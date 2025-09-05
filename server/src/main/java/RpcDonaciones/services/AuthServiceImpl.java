@@ -5,16 +5,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import RpcDonaciones.grpc.AuthServiceGrpc;
-import RpcDonaciones.grpc.LoginRequest;
-import RpcDonaciones.grpc.LoginResponse;
+import RpcDonaciones.grpc.AuthServiceProto.LoginRequest;
+import RpcDonaciones.grpc.AuthServiceProto.LoginResponse;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 @Service
-public class AuthServiceImpl extends AuthServiceImplBase {
+public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
     @Autowired
-    private UserRepository userRepository; // Asumiendo que ya creaste esto
+    private UserRepository userRepository;
 
     private final byte[] key = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256).getEncoded();
 
