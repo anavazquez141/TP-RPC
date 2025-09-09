@@ -2,30 +2,69 @@ syntax = "proto3";
 option java_package = "RpcDonaciones.grpc";
 option java_outer_classname = "UsuarioServiceProto";
 
-service UsuarioService {
-    rpc registrarUsuario (UsuarioRequest) returns (UsuarioResponse);
-    rpc traerUsuarioPorId (UsuarioIdRequest) returns (UsuarioResponse);
-    rpc eliminarUsuario (UsuarioIdRequest) returns (EliminarUsuarioResponse);
+// ----------------- MENSAJES ---------------------
+
+// Roles de usuario para el enum
+enum Rol {
+    PRESIDENTE = 0;
+    VOCAL = 1;
+    COORDINADOR = 2;
+    VOLUNTARIO = 3;
 }
 
+// Mensaje para dar de alta un usuario
 message UsuarioRequest {
-    string email = 1;
-    string password = 2;
+    int64 id = 1;
+    string nombre_usuario = 2;
     string name = 3;
+    string apellido = 4;
+    string telefono = 5;
+    string email = 6;
+    Rol rol = 7;
+    bool activo = 8;
+    string password = 9;
 }
 
+// Mensaje para obtener un usuario por ID
 message UsuarioIdRequest {
     int64 id = 1;
 }
 
+// Mensaje de respuesta para las operaciones de usuario
 message UsuarioResponse {
     int64 id = 1;
-    string email = 2;
+    string nombre_usuario = 2;
     string name = 3;
-    string status = 4;
+    string apellido = 4;
+    string telefono = 5;
+    string email = 6;
+    Rol rol = 7;
+    bool activo = 8;
+    string status = 9;
+    string mensaje = 10;
 }
 
+// Mensjae de respuesta para la baja logica de un usuario
 message EliminarUsuarioResponse {
     bool success = 1;
     string message = 2;
+}
+
+// Mensaje de peticion para listar todos los usuarios
+message ListarUsuariosRequest{}
+
+// Mensaje de respuesta para la lista de usuarios. El campo 'repeated'
+// indica que es un array de mensajes de tipo UsuarioResponse.
+message ListarUsuariosResponse {
+    repeated UsuarioResponse usuarios = 1;
+} 
+
+
+// --------------------- SERVICIOS -----------------------
+service UsuarioService {
+    // Puntos de entrada para el cliente web
+    rpc registrarUsuario (UsuarioRequest) returns (UsuarioResponse);
+    rpc traerUsuarioPorId (UsuarioIdRequest) returns (UsuarioResponse);
+    rpc eliminarUsuario (UsuarioIdRequest) returns (EliminarUsuarioResponse);
+    rpc listarUsuarios(ListarUsuariosRequest) returns (ListarUsuariosResponse);
 }
