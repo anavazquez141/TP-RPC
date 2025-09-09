@@ -48,6 +48,9 @@ public class Usuario implements UserDetails {
     protected Long id;
 
     @Column(length = 20)
+    protected String nombreUsuario;
+
+    @Column(length = 20)
     protected String nombre;
 
     @Column(length = 20)
