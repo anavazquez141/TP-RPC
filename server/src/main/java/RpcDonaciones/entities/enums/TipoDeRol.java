@@ -7,7 +7,7 @@ public enum TipoDeRol {
     VOLUNTARIO;
 
     public String getPrefixedName() {
-        return "ROL_" + this.name();
+        return "ROLE_" + this.name();
     }
     
 }
