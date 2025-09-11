@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+
 import RpcDonaciones.services.AuthServiceImpl;
+import RpcDonaciones.services.UsuarioServiceImpl;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
@@ -19,6 +22,9 @@ public class GrpcServerConfig {
 
     @Autowired
     private AuthServiceImpl authService;
+
+    @Autowired
+    private UsuarioServiceImpl usuarioService;
 
     @Value("${grpc.server.port}")
     private int grpcPort;
@@ -35,9 +41,10 @@ public class GrpcServerConfig {
             System.out.println("No se encontraron procesos usando el puerto " + grpcPort + ".");
         }
 
-        // Iniciar el servidor gRPC
+        // Iniciar el servidor gRPC con ambos servicios
         server = ServerBuilder.forPort(grpcPort)
                 .addService(authService)
+                .addService(usuarioService)
                 .build()
                 .start();
         System.out.println("gRPC server started on port " + grpcPort);
