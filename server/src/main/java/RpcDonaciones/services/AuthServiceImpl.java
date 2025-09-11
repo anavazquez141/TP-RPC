@@ -1,5 +1,6 @@
 package RpcDonaciones.services;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Date;
@@ -13,10 +14,14 @@ import org.springframework.stereotype.Service;
 import RpcDonaciones.grpc.AuthServiceGrpc;
 import RpcDonaciones.grpc.AuthServiceProto.LoginRequest;
 import RpcDonaciones.grpc.AuthServiceProto.LoginResponse;
+import RpcDonaciones.grpc.AuthServiceProto.LogoutRequest;
+import RpcDonaciones.grpc.AuthServiceProto.LogoutResponse;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 import RpcDonaciones.repositories.IUsuario;
+import RpcDonaciones.repositories.IBlacklistedToken;
+import RpcDonaciones.entities.BlacklistedToken;
 import RpcDonaciones.entities.Usuario;
 import javax.crypto.SecretKey;
 import java.util.Base64;
@@ -27,6 +32,8 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
 
     @Autowired
     private IUsuario userRepository;
+    @Autowired
+    private IBlacklistedToken blacklistedTokenRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Value("${jwt.expiration}")
@@ -72,4 +79,37 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
             responseObserver.onError(e);
         }
     }
+
+    @Override
+    public void logout(LogoutRequest req, StreamObserver<LogoutResponse> responseObserver) {
+        try {
+            String token = req.getToken();
+            if (token == null || token.isEmpty()) {
+                LogoutResponse response = LogoutResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Token no proporcionado")
+                    .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+            blacklistedTokenRepository.save(new BlacklistedToken(token));
+            LogoutResponse response = LogoutResponse.newBuilder()
+                .setStatus("SUCCESS")
+                .setMessage("Logout successful")
+                .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL
+                .withDescription("Error en logout: " + e.getMessage())
+                .asRuntimeException());
+        }
+    }
+
+    public boolean isTokenValid(String token) {
+        return !blacklistedTokenRepository.existsByToken(token);
+    }
 }
+
+
