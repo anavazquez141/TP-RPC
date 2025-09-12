@@ -5,9 +5,11 @@ import io.grpc.stub.StreamObserver;
 
 import java.util.Date;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -63,6 +65,9 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
             // Genera un JWT
             String token = Jwts.builder()
                     .setSubject(usuarioOptional.get().getEmail())
+                    .claim("roles", usuarioOptional.get().getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList()))
                     .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                     .signWith(key)
                     .compact();

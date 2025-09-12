@@ -5,7 +5,7 @@ option java_outer_classname = "UsuarioServiceProto";
 // ----------------- MENSAJES ---------------------
 
 // Roles de usuario para el enum
-enum Rol {
+enum Role {
     PRESIDENTE = 0;
     VOCAL = 1;
     COORDINADOR = 2;
@@ -14,20 +14,22 @@ enum Rol {
 
 // Mensaje para dar de alta un usuario
 message UsuarioRequest {
-    int64 id = 1;
-    string nombreUsuario = 2;
-    string nombre = 3;
-    string apellido = 4;
-    string telefono = 5;
-    string email = 6;
-    Rol rol = 7;
-    bool activo = 8;
-    string clave = 9;
+    string token = 1; // Token JWT del usuario que realiza la acción
+    int64 id = 2;
+    string nombreUsuario = 3;
+    string nombre = 4;
+    string apellido = 5;
+    string telefono = 6;
+    string email = 7;
+    Role rol = 8;
+    bool activo = 9;
+    string clave = 10;
 }
 
 // Mensaje para obtener un usuario por ID
 message UsuarioIdRequest {
-    int64 id = 1;
+    string token = 1; // Token JWT para autorización
+    int64 id = 2;
 }
 
 // Mensaje de respuesta para las operaciones de usuario
@@ -38,7 +40,7 @@ message UsuarioResponse {
     string apellido = 4;
     string telefono = 5;
     string email = 6;
-    Rol rol = 7;
+    Role rol = 7;
     bool activo = 8;
     string status = 9;
     string message = 10;
@@ -50,8 +52,9 @@ message EliminarUsuarioResponse {
     string message = 2;
 }
 
-// Mensaje de peticion para listar todos los usuarios
-message ListarUsuariosRequest{}
+message ListarUsuariosRequest {
+    string token = 1; // Token JWT para autorización
+}
 
 // Mensaje de respuesta para la lista de usuarios. El campo 'repeated'
 // indica que es un array de mensajes de tipo UsuarioResponse.
