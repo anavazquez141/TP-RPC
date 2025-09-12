@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x61uthService.proto\",\n\x0cLoginRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\r\n\x05\x63lave\x18\x02 \x01(\t\"?\n\rLoginResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t25\n\x0b\x41uthService\x12&\n\x05login\x12\r.LoginRequest\x1a\x0e.LoginResponseB&\n\x12RpcDonaciones.grpcB\x10\x41uthServiceProtob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11\x61uthService.proto\",\n\x0cLoginRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\r\n\x05\x63lave\x18\x02 \x01(\t\"?\n\rLoginResponse\x12\r\n\x05token\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"\x1e\n\rLogoutRequest\x12\r\n\x05token\x18\x01 \x01(\t\"1\n\x0eLogoutResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t2`\n\x0b\x41uthService\x12&\n\x05login\x12\r.LoginRequest\x1a\x0e.LoginResponse\x12)\n\x06logout\x12\x0e.LogoutRequest\x1a\x0f.LogoutResponseB&\n\x12RpcDonaciones.grpcB\x10\x41uthServiceProtob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,6 +36,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_LOGINREQUEST']._serialized_end=65
   _globals['_LOGINRESPONSE']._serialized_start=67
   _globals['_LOGINRESPONSE']._serialized_end=130
-  _globals['_AUTHSERVICE']._serialized_start=132
-  _globals['_AUTHSERVICE']._serialized_end=185
+  _globals['_LOGOUTREQUEST']._serialized_start=132
+  _globals['_LOGOUTREQUEST']._serialized_end=162
+  _globals['_LOGOUTRESPONSE']._serialized_start=164
+  _globals['_LOGOUTRESPONSE']._serialized_end=213
+  _globals['_AUTHSERVICE']._serialized_start=215
+  _globals['_AUTHSERVICE']._serialized_end=311
 # @@protoc_insertion_point(module_scope)
