@@ -169,11 +169,11 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
 
                 UsuarioResponse usuarioResponse = UsuarioResponse.newBuilder()
                         .setId(usuario.getId())
-                        .setNombreUsuario(usuario.getNombreUsuario())
-                        .setNombre(usuario.getNombre())
-                        .setApellido(usuario.getApellido())
-                        .setTelefono(usuario.getTelefono())
-                        .setEmail(usuario.getEmail())
+                        .setNombreUsuario(usuario.getNombreUsuario() != null ? usuario.getNombreUsuario() : "")
+                        .setNombre(usuario.getNombre() != null ? usuario.getNombre() : "")
+                        .setApellido(usuario.getApellido() != null ? usuario.getApellido() : "")
+                        .setTelefono(usuario.getTelefono() != null ? usuario.getTelefono() : "")
+                        .setEmail(usuario.getEmail() != null ? usuario.getEmail() : "")
                         .setRol(protoRol)
                         .setActivo(usuario.isEstado())
                         .build();
@@ -184,6 +184,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
             responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            e.printStackTrace();
             responseObserver.onError(e);
         }
     }

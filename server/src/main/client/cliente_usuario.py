@@ -1,9 +1,8 @@
 import grpc
 #import usuario_pb2
 #import usuario_pb2_grpc
-import usuarioService_pb2 as usuario_pb2
-import usuarioService_pb2_grpc as usuario_pb2_grpc
-
+from proto import usuarioService_pb2 as usuario_pb2
+from proto import usuarioService_pb2_grpc as usuario_pb2_grpc
 
 class ClienteUsuario:
     def __init__(self, host='localhost', port=9090):
