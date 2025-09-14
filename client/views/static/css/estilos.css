@@ -86,3 +86,10 @@ a:hover {
     text-decoration: underline;
 }
 
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
+}

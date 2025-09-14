@@ -1,6 +1,8 @@
 import grpc
-import authService_pb2  
-import authService_pb2_grpc  
+from proto import usuarioService_pb2 as usuario_pb2
+from proto import usuarioService_pb2_grpc as usuario_pb2_grpc
+from proto import authService_pb2 as authService_pb2
+from proto import authService_pb2_grpc as authService_pb2_grpc
 
 def login(email, password):
     with grpc.insecure_channel('localhost:9090') as channel:

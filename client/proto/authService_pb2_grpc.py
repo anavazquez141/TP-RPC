@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import authService_pb2 as authService__pb2
+from proto import authService_pb2 as proto_dot_authService__pb2
 
 GRPC_GENERATED_VERSION = '1.74.0'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in authService_pb2_grpc.py depends on'
+        + f' but the generated code in proto/authService_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -36,13 +36,18 @@ class AuthServiceStub(object):
         """
         self.login = channel.unary_unary(
                 '/AuthService/login',
-                request_serializer=authService__pb2.LoginRequest.SerializeToString,
-                response_deserializer=authService__pb2.LoginResponse.FromString,
+                request_serializer=proto_dot_authService__pb2.LoginRequest.SerializeToString,
+                response_deserializer=proto_dot_authService__pb2.LoginResponse.FromString,
                 _registered_method=True)
         self.logout = channel.unary_unary(
                 '/AuthService/logout',
-                request_serializer=authService__pb2.LogoutRequest.SerializeToString,
-                response_deserializer=authService__pb2.LogoutResponse.FromString,
+                request_serializer=proto_dot_authService__pb2.LogoutRequest.SerializeToString,
+                response_deserializer=proto_dot_authService__pb2.LogoutResponse.FromString,
+                _registered_method=True)
+        self.validarToken = channel.unary_unary(
+                '/AuthService/validarToken',
+                request_serializer=proto_dot_authService__pb2.TokenValidationRequest.SerializeToString,
+                response_deserializer=proto_dot_authService__pb2.TokenValidationResponse.FromString,
                 _registered_method=True)
 
 
@@ -61,18 +66,29 @@ class AuthServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def validarToken(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_AuthServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'login': grpc.unary_unary_rpc_method_handler(
                     servicer.login,
-                    request_deserializer=authService__pb2.LoginRequest.FromString,
-                    response_serializer=authService__pb2.LoginResponse.SerializeToString,
+                    request_deserializer=proto_dot_authService__pb2.LoginRequest.FromString,
+                    response_serializer=proto_dot_authService__pb2.LoginResponse.SerializeToString,
             ),
             'logout': grpc.unary_unary_rpc_method_handler(
                     servicer.logout,
-                    request_deserializer=authService__pb2.LogoutRequest.FromString,
-                    response_serializer=authService__pb2.LogoutResponse.SerializeToString,
+                    request_deserializer=proto_dot_authService__pb2.LogoutRequest.FromString,
+                    response_serializer=proto_dot_authService__pb2.LogoutResponse.SerializeToString,
+            ),
+            'validarToken': grpc.unary_unary_rpc_method_handler(
+                    servicer.validarToken,
+                    request_deserializer=proto_dot_authService__pb2.TokenValidationRequest.FromString,
+                    response_serializer=proto_dot_authService__pb2.TokenValidationResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -100,8 +116,8 @@ class AuthService(object):
             request,
             target,
             '/AuthService/login',
-            authService__pb2.LoginRequest.SerializeToString,
-            authService__pb2.LoginResponse.FromString,
+            proto_dot_authService__pb2.LoginRequest.SerializeToString,
+            proto_dot_authService__pb2.LoginResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -127,8 +143,35 @@ class AuthService(object):
             request,
             target,
             '/AuthService/logout',
-            authService__pb2.LogoutRequest.SerializeToString,
-            authService__pb2.LogoutResponse.FromString,
+            proto_dot_authService__pb2.LogoutRequest.SerializeToString,
+            proto_dot_authService__pb2.LogoutResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def validarToken(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/AuthService/validarToken',
+            proto_dot_authService__pb2.TokenValidationRequest.SerializeToString,
+            proto_dot_authService__pb2.TokenValidationResponse.FromString,
             options,
             channel_credentials,
             insecure,

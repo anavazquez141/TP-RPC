@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil de Usuario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Perfil de Usuario</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <p>ID: {{ usuario.id }}</p>
+    <p>Nombre de Usuario: {{ usuario.nombreUsuario }}</p>
+    <p>Nombre: {{ usuario.nombre }}</p>
+    <p>Apellido: {{ usuario.apellido }}</p>
+    <p>Teléfono: {{ usuario.telefono }}</p>
+    <p>Email: {{ usuario.email }}</p>
+    <p>Rol: {{ usuario.rol }}</p>
+    <p>Activo: {{ 'Sí' if usuario.activo else 'No' }}</p>
+    {% if es_presidente %}
+        <p><a href="{{ url_for('registrar') }}">Registrar usuario</a></p>
+        <p><a href="{{ url_for('cuenta') }}">Modificar cuenta</a></p>
+    {% else %}
+        <p><a href="{{ url_for('cuenta') }}">Modificar cuenta</a></p>
+    {% endif %}
+    <p><a href="{{ url_for('logout') }}">Cerrar Sesión</a></p>
+</body>
+</html>

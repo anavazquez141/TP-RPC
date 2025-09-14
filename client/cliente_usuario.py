@@ -1,99 +1,175 @@
 import grpc
-#import usuario_pb2
-#import usuario_pb2_grpc
 from proto import usuarioService_pb2 as usuario_pb2
 from proto import usuarioService_pb2_grpc as usuario_pb2_grpc
+from proto import authService_pb2 as auth_pb2
+from proto import authService_pb2_grpc as auth_pb2_grpc
 
 class ClienteUsuario:
     def __init__(self, host='localhost', port=9090):
-        self.channel = grpc.insecure_channel(f"{host}:{port}")
-        self.stub = usuario_pb2_grpc.UsuarioServiceStub(self.channel)
+        self.host = host
+        self.port = port
+        self.channel = None
+        self.usuario_stub = None
+        self.auth_stub = None
+        self.token = None
 
-    def registrar_usuario(self, nombreUsuario, nombre, apellido, telefono, email, rol, activo, clave):
-        request = usuario_pb2.UsuarioRequest(
-            nombreUsuario=nombreUsuario,
+    def connect(self):
+        if self.channel is None or self.is_channel_closed():
+            self.channel = grpc.insecure_channel(f"{self.host}:{self.port}")
+            self.usuario_stub = usuario_pb2_grpc.UsuarioServiceStub(self.channel)
+            self.auth_stub = auth_pb2_grpc.AuthServiceStub(self.channel)
+
+    def is_channel_closed(self):
+        try:
+            self.channel.subscribe(lambda connectivity: None)
+            return False
+        except Exception:
+            return True
+
+    def login(self, email, password):
+        """Realiza el login y almacena el token si es exitoso."""
+        self.connect()
+        if self.token is not None:
+            return auth_pb2.LoginResponse(status="SUCCESS", message="Ya has iniciado sesión", token=self.token)
+        request = auth_pb2.LoginRequest(email=email, clave=password)
+        try:
+            response = self.auth_stub.login(request)
+            if response.status == "SUCCESS":
+                self.token = response.token
+                return response
+            else:
+                return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+        except Exception as e:
+            print(f"Error inesperado: {str(e)}")
+            return None
+
+    def logout(self):
+        """Cierra la sesión y elimina el token."""
+        self.connect()
+        if not self.token:
+            return auth_pb2.LogoutResponse(status="FAILURE", message="No hay token para cerrar sesión")
+        request = auth_pb2.LogoutRequest(token=self.token)
+        try:
+            response = self.auth_stub.logout(request)
+            if response.status == "SUCCESS":
+                self.token = None
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+
+    def validar_token(self, token):
+        """Valida un token con el servidor."""
+        self.connect()
+        request = auth_pb2.TokenValidationRequest(token=token)
+        try:
+            response = self.auth_stub.validarToken(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+
+    def traer_usuario_por_email(self, email):
+        self.connect()
+        request = usuario_pb2.UsuarioEmailRequest(email=email)
+        try:
+            response = self.usuario_stub.traerUsuarioPorEmail(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+
+    def traer_usuario_por_id(self, user_id, token):
+        self.connect()
+        request = usuario_pb2.UsuarioIdRequest(id=user_id, token=token)
+        try:
+            response = self.usuario_stub.traerUsuarioPorId(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+
+    def listar_usuarios(self, token):
+        self.connect()
+        request = usuario_pb2.ListarUsuariosRequest(token=token)
+        try:
+            response = self.usuario_stub.listarUsuarios(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+
+    def registrar_usuario(self, nombre_usuario, nombre, apellido, telefono, email, clave, rol, token):
+        self.connect()
+        rol_map = {
+            "PRESIDENTE": 0,
+            "VOCAL": 1,
+            "COORDINADOR": 2,
+            "VOLUNTARIO": 3
+        }
+        request = usuario_pb2.RegistrarUsuarioRequest(
+            nombreUsuario=nombre_usuario,
             nombre=nombre,
             apellido=apellido,
             telefono=telefono,
             email=email,
-            rol=rol,
-            activo=activo,
-            clave=clave
+            clave=clave,
+            rol=rol_map.get(rol, 3),  # Por defecto VOLUNTARIO
+            token=token
         )
-        return self.stub.registrarUsuario(request)
+        try:
+            response = self.usuario_stub.registrarUsuario(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
 
-    def traer_usuario_por_id(self, user_id):
-        request = usuario_pb2.UsuarioIdRequest(id=user_id)
-        return self.stub.traerUsuarioPorId(request)
-
-    def modificar_usuario(self, user_id, nombreUsuario, nombre, apellido, telefono, email, rol, activo, clave):
-        request = usuario_pb2.UsuarioRequest(
+    def modificar_usuario(self, user_id, nombre_usuario, nombre, apellido, telefono, email, rol, token, clave=""):
+        """Modifica un usuario existente."""
+        self.connect()
+        rol_map = {
+            0: 0,
+            1: 1,
+            2: 2,
+            3: 3,
+            "PRESIDENTE": 0,
+            "VOCAL": 1,
+            "COORDINADOR": 2,
+            "VOLUNTARIO": 3
+        }
+        request = usuario_pb2.ModificarUsuarioRequest(
             id=user_id,
-            nombreUsuario=nombreUsuario,
+            nombreUsuario=nombre_usuario,
             nombre=nombre,
             apellido=apellido,
             telefono=telefono,
             email=email,
-            rol=rol,
-            activo=activo,
-            clave=clave
+            clave=clave,
+            rol=rol_map.get(rol, 3),  # Por defecto VOLUNTARIO
+            token=token
         )
-        return self.stub.modificarUsuario(request)
+        try:
+            response = self.usuario_stub.modificarUsuario(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
 
-    def eliminar_usuario(self, user_id):
-        request = usuario_pb2.UsuarioIdRequest(id=user_id)
-        return self.stub.eliminarUsuario(request)
-
-    def listar_usuarios(self):
-        request = usuario_pb2.ListarUsuariosRequest()
-        return self.stub.listarUsuarios(request)
-
+    def eliminar_usuario(self, user_id, token):
+        self.connect()
+        request = usuario_pb2.EliminarUsuarioRequest(id=user_id, token=token)
+        try:
+            response = self.usuario_stub.eliminarUsuario(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+        
     def cerrar(self):
-        self.channel.close()
-
-
-# ------------------ EJEMPLO DE USO ------------------
-if __name__ == "__main__":
-    cliente = ClienteUsuario()
-
-    # Registrar usuario
-    resp = cliente.registrar_usuario(
-        nombreUsuario="ana123",
-        nombre="Ana",
-        apellido="Belen",
-        telefono="12345678",
-        email="ana@example.com",
-        rol=usuario_pb2.Rol.VOLUNTARIO,  # enum de proto
-        activo=True,
-        clave="secreto"
-    )
-    print("Registrar:", resp.id, resp.nombreUsuario, resp.nombre, resp.apellido, resp.email, resp.message)
-
-    # Traer usuario por ID
-    usuario = cliente.traer_usuario_por_id(resp.id)
-    print("Traer por ID:", usuario.id, usuario.nombreUsuario, usuario.nombre, usuario.email, usuario.rol, usuario.activo)
-
-    # Modificar usuario
-    resp_mod = cliente.modificar_usuario(
-        resp.id,
-        nombreUsuario="ana456",
-        nombre="Ana",
-        apellido="Belen",
-        telefono="87654321",
-        email="ana2@example.com",
-        rol=usuario_pb2.Rol.VOLUNTARIO,
-        activo=True,
-        clave="nuevoSecreto"
-    )
-    print("Modificar:", resp_mod.nombreUsuario, resp_mod.email, resp_mod.message)
-
-    # Listar usuarios
-    usuarios = cliente.listar_usuarios()
-    for u in usuarios.usuarios:
-        print("Usuario listado:", u.id, u.nombreUsuario, u.email, u.rol, u.activo)
-
-    # Eliminar usuario
-    resp_del = cliente.eliminar_usuario(resp.id)
-    print("Eliminar:", resp_del.success, resp_del.message)
-
-    cliente.cerrar()
+        """Cierra el canal gRPC."""
+        if self.channel is not None:
+            self.channel.close()
+            self.channel = None

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Administrar Cuenta</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Administrar Cuenta</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <h2>Modificar Cuenta</h2>
+    <form method="POST" action="{{ url_for('cuenta') }}">
+        <label for="nombreUsuario">Nombre de Usuario:</label>
+        <input type="text" id="nombreUsuario" name="nombreUsuario" value="{{ usuario.nombreUsuario }}" required><br>
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required><br>
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" name="apellido" value="{{ usuario.apellido }}" required><br>
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono" value="{{ usuario.telefono }}" required><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" value="{{ usuario.email }}" required><br>
+        <label for="clave">Nueva Clave (opcional):</label>
+        <input type="password" id="clave" name="clave" placeholder="Dejar en blanco para no cambiar"><br>
+        <input type="submit" value="Modificar Cuenta">
+    </form>
+    <h2>Eliminar Cuenta</h2>
+    <form method="POST" action="{{ url_for('cuenta') }}" onsubmit="return confirm('¿Seguro que deseas eliminar tu cuenta? Esta acción no se puede deshacer.');">
+        <input type="hidden" name="eliminar" value="true">
+        <input type="submit" value="Eliminar Cuenta" style="color: red;">
+    </form>
+    <p><a href="{{ url_for('index') }}">Volver al perfil</a></p>
+    <p><a href="{{ url_for('logout') }}">Cerrar Sesión</a></p>
+</body>
+</html>

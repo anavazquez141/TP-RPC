@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Nuevo Usuario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Registrar Nuevo Usuario</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('registrar') }}">
+        <label for="nombreUsuario">Nombre de Usuario:</label>
+        <input type="text" id="nombreUsuario" name="nombreUsuario" required><br>
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required><br>
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" name="apellido" required><br>
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono" required><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+        <label for="clave">Clave:</label>
+        <input type="password" id="clave" name="clave" required><br>
+        <label for="rol">Rol:</label>
+        <select id="rol" name="rol">
+            <option value="PRESIDENTE">Presidente</option>
+            <option value="VOCAL">Vocal</option>
+            <option value="COORDINADOR">Coordinador</option>
+            <option value="VOLUNTARIO">Voluntario</option>
+        </select><br>
+        <input type="submit" value="Registrar">
+    </form>
+    <p><a href="{{ url_for('index') }}">Volver al perfil</a></p>
+    <p><a href="{{ url_for('logout') }}">Cerrar Sesión</a></p>
+</body>
+</html>

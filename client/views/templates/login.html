@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Iniciar Sesión</h1>
+
+    <!-- Mensajes -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulario de login -->
+    <form action="{{ url_for('login') }}" method="POST">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="clave" placeholder="Clave" required>
+        <button type="submit">Iniciar Sesión</button>
+    </form>
+
+    <p><a href="{{ url_for('index') }}">Volver al inicio</a></p>
+</body>
+</html>
