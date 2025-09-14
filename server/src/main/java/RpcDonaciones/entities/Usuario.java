@@ -62,7 +62,7 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     protected String clave;
 
-    @Column(length = 20)
+    @Column(length = 50)
     protected String email;
 
     protected boolean estado;

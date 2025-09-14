@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import RpcDonaciones.grpc.AuthServiceGrpc;
+import RpcDonaciones.grpc.AuthServiceProto;
 import RpcDonaciones.grpc.AuthServiceProto.LoginRequest;
 import RpcDonaciones.grpc.AuthServiceProto.LoginResponse;
 import RpcDonaciones.grpc.AuthServiceProto.LogoutRequest;
@@ -112,6 +113,23 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
         }
     }
 
+    @Override
+    public void validarToken(AuthServiceProto.TokenValidationRequest req, StreamObserver<AuthServiceProto.TokenValidationResponse> responseObserver) {
+        try {
+            String token = req.getToken();
+            boolean isValid = isTokenValid(token); // Usa tu método isTokenValid
+            AuthServiceProto.TokenValidationResponse response = AuthServiceProto.TokenValidationResponse.newBuilder()
+                .setStatus(isValid ? "SUCCESS" : "FAILURE")
+                .setMessage(isValid ? "Token válido" : "Token inválido o expirado")
+                .build();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL
+                .withDescription("Error al validar token: " + e.getMessage())
+                .asRuntimeException());
+        }
+    }
     public boolean isTokenValid(String token) {
         return !blacklistedTokenRepository.existsByToken(token);
     }

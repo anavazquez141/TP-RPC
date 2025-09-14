@@ -1,10 +1,10 @@
 syntax = "proto3";
+
+package usuario;
+
 option java_package = "RpcDonaciones.grpc";
 option java_outer_classname = "UsuarioServiceProto";
 
-// ----------------- MENSAJES ---------------------
-
-// Roles de usuario para el enum
 enum Role {
     PRESIDENTE = 0;
     VOCAL = 1;
@@ -12,9 +12,8 @@ enum Role {
     VOLUNTARIO = 3;
 }
 
-// Mensaje para dar de alta un usuario
 message UsuarioRequest {
-    string token = 1; // Token JWT del usuario que realiza la acción
+    string token = 1;
     int64 id = 2;
     string nombreUsuario = 3;
     string nombre = 4;
@@ -26,13 +25,15 @@ message UsuarioRequest {
     string clave = 10;
 }
 
-// Mensaje para obtener un usuario por ID
 message UsuarioIdRequest {
-    string token = 1; // Token JWT para autorización
+    string token = 1;
     int64 id = 2;
 }
 
-// Mensaje de respuesta para las operaciones de usuario
+message UsuarioEmailRequest {
+    string email = 1;
+}
+
 message UsuarioResponse {
     int64 id = 1;
     string nombreUsuario = 2;
@@ -46,29 +47,35 @@ message UsuarioResponse {
     string message = 10;
 }
 
-// Mensjae de respuesta para la baja logica de un usuario
+message UsuarioSinClave {
+    int32 id = 1;
+    string nombreUsuario = 2;
+    string nombre = 3;
+    string apellido = 4;
+    string telefono = 5;
+    string email = 6;
+    Role rol = 7;
+    bool activo = 8;
+}
+
 message EliminarUsuarioResponse {
     bool success = 1;
     string message = 2;
 }
 
 message ListarUsuariosRequest {
-    string token = 1; // Token JWT para autorización
+    string token = 1;
 }
 
-// Mensaje de respuesta para la lista de usuarios. El campo 'repeated'
-// indica que es un array de mensajes de tipo UsuarioResponse.
 message ListarUsuariosResponse {
-    repeated UsuarioResponse usuarios = 1;
-} 
+    repeated UsuarioSinClave usuarios = 1;
+}
 
-
-// --------------------- SERVICIOS -----------------------
 service UsuarioService {
-    // Puntos de entrada para el cliente web
-    rpc registrarUsuario (UsuarioRequest) returns (UsuarioResponse);
-    rpc traerUsuarioPorId (UsuarioIdRequest) returns (UsuarioResponse);
+    rpc registrarUsuario(UsuarioRequest) returns (UsuarioResponse);
+    rpc traerUsuarioPorId(UsuarioIdRequest) returns (UsuarioSinClave);
     rpc modificarUsuario(UsuarioRequest) returns (UsuarioResponse);
-    rpc eliminarUsuario (UsuarioIdRequest) returns (EliminarUsuarioResponse);
+    rpc eliminarUsuario(UsuarioIdRequest) returns (EliminarUsuarioResponse);
     rpc listarUsuarios(ListarUsuariosRequest) returns (ListarUsuariosResponse);
+    rpc traerUsuarioPorEmail(UsuarioEmailRequest) returns (UsuarioSinClave);
 }

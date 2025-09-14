@@ -17,12 +17,18 @@ public class DataDePrueba {
     public CommandLineRunner initData(IUsuario userRepository, IRol rolRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             // Crear un rol
-            Rol rol = new Rol(1L, TipoDeRol.VOLUNTARIO);
+            Rol rol = new Rol(1L, TipoDeRol.PRESIDENTE );
             rolRepository.save(rol);
-
+            Rol rol2 = new Rol(2L, TipoDeRol.VOCAL);
+            rolRepository.save(rol2);
+            Rol rol3 = new Rol(3L, TipoDeRol.COORDINADOR);
+            rolRepository.save(rol3);
+            Rol rol4 = new Rol(4L, TipoDeRol.VOLUNTARIO);
+            rolRepository.save(rol4);
             // Crear un usuario
             Usuario user = new Usuario();
             user.setEmail("test@example.com");
+            user.setNombreUsuario("testuser");
             user.setClave(passwordEncoder.encode("password123"));
             user.setNombre("Test");
             user.setApellido("User");
@@ -31,7 +37,18 @@ public class DataDePrueba {
             user.agregarRoles(rol);
             userRepository.save(user);
 
-            System.out.println("Usuario de prueba creado: test@example.com con rol VOLUNTARIO");
+            Usuario user2 = new Usuario();
+            user2.setEmail("voluntario@example.com");
+            user2.setNombreUsuario("voluntario");
+            user2.setClave(passwordEncoder.encode("password123"));
+            user2.setNombre("Voluntario");
+            user2.setApellido("Volunnteer");
+            user2.setTelefono("222222222");
+            user2.setEstado(true); // Habilitado
+            user2.agregarRoles(rol4);
+            userRepository.save(user2)
+            ;
+            System.out.println("Usuario de prueba creado: test@example.com con rol PRESIDENTE");
         };
     }
 }

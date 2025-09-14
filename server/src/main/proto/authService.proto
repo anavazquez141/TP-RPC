@@ -5,6 +5,7 @@ option java_outer_classname = "AuthServiceProto";
 service AuthService {
     rpc login (LoginRequest) returns (LoginResponse);
     rpc logout (LogoutRequest) returns (LogoutResponse);
+    rpc validarToken(TokenValidationRequest) returns (TokenValidationResponse);
 }
 
 message LoginRequest {
@@ -25,4 +26,13 @@ message LogoutRequest {
 message LogoutResponse {
     string status = 1; // e.g., "SUCCESS", "FAILURE"
     string message = 2; // Mensaje opcional (e.g., "Credenciales invalidas")
+}
+
+message TokenValidationRequest {
+    string token = 1;
+}
+
+message TokenValidationResponse {
+    string status = 1;
+    string message = 2;
 }
