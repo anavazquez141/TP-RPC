@@ -4,6 +4,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -19,6 +20,8 @@ import RpcDonaciones.grpc.AuthServiceProto.LoginRequest;
 import RpcDonaciones.grpc.AuthServiceProto.LoginResponse;
 import RpcDonaciones.grpc.AuthServiceProto.LogoutRequest;
 import RpcDonaciones.grpc.AuthServiceProto.LogoutResponse;
+import RpcDonaciones.grpc.AuthServiceProto.TokenValidationResponse;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -73,6 +76,16 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
                     .signWith(key)
                     .compact();
 
+            if (blacklistedTokenRepository.existsById(token)) {
+                LoginResponse response = LoginResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("Token inválido generado")
+                        .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+
             LoginResponse response = LoginResponse.newBuilder()
                     .setToken(token)
                     .setStatus("SUCCESS")
@@ -99,7 +112,27 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
                 responseObserver.onCompleted();
                 return;
             }
-            blacklistedTokenRepository.save(new BlacklistedToken(token));
+
+            String email;
+            try {
+                email = Jwts.parser()
+                    .setSigningKey(key) // Usa la misma clave que en login
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getSubject();
+            } catch (JwtException e) {
+                // Maneja errores como token inválido o expirado
+                LogoutResponse response = LogoutResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Token inválido: " + e.getMessage())
+                    .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+
+            blacklistedTokenRepository.save(new BlacklistedToken(token, email));
             LogoutResponse response = LogoutResponse.newBuilder()
                 .setStatus("SUCCESS")
                 .setMessage("Logout successful")
@@ -117,19 +150,54 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     public void validarToken(AuthServiceProto.TokenValidationRequest req, StreamObserver<AuthServiceProto.TokenValidationResponse> responseObserver) {
         try {
             String token = req.getToken();
-            boolean isValid = isTokenValid(token); // Usa tu método isTokenValid
-            AuthServiceProto.TokenValidationResponse response = AuthServiceProto.TokenValidationResponse.newBuilder()
-                .setStatus(isValid ? "SUCCESS" : "FAILURE")
-                .setMessage(isValid ? "Token válido" : "Token inválido o expirado")
-                .build();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
+            if (token == null || token.isEmpty()) {
+                TokenValidationResponse response = TokenValidationResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Token no proporcionado")
+                    .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Verifica si el token está en la lista negra
+            if (blacklistedTokenRepository.existsById(token)) {
+                AuthServiceProto.TokenValidationResponse response = TokenValidationResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Token inválido: está en la lista negra")
+                    .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Verifica el token JWT
+            try {
+                Jwts.parser()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+                AuthServiceProto.TokenValidationResponse response = TokenValidationResponse.newBuilder()
+                    .setStatus("SUCCESS")
+                    .setMessage("Token válido")
+                    .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            } catch (JwtException e) {
+                AuthServiceProto.TokenValidationResponse response = TokenValidationResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Token inválido: " + e.getMessage())
+                    .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
         } catch (Exception e) {
             responseObserver.onError(Status.INTERNAL
-                .withDescription("Error al validar token: " + e.getMessage())
+                .withDescription("Error en validación de token: " + e.getMessage())
                 .asRuntimeException());
         }
     }
+    
     public boolean isTokenValid(String token) {
         return !blacklistedTokenRepository.existsByToken(token);
     }

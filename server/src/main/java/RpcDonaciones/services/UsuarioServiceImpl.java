@@ -3,19 +3,25 @@ package RpcDonaciones.services;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import RpcDonaciones.grpc.UsuarioServiceGrpc;
 import RpcDonaciones.grpc.UsuarioServiceProto;
 import RpcDonaciones.repositories.IUsuario;
+import RpcDonaciones.repositories.IBlacklistedToken;
 import RpcDonaciones.repositories.IRol;
 import RpcDonaciones.entities.Usuario;
 import RpcDonaciones.entities.Rol;
 import RpcDonaciones.entities.enums.TipoDeRol;
 import javax.crypto.SecretKey;
+import java.util.Base64;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -27,14 +33,20 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     @Autowired
     private IRol rolRepository;
     @Autowired
+    private IBlacklistedToken blacklistedTokenRepository;
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private final SecretKey key = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256);
+    private final SecretKey key;
+    
+    public UsuarioServiceImpl(@Value("${jwt.secret}") String base64Key) {
+        this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Key));
+    }
 
     @Override
     public void registrarUsuario(UsuarioServiceProto.UsuarioRequest request, StreamObserver<UsuarioServiceProto.UsuarioResponse> responseObserver) {
         try {
-            // Verificación de token y rol PRESIDENTE
+            // Verificación de token
             String token = request.getToken();
             if (token == null || token.isEmpty()) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
@@ -44,19 +56,34 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 responseObserver.onCompleted();
                 return;
             }
-            if (!isTokenValid(token)) {
+            Claims claims;
+            try {
+                if (blacklistedTokenRepository.existsById(token)) {
+                    System.out.println("Token en lista negra: " + token);
+                    responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("Token inválido: está en la lista negra")
+                        .build());
+                    responseObserver.onCompleted();
+                    return;
+                }
+                claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getPayload();
+                System.out.println("Token válido: " + token);
+            } catch (JwtException e) {
+                System.out.println("Error en JWT: " + e.getMessage());
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                     .setStatus("FAILURE")
-                    .setMessage("Token inválido")
+                    .setMessage("Token inválido: " + e.getMessage())
                     .build());
                 responseObserver.onCompleted();
                 return;
             }
-            Claims claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+
+            // Verificación de rol PRESIDENTE
             List<String> roles = claims.get("roles", List.class);
             if (!roles.contains("ROLE_PRESIDENTE")) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
@@ -85,7 +112,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
             nuevoUsuario.setTelefono(request.getTelefono());
             nuevoUsuario.setEmail(request.getEmail());
             nuevoUsuario.setClave(passwordEncoder.encode(request.getClave()));
-            nuevoUsuario.setEstado(request.getActivo());
+            nuevoUsuario.setEstado(true);
             Rol rol = mapProtoRoleToEntityRol(request.getRol());
             nuevoUsuario.agregarRoles(rol);
 
@@ -126,10 +153,26 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 responseObserver.onCompleted();
                 return;
             }
-            if (!isTokenValid(token)) {
+            try {
+                if (blacklistedTokenRepository.existsById(token)) {
+                    System.out.println("Token en lista negra: " + token);
+                    responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("Token inválido: está en la lista negra")
+                        .build());
+                    responseObserver.onCompleted();
+                    return;
+                }
+                Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseClaimsJws(token);
+                System.out.println("Token válido: " + token);
+            } catch (JwtException e) {
+                System.out.println("Error en JWT: " + e.getMessage());
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                     .setStatus("FAILURE")
-                    .setMessage("Token inválido")
+                    .setMessage("Token inválido: " + e.getMessage())
                     .build());
                 responseObserver.onCompleted();
                 return;
@@ -156,7 +199,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
             if (!request.getClave().isEmpty()) {
                 usuario.setClave(passwordEncoder.encode(request.getClave()));
             }
-            usuario.setEstado(request.getActivo());
+            usuario.setEstado(true);
             TipoDeRol tipoRol = mapProtoRoleToTipoDeRol(request.getRol());
             Optional<Rol> rolOpt = rolRepository.findByType(tipoRol);
             if (rolOpt.isPresent()) {
@@ -201,21 +244,39 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 responseObserver.onCompleted();
                 return;
             }
-            if (!isTokenValid(token)) {
+            try {
+                if (blacklistedTokenRepository.existsById(token)) {
+                    System.out.println("Token en lista negra: " + token);
+                    responseObserver.onNext(UsuarioServiceProto.EliminarUsuarioResponse.newBuilder()
+                        .setSuccess(false)
+                        .setMessage("Token inválido: está en la lista negra")
+                        .build());
+                    responseObserver.onCompleted();
+                    return;
+                }
+                Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseClaimsJws(token);
+                System.out.println("Token válido: " + token);
+            } catch (JwtException e) {
+                System.out.println("Error en JWT: " + e.getMessage());
                 responseObserver.onNext(UsuarioServiceProto.EliminarUsuarioResponse.newBuilder()
                     .setSuccess(false)
-                    .setMessage("Token inválido")
+                    .setMessage("Token inválido: " + e.getMessage())
                     .build());
                 responseObserver.onCompleted();
                 return;
             }
 
-            // Eliminar usuario
-            if (userRepository.existsById(request.getId())) {
-                userRepository.deleteById(request.getId());
+            Optional<Usuario> usuarioOptional = userRepository.findById((long) request.getId());
+            if (usuarioOptional.isPresent()) {
+                Usuario usuario = usuarioOptional.get();
+                usuario.setEstado(false); 
+                userRepository.save(usuario); 
                 responseObserver.onNext(UsuarioServiceProto.EliminarUsuarioResponse.newBuilder()
                     .setSuccess(true)
-                    .setMessage("Usuario eliminado exitosamente")
+                    .setMessage("Usuario dado de baja exitosamente")
                     .build());
                 responseObserver.onCompleted();
             } else {
@@ -223,7 +284,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                     .setSuccess(false)
                     .setMessage("Usuario no encontrado")
                     .build());
-                responseObserver.onCompleted();
+                    responseObserver.onCompleted();
             }
         } catch (Exception e) {
             responseObserver.onError(Status.INTERNAL
@@ -338,19 +399,26 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     }
 
     private boolean isTokenValid(String token) {
-        if (token == null || token.isEmpty()) {
-            return false;
-        }
-        try {
-            Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    if (token == null || token.isEmpty()) {
+        System.out.println("Token nulo o vacío");
+        return false;
     }
+    if (blacklistedTokenRepository.existsById(token)) {
+        System.out.println("Token en lista negra: " + token);
+        return false;
+    }
+    try {
+        Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseClaimsJws(token);
+        System.out.println("Token válido: " + token);
+        return true;
+    } catch (Exception e) {
+        System.out.println("Error en JWT: " + e.getMessage());
+        return false;
+    }
+}
 
     private TipoDeRol mapProtoRoleToTipoDeRol(UsuarioServiceProto.Role protoRole) {
         switch (protoRole) {
