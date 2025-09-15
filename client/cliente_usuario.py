@@ -104,13 +104,14 @@ class ClienteUsuario:
 
     def registrar_usuario(self, nombre_usuario, nombre, apellido, telefono, email, clave, rol, token):
         self.connect()
+        print(f"Enviando token para registrar_usuario: {token}")
         rol_map = {
             "PRESIDENTE": 0,
             "VOCAL": 1,
             "COORDINADOR": 2,
             "VOLUNTARIO": 3
         }
-        request = usuario_pb2.RegistrarUsuarioRequest(
+        request = usuario_pb2.UsuarioRequest(
             nombreUsuario=nombre_usuario,
             nombre=nombre,
             apellido=apellido,
@@ -122,6 +123,7 @@ class ClienteUsuario:
         )
         try:
             response = self.usuario_stub.registrarUsuario(request)
+            print(f"Respuesta de registrarUsuario: {response}")
             return response
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
@@ -140,7 +142,7 @@ class ClienteUsuario:
             "COORDINADOR": 2,
             "VOLUNTARIO": 3
         }
-        request = usuario_pb2.ModificarUsuarioRequest(
+        request = usuario_pb2.UsuarioRequest(
             id=user_id,
             nombreUsuario=nombre_usuario,
             nombre=nombre,
@@ -160,9 +162,11 @@ class ClienteUsuario:
 
     def eliminar_usuario(self, user_id, token):
         self.connect()
-        request = usuario_pb2.EliminarUsuarioRequest(id=user_id, token=token)
+        print(f"Enviando solicitud para eliminar_usuario: id={user_id}, token={token}")
+        request = usuario_pb2.UsuarioIdRequest(id=user_id, token=token)
         try:
             response = self.usuario_stub.eliminarUsuario(request)
+            print(f"Respuesta de eliminarUsuario: success={response.success}, message={response.message}")
             return response
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")

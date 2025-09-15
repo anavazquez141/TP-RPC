@@ -72,6 +72,14 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if 'token' in session:
+        try:
+            response = cliente.validar_token(session['token'])
+            if response and response.status == "SUCCESS":
+                flash("Ya estás logueado", "info")
+                return redirect(url_for('index'))
+        except Exception:
+            session.clear()
     if request.method == 'POST':
         email = request.form['email']
         clave = request.form['clave']
@@ -99,11 +107,11 @@ def login():
 def logout():
     if 'token' in session:
         try:
-            response = cliente.logout(session['token'])
+            response = cliente.logout()  
             if response and response.status == "SUCCESS":
                 flash("Cierre de sesión exitoso", "success")
             else:
-                flash("Error al cerrar sesión", "error")
+                flash("Error al cerrar sesión: " + (response.message if response else "Desconocido"), "error")
         except Exception as e:
             print(f"Error al cerrar sesión: {e}")
             flash("Error al cerrar sesión", "error")
@@ -199,12 +207,12 @@ def cuenta():
         if 'eliminar' in request.form:
             try:
                 response = cliente.eliminar_usuario(usuario.id, session['token'])
-                if response.status == "SUCCESS":
+                if response and response.success:
+                    flash("Usuario dado de baja exitosamente", "success")
                     session.clear()
-                    flash("Cuenta eliminada exitosamente", "success")
                     return redirect(url_for('login'))
                 else:
-                    flash(response.message, "error")
+                    flash(response.message if response else "Error al eliminar cuenta", "error")
             except Exception as e:
                 print(f"Error al eliminar cuenta: {e}")
                 flash("Error al eliminar cuenta", "error")
