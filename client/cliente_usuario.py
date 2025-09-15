@@ -30,7 +30,14 @@ class ClienteUsuario:
         """Realiza el login y almacena el token si es exitoso."""
         self.connect()
         if self.token is not None:
-            return auth_pb2.LoginResponse(status="SUCCESS", message="Ya has iniciado sesión", token=self.token)
+            validation_response = self.validar_token(self.token)
+            if validation_response and validation_response.status == "SUCCESS":
+                print(f"Token existente válido: {self.token}")
+                return auth_pb2.LoginResponse(status="SUCCESS", message="Ya has iniciado sesión", token=self.token)
+            else:
+                print(f"Token existente inválido: {self.token}, limpiando token")
+                self.token = None  
+
         request = auth_pb2.LoginRequest(email=email, clave=password)
         try:
             response = self.auth_stub.login(request)
@@ -167,6 +174,8 @@ class ClienteUsuario:
         try:
             response = self.usuario_stub.eliminarUsuario(request)
             print(f"Respuesta de eliminarUsuario: success={response.success}, message={response.message}")
+            if response.success:
+                self.token = None  
             return response
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
