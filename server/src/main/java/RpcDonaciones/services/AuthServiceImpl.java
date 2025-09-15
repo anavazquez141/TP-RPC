@@ -54,12 +54,34 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     @Override
     public void login(LoginRequest req, StreamObserver<LoginResponse> responseObserver) {
         try {
-            // Simulación: Busca el usuario en la base de datos
+            
+            String email = req.getEmail();
+            String password = req.getClave();
+
+            if (email == null || email.isEmpty() || password == null || password.isEmpty()) {
+                responseObserver.onNext(AuthServiceProto.LoginResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Email y contraseña son requeridos")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }   
+
             Optional<Usuario> usuarioOptional = userRepository.findByEmail(req.getEmail());
             if (!usuarioOptional.isPresent() || !passwordEncoder.matches(req.getClave(), usuarioOptional.get().getClave())) { 
                 LoginResponse response = LoginResponse.newBuilder()
                         .setStatus("FAILURE")
                         .setMessage("Invalid email or password")
+                        .build();
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+                return;
+            }
+
+            if (usuarioOptional.get().isEstado() == false) { 
+                LoginResponse response = LoginResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("Cuenta deshabilitada")
                         .build();
                 responseObserver.onNext(response);
                 responseObserver.onCompleted();

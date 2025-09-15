@@ -7,10 +7,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.google.rpc.context.AttributeContext.Auth;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import RpcDonaciones.grpc.AuthServiceProto;
 import RpcDonaciones.grpc.UsuarioServiceGrpc;
 import RpcDonaciones.grpc.UsuarioServiceProto;
 import RpcDonaciones.repositories.IUsuario;
@@ -19,8 +23,10 @@ import RpcDonaciones.repositories.IRol;
 import RpcDonaciones.entities.Usuario;
 import RpcDonaciones.entities.Rol;
 import RpcDonaciones.entities.enums.TipoDeRol;
+import RpcDonaciones.services.AuthServiceImpl;
 import javax.crypto.SecretKey;
 import java.util.Base64;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +38,8 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     private IUsuario userRepository;
     @Autowired
     private IRol rolRepository;
+    @Autowired
+    private AuthServiceImpl authService;
     @Autowired
     private IBlacklistedToken blacklistedTokenRepository;
     @Autowired
@@ -103,6 +111,17 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 responseObserver.onCompleted();
                 return;
             }
+
+            // Verificar si el email ya existe
+            if (userRepository.findByNombreUsuario(request.getNombreUsuario()).isPresent()) {
+                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("El nombre de usuario ya está registrado")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
 
             // Crear y persistir el usuario
             Usuario nuevoUsuario = new Usuario();
@@ -184,6 +203,28 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                     .setStatus("FAILURE")
                     .setMessage("Usuario no encontrado")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Verificar si el nombre de usuario ya existe y no pertenece al usuario actual
+            Optional<Usuario> usuarioPorNombre = userRepository.findByNombreUsuario(request.getNombreUsuario());
+            if (usuarioPorNombre.isPresent() && !usuarioPorNombre.get().getId().equals((long) request.getId())) {
+                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("El nombre de usuario ya está registrado")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Verificar si el email ya existe y no pertenece al usuario actual
+            Optional<Usuario> usuarioPorEmail = userRepository.findByEmail(request.getEmail());
+            if (usuarioPorEmail.isPresent() && !usuarioPorEmail.get().getId().equals((long) request.getId())) {
+                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("El email ya está registrado")
                     .build());
                 responseObserver.onCompleted();
                 return;
@@ -274,6 +315,31 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 Usuario usuario = usuarioOptional.get();
                 usuario.setEstado(false); 
                 userRepository.save(usuario); 
+
+                AuthServiceProto.LogoutRequest logoutRequest = AuthServiceProto.LogoutRequest.newBuilder()
+                    .setToken(token)
+                    .build();
+                StreamObserver<AuthServiceProto.LogoutResponse> logoutResponseObserver = new StreamObserver<AuthServiceProto.LogoutResponse>(){
+                    @Override
+                    public void onNext(AuthServiceProto.LogoutResponse response) {
+                        if (response.getStatus().equals("SUCCESS")) {
+                            System.out.println("Logout exitoso: " + response.getMessage());
+                        } else {
+                            System.out.println("Logout falló: " + response.getMessage());
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        System.out.println("Error al hacer logout: " + t.getMessage());
+                    }
+
+                    @Override
+                    public void onCompleted() {
+                        System.out.println("Logout completado");
+                    }
+                };
+                authService.logout(logoutRequest, logoutResponseObserver);
                 responseObserver.onNext(UsuarioServiceProto.EliminarUsuarioResponse.newBuilder()
                     .setSuccess(true)
                     .setMessage("Usuario dado de baja exitosamente")

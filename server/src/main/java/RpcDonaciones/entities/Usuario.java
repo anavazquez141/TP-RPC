@@ -47,7 +47,7 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
 
-    @Column(length = 20)
+    @Column(name = "nombre_usuario", unique = true, length = 20, nullable = false)
     protected String nombreUsuario;
 
     @Column(length = 20)
@@ -62,7 +62,7 @@ public class Usuario implements UserDetails {
     @Column(nullable = false)
     protected String clave;
 
-    @Column(length = 50)
+    @Column(length = 50, unique = true,nullable = false)
     protected String email;
 
     protected boolean estado;
