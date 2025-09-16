@@ -1,0 +1,85 @@
+syntax = "proto3";
+option java_package = "RpcDonaciones.grpc";
+option java_outer_classname = "DonacionServiceProto";
+
+// ----------------- MENSAJES ---------------------
+//Categorias para el enum
+enum CategoriaDonacion {
+    ROPA = 0;
+    ALIMENTOS = 1;
+    JUGUETES = 2;
+    UTILES_ESCOLARES = 3;
+}
+
+// ----------------- ---------------------
+
+// Mensaje para registrar una donación
+message RegistrarDonacionRequest {
+    string token = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+// Mensaje para modificar una donación
+message ModificarDonacionRequest {
+    string token = 1;
+    int64 id = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+// Mensaje para eliminar una donación 
+message EliminarDonacionRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+// Mensaje para listar donaciones
+message ListarDonacionesRequest {
+    string token = 1;
+}
+
+// Mensaje para obtener una donación por ID
+message DonacionIdRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+// Mensaje de respuesta para operaciones de donación
+message DonacionResponse {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+    string status = 5;
+    string message = 6;
+}
+
+// Mensaje de respuesta para eliminación
+message EliminarDonacionResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+// Mensaje de respuesta para listado
+message ListarDonacionesResponse {
+    repeated DonacionItem donaciones = 1;
+}
+
+// Item individual de donación
+message DonacionItem {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+// --------------------- SERVICIOS -----------------------
+service DonacionService {
+    rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
+    rpc modificarDonacion (ModificarDonacionRequest) returns (DonacionResponse);
+    rpc eliminarDonacion (EliminarDonacionRequest) returns (EliminarDonacionResponse);
+    rpc listarDonaciones (ListarDonacionesRequest) returns (ListarDonacionesResponse);
+    rpc traerDonacionPorId (DonacionIdRequest) returns (DonacionResponse);
+}
