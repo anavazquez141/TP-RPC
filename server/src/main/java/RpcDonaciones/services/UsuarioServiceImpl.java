@@ -4,11 +4,10 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.google.rpc.context.AttributeContext.Auth;
+
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -23,7 +22,7 @@ import RpcDonaciones.repositories.IRol;
 import RpcDonaciones.entities.Usuario;
 import RpcDonaciones.entities.Rol;
 import RpcDonaciones.entities.enums.TipoDeRol;
-import RpcDonaciones.services.AuthServiceImpl;
+
 import javax.crypto.SecretKey;
 import java.util.Base64;
 
