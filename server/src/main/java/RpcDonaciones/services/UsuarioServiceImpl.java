@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.security.SecureRandom;
+import java.util.UUID;
 
 
 
@@ -24,6 +26,8 @@ import RpcDonaciones.entities.Rol;
 import RpcDonaciones.entities.enums.TipoDeRol;
 
 import javax.crypto.SecretKey;
+
+import java.security.SecureRandom;
 import java.util.Base64;
 
 
@@ -129,7 +133,10 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
             nuevoUsuario.setApellido(request.getApellido());
             nuevoUsuario.setTelefono(request.getTelefono());
             nuevoUsuario.setEmail(request.getEmail());
-            nuevoUsuario.setClave(passwordEncoder.encode(request.getClave()));
+           // Generar clave aleatoria
+            String clavePlana = generarClaveAleatoria(10); // 10 caracteres, podés cambiar el tamaño
+            String claveEncriptada = passwordEncoder.encode(clavePlana);
+            nuevoUsuario.setClave(claveEncriptada);
             nuevoUsuario.setEstado(true);
             Rol rol = mapProtoRoleToEntityRol(request.getRol());
             nuevoUsuario.agregarRoles(rol);
@@ -236,9 +243,9 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
             usuario.setApellido(request.getApellido());
             usuario.setTelefono(request.getTelefono());
             usuario.setEmail(request.getEmail());
-            if (!request.getClave().isEmpty()) {
-                usuario.setClave(passwordEncoder.encode(request.getClave()));
-            }
+            //if (!request.getClave().isEmpty()) {
+              //  usuario.setClave(passwordEncoder.encode(request.getClave()));
+            //}
             usuario.setEstado(true);
             TipoDeRol tipoRol = mapProtoRoleToTipoDeRol(request.getRol());
             Optional<Rol> rolOpt = rolRepository.findByType(tipoRol);
@@ -525,4 +532,13 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
             return rolRepository.save(newRol);
         }
     }
+    private String generarClaveAleatoria(int length) {
+    final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#-$%";
+    SecureRandom random = new SecureRandom();
+    StringBuilder sb = new StringBuilder(length);
+    for (int i = 0; i < length; i++) {
+        sb.append(chars.charAt(random.nextInt(chars.length())));
+    }
+    return sb.toString();
+}
 }

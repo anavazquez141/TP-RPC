@@ -22,7 +22,6 @@ message UsuarioRequest {
     string email = 7;
     Role rol = 8;
     bool activo = 9;
-    string clave = 10;
 }
 
 message UsuarioIdRequest {
