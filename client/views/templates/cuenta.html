@@ -2,11 +2,17 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Administrar Cuenta</title>
+    <title>Administrar Cuenta - {{ usuario.nombreUsuario }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
-<body>
-    <h1>Administrar Cuenta</h1>
+<body class="login-body">
+
+<div class="profile-card modern-form">
+
+    <!-- Nombre de usuario -->
+    <h2>{{ usuario.nombreUsuario }}</h2>
+
+    <!-- Mensajes flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -14,28 +20,47 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
-    <h2>Modificar Cuenta</h2>
-    <form method="POST" action="{{ url_for('cuenta') }}">
-        <label for="nombreUsuario">Nombre de Usuario:</label>
-        <input type="text" id="nombreUsuario" name="nombreUsuario" value="{{ usuario.nombreUsuario }}" required><br>
-        <label for="nombre">Nombre:</label>
-        <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required><br>
-        <label for="apellido">Apellido:</label>
-        <input type="text" id="apellido" name="apellido" value="{{ usuario.apellido }}" required><br>
-        <label for="telefono">Teléfono:</label>
-        <input type="text" id="telefono" name="telefono" value="{{ usuario.telefono }}" required><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" value="{{ usuario.email }}" required><br>
-        <label for="clave">Nueva Clave (opcional):</label>
-        <input type="password" id="clave" name="clave" placeholder="Dejar en blanco para no cambiar"><br>
-        <input type="submit" value="Modificar Cuenta">
+
+    <!-- Formulario para modificar cuenta -->
+    <form method="POST" action="{{ url_for('cuenta') }}" class="modern-login-form">
+        <div class="input-group">
+            <input type="text" name="nombreUsuario" value="{{ usuario.nombreUsuario }}" required placeholder=" ">
+            <label>Nombre de Usuario</label>
+        </div>
+        <div class="input-group">
+            <input type="text" name="nombre" value="{{ usuario.nombre }}" required placeholder=" ">
+            <label>Nombre</label>
+        </div>
+        <div class="input-group">
+            <input type="text" name="apellido" value="{{ usuario.apellido }}" required placeholder=" ">
+            <label>Apellido</label>
+        </div>
+        <div class="input-group">
+            <input type="text" name="telefono" value="{{ usuario.telefono }}" required placeholder=" ">
+            <label>Teléfono</label>
+        </div>
+        <div class="input-group">
+            <input type="email" name="email" value="{{ usuario.email }}" required placeholder=" ">
+            <label>Email</label>
+        </div>
+        <button type="submit">Modificar Cuenta</button>
     </form>
-    <h2>Eliminar Cuenta</h2>
-    <form method="POST" action="{{ url_for('cuenta') }}" onsubmit="return confirm('¿Seguro que deseas eliminar tu cuenta? Esta acción no se puede deshacer.');">
+
+    <!-- Formulario para eliminar cuenta -->
+    <form method="POST" action="{{ url_for('cuenta') }}"
+          onsubmit="return confirm('¿Seguro que deseas eliminar tu cuenta? Esta acción no se puede deshacer.');"
+          class="modern-login-form" style="margin-top: 15px;">
         <input type="hidden" name="eliminar" value="true">
-        <input type="submit" value="Eliminar Cuenta" style="color: red;">
+        <button type="submit" class="delete-btn">Eliminar Cuenta</button>
     </form>
-    <p><a href="{{ url_for('index') }}">Volver al perfil</a></p>
-    <p><a href="{{ url_for('logout') }}">Cerrar Sesión</a></p>
+
+    <!-- Enlaces -->
+    <div class="actions">
+        <a href="{{ url_for('index') }}" class="btn secondary">Volver al perfil</a>
+        <a href="{{ url_for('logout') }}" class="btn secondary">Cerrar Sesión</a>
+    </div>
+
+</div>
+
 </body>
 </html>

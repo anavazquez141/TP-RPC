@@ -5,25 +5,35 @@
     <title>Iniciar Sesión</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
-<body>
-    <h1>Iniciar Sesión</h1>
+<body class="login-body">
 
-    <!-- Mensajes -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    <div class="profile-card login-card">
+        <h2 class="login-title">Bienvenido</h2>
+        <p class="login-subtitle">Inicia sesión para continuar</p>
 
-    <!-- Formulario de login -->
-    <form action="{{ url_for('login') }}" method="POST">
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="clave" placeholder="Clave" required>
-        <button type="submit">Iniciar Sesión</button>
-    </form>
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-    <p><a href="{{ url_for('index') }}">Volver al inicio</a></p>
+        <!-- Formulario -->
+        <form action="{{ url_for('login') }}" method="POST" class="modern-login-form">
+            <div class="input-group">
+                <input type="email" name="email" placeholder=" " required>
+                <label>✉ Correo electrónico</label>
+            </div>
+            <div class="input-group">
+                <input type="password" name="clave" placeholder=" " required>
+                <label>🔒 Contraseña</label>
+            </div>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+
+    </div>
+
 </body>
 </html>

@@ -144,6 +144,9 @@ def usuarios():
     usuarios = obtener_usuarios()
     return render_template('usuarios.html', usuarios=usuarios)
 
+
+
+
 @app.route('/registrar', methods=['GET', 'POST'])
 def registrar():
     if 'token' not in session:
@@ -168,11 +171,10 @@ def registrar():
         apellido = request.form['apellido']
         telefono = request.form['telefono']
         email = request.form['email']
-        clave = request.form['clave']
         rol = request.form['rol']
         
         try:
-            response = cliente.registrar_usuario(nombre_usuario, nombre, apellido, telefono, email, clave, rol, session['token'])
+            response = cliente.registrar_usuario(nombre_usuario, nombre, apellido, telefono, email, rol, session['token'])
             if response.status == "SUCCESS":
                 flash("Usuario registrado exitosamente", "success")
                 return redirect(url_for('index'))
@@ -183,6 +185,11 @@ def registrar():
             flash("Error al registrar usuario", "error")
     
     return render_template('registrar.html')
+
+
+
+
+
 
 @app.route('/cuenta', methods=['GET', 'POST'])
 def cuenta():
@@ -222,11 +229,10 @@ def cuenta():
             apellido = request.form['apellido']
             telefono = request.form['telefono']
             email = request.form['email']
-            clave = request.form.get('clave', '')
             rol = usuario.rol  # Mantener el rol actual
             
             try:
-                response = cliente.modificar_usuario(usuario.id, nombre_usuario, nombre, apellido, telefono, email, rol, session['token'], clave)
+                response = cliente.modificar_usuario(usuario.id, nombre_usuario, nombre, apellido, telefono, email, rol, session['token'])
                 if response.status == "SUCCESS":
                     session['email'] = email
                     flash("Cuenta modificada exitosamente", "success")
@@ -259,3 +265,4 @@ def cuenta():
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
+    

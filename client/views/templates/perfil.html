@@ -2,32 +2,68 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Perfil de Usuario</title>
+    <title>Perfil{% if usuario %} - {{ usuario.nombreUsuario }}{% endif %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
-    <h1>Perfil de Usuario</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <p>ID: {{ usuario.id }}</p>
-    <p>Nombre de Usuario: {{ usuario.nombreUsuario }}</p>
-    <p>Nombre: {{ usuario.nombre }}</p>
-    <p>Apellido: {{ usuario.apellido }}</p>
-    <p>Teléfono: {{ usuario.telefono }}</p>
-    <p>Email: {{ usuario.email }}</p>
-    <p>Rol: {{ usuario.rol }}</p>
-    <p>Activo: {{ 'Sí' if usuario.activo else 'No' }}</p>
-    {% if es_presidente %}
-        <p><a href="{{ url_for('registrar') }}">Registrar usuario</a></p>
-        <p><a href="{{ url_for('cuenta') }}">Modificar cuenta</a></p>
+
+    {% if usuario %}
+    <div class="profile-card">
+
+        <h2>{{ usuario.nombreUsuario }}</h2>
+
+        <!-- Mensajes -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Datos del Usuario -->
+        <table>
+            <tr>
+                <th>Nombre</th>
+                <td>{{ usuario.nombre }}</td>
+            </tr>
+            <tr>
+                <th>Apellido</th>
+                <td>{{ usuario.apellido }}</td>
+            </tr>
+            <tr>
+                <th>Teléfono</th>
+                <td>{{ usuario.telefono }}</td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td>{{ usuario.email }}</td>
+            </tr>
+            <tr>
+                <th>Rol</th>
+                <td>{{ usuario.rol }}</td>
+            </tr>
+            <tr>
+                <th>Activo</th>
+                <td>{{ 'Sí' if usuario.activo else 'No' }}</td>
+            </tr>
+        </table>
+
+        <!-- Enlaces -->
+        <div class="actions">
+            {% if es_presidente %}
+                <a href="{{ url_for('registrar') }}" class="btn primary">Registrar Usuario</a>
+            {% endif %}
+            <a href="{{ url_for('cuenta') }}" class="btn primary">Modificar Cuenta</a>
+            <a href="{{ url_for('logout') }}" class="btn secondary">Cerrar Sesión</a>
+        </div>
+    </div>
     {% else %}
-        <p><a href="{{ url_for('cuenta') }}">Modificar cuenta</a></p>
+    <div class="profile-card">
+        <h2>Usuario no logueado</h2>
+        <p><a href="{{ url_for('login') }}" class="btn primary">Iniciar Sesión</a></p>
+    </div>
     {% endif %}
-    <p><a href="{{ url_for('logout') }}">Cerrar Sesión</a></p>
+
 </body>
 </html>

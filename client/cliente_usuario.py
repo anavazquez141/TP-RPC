@@ -109,7 +109,7 @@ class ClienteUsuario:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
             return None
 
-    def registrar_usuario(self, nombre_usuario, nombre, apellido, telefono, email, clave, rol, token):
+    def registrar_usuario(self, nombre_usuario, nombre, apellido, telefono, email, rol, token):
         self.connect()
         print(f"Enviando token para registrar_usuario: {token}")
         rol_map = {
@@ -124,7 +124,6 @@ class ClienteUsuario:
             apellido=apellido,
             telefono=telefono,
             email=email,
-            clave=clave,
             rol=rol_map.get(rol, 3),  # Por defecto VOLUNTARIO
             token=token
         )
@@ -136,7 +135,7 @@ class ClienteUsuario:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
             return None
 
-    def modificar_usuario(self, user_id, nombre_usuario, nombre, apellido, telefono, email, rol, token, clave=""):
+    def modificar_usuario(self, user_id, nombre_usuario, nombre, apellido, telefono, email, rol, token):
         """Modifica un usuario existente."""
         self.connect()
         rol_map = {
@@ -156,7 +155,6 @@ class ClienteUsuario:
             apellido=apellido,
             telefono=telefono,
             email=email,
-            clave=clave,
             rol=rol_map.get(rol, 3),  # Por defecto VOLUNTARIO
             token=token
         )
