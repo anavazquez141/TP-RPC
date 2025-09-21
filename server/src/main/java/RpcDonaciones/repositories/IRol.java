@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface IRol extends JpaRepository<Rol,Long> {
     List<Rol> findByTypeNot(TipoDeRol type);
     Optional<Rol> findByType(TipoDeRol type);
+
 }

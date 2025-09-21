@@ -11,7 +11,7 @@ import RpcDonaciones.entities.Usuario;
 public interface IUsuario extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByEmail(String email);
     Optional<Usuario> findByNombre(String username);
-
+    boolean existsByNombreUsuario(String nombreUsuario);
     @Query("SELECT u FROM Usuario u WHERE u.nombreUsuario = :nombreUsuario")
     Optional<Usuario> findByNombreUsuario(@Param("nombreUsuario") String nombreUsuario);
 }
