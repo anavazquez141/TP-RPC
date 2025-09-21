@@ -15,6 +15,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.mail.MessagingException;
 import RpcDonaciones.grpc.AuthServiceProto;
 import RpcDonaciones.grpc.UsuarioServiceGrpc;
 import RpcDonaciones.grpc.UsuarioServiceProto;
@@ -43,6 +44,8 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     private IRol rolRepository;
     @Autowired
     private AuthServiceImpl authService;
+    @Autowired
+    private EmailService emailService;
     @Autowired
     private IBlacklistedToken blacklistedTokenRepository;
     @Autowired
@@ -143,6 +146,14 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
 
             // Persistencia: Guardar el usuario en la base de datos
             Usuario usuarioGuardado = userRepository.save(nuevoUsuario);
+
+            // Enviar correo con las credenciales
+            try {
+                emailService.sendWelcomeEmail(usuarioGuardado.getEmail(), usuarioGuardado.getNombreUsuario(), clavePlana);
+            } catch (MessagingException e) {
+                // Loggear el error, pero no fallar el registro
+                System.out.println("Error al enviar correo: " + e.getMessage());
+            }
 
             // Enviar respuesta
             responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
