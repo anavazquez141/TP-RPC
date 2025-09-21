@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Eventos Solidarios</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-6 text-center">Gestión de Eventos Solidarios</h1>
+
+        <!--Formulario para Crear/Actualizar Evento -->
+        <!--<div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-4">Crear/Editar Evento</h2>
+            <div class="grid gap-4">
+                <input type="hidden" id="idEvento">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nombre del Evento</label>
+                    <input type="text" id="nombreEvento" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ej: Evento Solidario">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                    <textarea id="descripcion" class="mt-1 block w-full p-2 border rounded-md" placeholder="Descripción del evento"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Fecha y Hora (YYYY-MM-DDThh:mm)</label>
+                    <input type="datetime-local" id="fechaHora" class="mt-1 block w-full p-2 border rounded-md">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">IDs de Usuarios (separados por comas)</label>
+                    <input type="text" id="usuarioIds" class="mt-1 block w-full p-2 border rounded-md" placeholder="Ej: 1,2,3">
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="saveEvento()" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Guardar</button>
+                    <button onclick="clearForm()" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Limpiar</button>
+                </div>
+            </div> -->
+        </div>
+
+        <form method="POST" action="{{ url_for('registrarEvento') }}">
+            <label for="nombreEvento">Nombre del Evento:</label>
+            <input type="text" id="nombreEvento" name="nombreEvento" required><br>
+            <label for="descripcion">Descripcion:</label>
+            <input type="text" id="descripcion" name="descripcion" required><br>
+            <label for="fechaHora">Fecha y hora:</label>
+            <input type="datetime-local" id="fechaHora" name="fechaHora" required><br>
+            </select><br>
+            <input type="submit" value="Registrar">
+        </form>
+
+        <p><a href="{{ url_for('index') }}">Volver al perfil</a></p>
+        <p><a href="{{ url_for('logout') }}">Cerrar Sesión</a></p>
