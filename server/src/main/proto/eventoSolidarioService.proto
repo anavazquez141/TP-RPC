@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+option java_package = "RpcDonaciones.grpc";
+option java_outer_classname = "EventoSolidarioServiceProto";
+
+message Evento {
+    int64 idEvento = 1;
+    string nombreEvento = 2;
+    string descripcion = 3;
+    string fechaHora = 4;
+    /*repeated Usuario usuarios = 5;*/
+}
+
+message CreateEventoRequest {
+    string nombreEvento = 1;
+    string descripcion = 2;
+    string fechaHora = 3;
+    repeated int64 usuarioIds = 4;
+}
+
+message CreateEventoResponse {
+    Evento evento = 1;
+}
+
+message GetEventoRequest {
+    int64 idEvento = 1;
+}
+
+message GetEventoResponse {
+    Evento evento = 1;
+}
+
+message UpdateEventoRequest {
+    int64 idEvento = 1;
+    string nombreEvento = 2;
+    string descripcion = 3;
+    string fechaHora = 4;
+    repeated int64 usuarioIds = 5;
+}
+
+message UpdateEventoResponse {
+    Evento evento = 1;
+}
+
+message DeleteEventoRequest {
+    int64 idEvento = 1;
+}
+
+message DeleteEventoResponse {
+    bool success = 1;
+}
+
+message ListEventosRequest {}
+
+message ListEventosResponse {
+    repeated Evento eventos = 1;
+}
+
+service EventosService {
+    rpc CreateEvento(CreateEventoRequest) returns (CreateEventoResponse);
+    rpc GetEvento(GetEventoRequest) returns (GetEventoResponse);
+    rpc UpdateEvento(UpdateEventoRequest) returns (UpdateEventoResponse);
+    rpc DeleteEvento(DeleteEventoRequest) returns (DeleteEventoResponse);
+    rpc ListEventos(ListEventosRequest) returns (ListEventosResponse);
+}
