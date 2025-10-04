@@ -31,8 +31,8 @@ message UsuarioIdRequest {
 
 message UsuarioEmailRequest {
     string email = 1;
+    string token = 2; 
 }
-
 message UsuarioResponse {
     int64 id = 1;
     string nombreUsuario = 2;

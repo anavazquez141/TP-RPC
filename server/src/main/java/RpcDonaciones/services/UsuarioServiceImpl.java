@@ -52,52 +52,27 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     private PasswordEncoder passwordEncoder;
 
     private final SecretKey key;
+    private final TokenValidator tokenValidator;
     
-    public UsuarioServiceImpl(@Value("${jwt.secret}") String base64Key) {
+    public UsuarioServiceImpl(@Value("${jwt.secret}") String base64Key, TokenValidator tokenValidator) {
         this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Key));
+        this.tokenValidator = tokenValidator;
     }
 
     @Override
     public void registrarUsuario(UsuarioServiceProto.UsuarioRequest request, StreamObserver<UsuarioServiceProto.UsuarioResponse> responseObserver) {
         try {
-            // Verificación de token
             String token = request.getToken();
-            if (token == null || token.isEmpty()) {
-                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token no proporcionado")
-                    .build());
-                responseObserver.onCompleted();
-                return;
-            }
-            Claims claims;
-            try {
-                if (blacklistedTokenRepository.existsById(token)) {
-                    System.out.println("Token en lista negra: " + token);
-                    responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                        .setStatus("FAILURE")
-                        .setMessage("Token inválido: está en la lista negra")
-                        .build());
-                    responseObserver.onCompleted();
-                    return;
-                }
-                claims = Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getPayload();
-                System.out.println("Token válido: " + token);
-            } catch (JwtException e) {
-                System.out.println("Error en JWT: " + e.getMessage());
-                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token inválido: " + e.getMessage())
-                    .build());
-                responseObserver.onCompleted();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
                 return;
             }
 
-            // Verificación de rol PRESIDENTE
+            Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseClaimsJws(token)
+                .getPayload();
+
             List<String> roles = claims.get("roles", List.class);
             if (!roles.contains("ROLE_PRESIDENTE")) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
@@ -108,7 +83,6 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-            // Verificar si el email ya existe
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                     .setStatus("FAILURE")
@@ -118,7 +92,6 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-            // Verificar si el email ya existe
             if (userRepository.findByNombreUsuario(request.getNombreUsuario()).isPresent()) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                     .setStatus("FAILURE")
@@ -128,34 +101,27 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-
-            // Crear y persistir el usuario
             Usuario nuevoUsuario = new Usuario();
             nuevoUsuario.setNombreUsuario(request.getNombreUsuario());
             nuevoUsuario.setNombre(request.getNombre());
             nuevoUsuario.setApellido(request.getApellido());
             nuevoUsuario.setTelefono(request.getTelefono());
             nuevoUsuario.setEmail(request.getEmail());
-           // Generar clave aleatoria
-            String clavePlana = generarClaveAleatoria(10); // 10 caracteres, podés cambiar el tamaño
+            String clavePlana = generarClaveAleatoria(10);
             String claveEncriptada = passwordEncoder.encode(clavePlana);
             nuevoUsuario.setClave(claveEncriptada);
             nuevoUsuario.setEstado(true);
             Rol rol = mapProtoRoleToEntityRol(request.getRol());
             nuevoUsuario.agregarRoles(rol);
 
-            // Persistencia: Guardar el usuario en la base de datos
             Usuario usuarioGuardado = userRepository.save(nuevoUsuario);
 
-            // Enviar correo con las credenciales
             try {
                 emailService.sendWelcomeEmail(usuarioGuardado.getEmail(), usuarioGuardado.getNombreUsuario(), clavePlana);
             } catch (MessagingException e) {
-                // Loggear el error, pero no fallar el registro
                 System.out.println("Error al enviar correo: " + e.getMessage());
             }
 
-            // Enviar respuesta
             responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                 .setId(usuarioGuardado.getId())
                 .setNombreUsuario(usuarioGuardado.getNombreUsuario())
@@ -163,7 +129,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 .setApellido(usuarioGuardado.getApellido())
                 .setTelefono(usuarioGuardado.getTelefono())
                 .setEmail(usuarioGuardado.getEmail())
-                .setRol(mapTipoDeRolToProtoRole(usuarioGuardado.getRolUsuario().iterator().next().getType()))
+                .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuarioGuardado.getRolUsuario().iterator().next().getType()))
                 .setActivo(usuarioGuardado.isEstado())
                 .setStatus("SUCCESS")
                 .setMessage("Usuario registrado exitosamente")
@@ -179,43 +145,12 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     @Override
     public void modificarUsuario(UsuarioServiceProto.UsuarioRequest request, StreamObserver<UsuarioServiceProto.UsuarioResponse> responseObserver) {
         try {
-            // Verificación de token
             String token = request.getToken();
-            if (token == null || token.isEmpty()) {
-                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token no proporcionado")
-                    .build());
-                responseObserver.onCompleted();
-                return;
-            }
-            try {
-                if (blacklistedTokenRepository.existsById(token)) {
-                    System.out.println("Token en lista negra: " + token);
-                    responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                        .setStatus("FAILURE")
-                        .setMessage("Token inválido: está en la lista negra")
-                        .build());
-                    responseObserver.onCompleted();
-                    return;
-                }
-                Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseClaimsJws(token);
-                System.out.println("Token válido: " + token);
-            } catch (JwtException e) {
-                System.out.println("Error en JWT: " + e.getMessage());
-                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token inválido: " + e.getMessage())
-                    .build());
-                responseObserver.onCompleted();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
                 return;
             }
 
-            // Busca al usuario por su ID
-            Optional<Usuario> usuarioOptional = userRepository.findById((long) request.getId());
+        Optional<Usuario> usuarioOptional = userRepository.findById((long) request.getId());
             if (!usuarioOptional.isPresent()) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                     .setStatus("FAILURE")
@@ -225,7 +160,31 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-            // Verificar si el nombre de usuario ya existe y no pertenece al usuario actual
+        boolean sinCambios = usuarioOptional.get().getNombreUsuario().equals(request.getNombreUsuario()) &&
+                            usuarioOptional.get().getNombre().equals(request.getNombre()) &&
+                            usuarioOptional.get().getApellido().equals(request.getApellido()) &&
+                            usuarioOptional.get().getTelefono().equals(request.getTelefono()) &&
+                            usuarioOptional.get().getEmail().equals(request.getEmail());
+
+        if (sinCambios) {
+            responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                .setStatus("SUCCESS")
+                .setMessage("No se hicieron cambios")
+                .setId(usuarioOptional.get().getId().intValue())
+                .setNombreUsuario(usuarioOptional.get().getNombreUsuario())
+                .setNombre(usuarioOptional.get().getNombre())
+                .setApellido(usuarioOptional.get().getApellido())
+                .setTelefono(usuarioOptional.get().getTelefono())
+                .setEmail(usuarioOptional.get().getEmail())
+                .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuarioOptional.get().getRolUsuario().iterator().next().getType()))
+                .setActivo(usuarioOptional.get().isEstado())
+                .build());
+            responseObserver.onCompleted();
+            return;
+        }
+        
+            
+            System.out.println("Buscando nombreUsuario: " + request.getNombreUsuario());
             Optional<Usuario> usuarioPorNombre = userRepository.findByNombreUsuario(request.getNombreUsuario());
             if (usuarioPorNombre.isPresent() && !usuarioPorNombre.get().getId().equals((long) request.getId())) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
@@ -236,7 +195,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-            // Verificar si el email ya existe y no pertenece al usuario actual
+            System.out.println("Buscando email: " + request.getEmail());
             Optional<Usuario> usuarioPorEmail = userRepository.findByEmail(request.getEmail());
             if (usuarioPorEmail.isPresent() && !usuarioPorEmail.get().getId().equals((long) request.getId())) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
@@ -247,28 +206,21 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-            // Actualizar el usuario
             Usuario usuario = usuarioOptional.get();
             usuario.setNombreUsuario(request.getNombreUsuario());
             usuario.setNombre(request.getNombre());
             usuario.setApellido(request.getApellido());
             usuario.setTelefono(request.getTelefono());
             usuario.setEmail(request.getEmail());
-            //if (!request.getClave().isEmpty()) {
-              //  usuario.setClave(passwordEncoder.encode(request.getClave()));
-            //}
-            usuario.setEstado(true);
-            TipoDeRol tipoRol = mapProtoRoleToTipoDeRol(request.getRol());
+            TipoDeRol tipoRol = RoleMapper.mapProtoRoleToTipoDeRol(request.getRol());
             Optional<Rol> rolOpt = rolRepository.findByType(tipoRol);
             if (rolOpt.isPresent()) {
                 usuario.getRolUsuario().clear();
                 usuario.agregarRoles(rolOpt.get());
             }
 
-            // Persistir cambios
             Usuario usuarioModificado = userRepository.save(usuario);
 
-            // Enviar respuesta
             responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                 .setId(usuarioModificado.getId())
                 .setNombreUsuario(usuarioModificado.getNombreUsuario())
@@ -276,7 +228,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 .setApellido(usuarioModificado.getApellido())
                 .setTelefono(usuarioModificado.getTelefono())
                 .setEmail(usuarioModificado.getEmail())
-                .setRol(mapTipoDeRolToProtoRole(usuarioModificado.getRolUsuario().iterator().next().getType()))
+                .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuarioModificado.getRolUsuario().iterator().next().getType()))
                 .setActivo(usuarioModificado.isEstado())
                 .setStatus("SUCCESS")
                 .setMessage("Usuario modificado exitosamente")
@@ -292,38 +244,8 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     @Override
     public void eliminarUsuario(UsuarioServiceProto.UsuarioIdRequest request, StreamObserver<UsuarioServiceProto.EliminarUsuarioResponse> responseObserver) {
         try {
-            // Verificación de token
             String token = request.getToken();
-            if (token == null || token.isEmpty()) {
-                responseObserver.onNext(UsuarioServiceProto.EliminarUsuarioResponse.newBuilder()
-                    .setSuccess(false)
-                    .setMessage("Token no proporcionado")
-                    .build());
-                responseObserver.onCompleted();
-                return;
-            }
-            try {
-                if (blacklistedTokenRepository.existsById(token)) {
-                    System.out.println("Token en lista negra: " + token);
-                    responseObserver.onNext(UsuarioServiceProto.EliminarUsuarioResponse.newBuilder()
-                        .setSuccess(false)
-                        .setMessage("Token inválido: está en la lista negra")
-                        .build());
-                    responseObserver.onCompleted();
-                    return;
-                }
-                Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseClaimsJws(token);
-                System.out.println("Token válido: " + token);
-            } catch (JwtException e) {
-                System.out.println("Error en JWT: " + e.getMessage());
-                responseObserver.onNext(UsuarioServiceProto.EliminarUsuarioResponse.newBuilder()
-                    .setSuccess(false)
-                    .setMessage("Token inválido: " + e.getMessage())
-                    .build());
-                responseObserver.onCompleted();
+            if (!tokenValidator.validarToken(token, responseObserver, "EliminarUsuario")) {
                 return;
             }
 
@@ -367,7 +289,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                     .setSuccess(false)
                     .setMessage("Usuario no encontrado")
                     .build());
-                    responseObserver.onCompleted();
+                responseObserver.onCompleted();
             }
         } catch (Exception e) {
             responseObserver.onError(Status.INTERNAL
@@ -379,22 +301,13 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     @Override
     public void listarUsuarios(UsuarioServiceProto.ListarUsuariosRequest req, StreamObserver<UsuarioServiceProto.ListarUsuariosResponse> responseObserver) {
         try {
-            // Verificación de token
             String token = req.getToken();
-            if (token == null || token.isEmpty()) {
-                responseObserver.onNext(UsuarioServiceProto.ListarUsuariosResponse.newBuilder()
-                    .build());
-                responseObserver.onCompleted();
-                return;
-            }
-            if (!isTokenValid(token)) {
-                responseObserver.onNext(UsuarioServiceProto.ListarUsuariosResponse.newBuilder()
-                    .build());
+            if (!tokenValidator.isTokenValid(token)) {
+                responseObserver.onNext(UsuarioServiceProto.ListarUsuariosResponse.newBuilder().build());
                 responseObserver.onCompleted();
                 return;
             }
 
-            System.out.println("Llamada a listarUsuarios");
             Iterable<Usuario> usuarios = userRepository.findAll();
             UsuarioServiceProto.ListarUsuariosResponse.Builder responseBuilder = UsuarioServiceProto.ListarUsuariosResponse.newBuilder();
             for (Usuario usuario : usuarios) {
@@ -405,7 +318,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                     .setApellido(usuario.getApellido())
                     .setTelefono(usuario.getTelefono())
                     .setEmail(usuario.getEmail())
-                    .setRol(UsuarioServiceProto.Role.valueOf(usuario.getRolUsuario().iterator().next().getType().name()))
+                    .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuario.getRolUsuario().iterator().next().getType()))
                     .setActivo(usuario.isEstado())
                     .build();
                 responseBuilder.addUsuarios(usuarioProto);
@@ -420,121 +333,83 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
     }
 
     @Override
-    public void traerUsuarioPorId(UsuarioServiceProto.UsuarioIdRequest req, StreamObserver<UsuarioServiceProto.UsuarioSinClave> responseObserver) {
-        try {
-            System.out.println("Llamada a traerUsuarioPorId: " + req.getId());
-            Optional<Usuario> usuarioOptional = userRepository.findById((long) req.getId());
-            if (!usuarioOptional.isPresent()) {
-                responseObserver.onError(Status.NOT_FOUND
-                    .withDescription("Usuario no encontrado")
-                    .asRuntimeException());
-                return;
-            }
-            Usuario usuario = usuarioOptional.get();
-            UsuarioServiceProto.UsuarioSinClave response = UsuarioServiceProto.UsuarioSinClave.newBuilder()
-                .setId(usuario.getId().intValue())
-                .setNombreUsuario(usuario.getNombreUsuario())
-                .setNombre(usuario.getNombre())
-                .setApellido(usuario.getApellido())
-                .setTelefono(usuario.getTelefono())
-                .setEmail(usuario.getEmail())
-                .setRol(UsuarioServiceProto.Role.valueOf(usuario.getRolUsuario().iterator().next().getType().name()))
-                .setActivo(usuario.isEstado())
-                .build();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL
-                .withDescription("Error al obtener usuario: " + e.getMessage())
-                .asRuntimeException());
-        }
-    }
-
-    @Override
-    public void traerUsuarioPorEmail(UsuarioServiceProto.UsuarioEmailRequest req, StreamObserver<UsuarioServiceProto.UsuarioSinClave> responseObserver) {
-        try {
-            System.out.println("Llamada a traerUsuarioPorEmail: " + req.getEmail());
-            Optional<Usuario> usuarioOptional = userRepository.findByEmail(req.getEmail());
-            if (!usuarioOptional.isPresent()) {
-                responseObserver.onError(Status.NOT_FOUND
-                    .withDescription("Usuario no encontrado")
-                    .asRuntimeException());
-                return;
-            }
-            Usuario usuario = usuarioOptional.get();
-            UsuarioServiceProto.UsuarioSinClave response = UsuarioServiceProto.UsuarioSinClave.newBuilder()
-                .setId(usuario.getId().intValue())
-                .setNombreUsuario(usuario.getNombreUsuario())
-                .setNombre(usuario.getNombre())
-                .setApellido(usuario.getApellido())
-                .setTelefono(usuario.getTelefono())
-                .setEmail(usuario.getEmail())
-                .setRol(UsuarioServiceProto.Role.valueOf(usuario.getRolUsuario().iterator().next().getType().name()))
-                .setActivo(usuario.isEstado())
-                .build();
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-        } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL
-                .withDescription("Error al obtener usuario: " + e.getMessage())
-                .asRuntimeException());
-        }
-    }
-
-    private boolean isTokenValid(String token) {
-    if (token == null || token.isEmpty()) {
-        System.out.println("Token nulo o vacío");
-        return false;
-    }
-    if (blacklistedTokenRepository.existsById(token)) {
-        System.out.println("Token en lista negra: " + token);
-        return false;
-    }
+public void traerUsuarioPorId(UsuarioServiceProto.UsuarioIdRequest req, StreamObserver<UsuarioServiceProto.UsuarioSinClave> responseObserver) {
     try {
-        Jwts.parser()
-            .verifyWith(key)
-            .build()
-            .parseClaimsJws(token);
-        System.out.println("Token válido: " + token);
-        return true;
+        String token = req.getToken();
+        if (!tokenValidator.isTokenValid(token)) {
+            responseObserver.onError(Status.UNAUTHENTICATED
+                .withDescription("Token inválido")
+                .asRuntimeException());
+            return;
+        }
+
+        Optional<Usuario> usuarioOptional = userRepository.findById((long) req.getId());
+        if (!usuarioOptional.isPresent()) {
+            responseObserver.onError(Status.NOT_FOUND
+                .withDescription("Usuario no encontrado")
+                .asRuntimeException());
+            return;
+        }
+        Usuario usuario = usuarioOptional.get();
+        UsuarioServiceProto.UsuarioSinClave response = UsuarioServiceProto.UsuarioSinClave.newBuilder()
+            .setId(usuario.getId().intValue())
+            .setNombreUsuario(usuario.getNombreUsuario())
+            .setNombre(usuario.getNombre())
+            .setApellido(usuario.getApellido())
+            .setTelefono(usuario.getTelefono())
+            .setEmail(usuario.getEmail())
+            .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuario.getRolUsuario().iterator().next().getType()))
+            .setActivo(usuario.isEstado())
+            .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
     } catch (Exception e) {
-        System.out.println("Error en JWT: " + e.getMessage());
-        return false;
+        responseObserver.onError(Status.INTERNAL
+            .withDescription("Error al obtener usuario: " + e.getMessage())
+            .asRuntimeException());
     }
 }
 
-    private TipoDeRol mapProtoRoleToTipoDeRol(UsuarioServiceProto.Role protoRole) {
-        switch (protoRole) {
-            case PRESIDENTE:
-                return TipoDeRol.PRESIDENTE;
-            case VOCAL:
-                return TipoDeRol.VOCAL;
-            case COORDINADOR:
-                return TipoDeRol.COORDINADOR;
-            case VOLUNTARIO:
-                return TipoDeRol.VOLUNTARIO;
-            default:
-                throw new IllegalArgumentException("Rol desconocido: " + protoRole);
+@Override
+public void traerUsuarioPorEmail(UsuarioServiceProto.UsuarioEmailRequest req, StreamObserver<UsuarioServiceProto.UsuarioSinClave> responseObserver) {
+    try {
+        String token = req.getToken();
+        if (!tokenValidator.isTokenValid(token)) {
+            responseObserver.onError(Status.UNAUTHENTICATED
+                .withDescription("Token inválido")
+                .asRuntimeException());
+            return;
         }
-    }
 
-    private UsuarioServiceProto.Role mapTipoDeRolToProtoRole(TipoDeRol tipoDeRol) {
-        switch (tipoDeRol) {
-            case PRESIDENTE:
-                return UsuarioServiceProto.Role.PRESIDENTE;
-            case VOCAL:
-                return UsuarioServiceProto.Role.VOCAL;
-            case COORDINADOR:
-                return UsuarioServiceProto.Role.COORDINADOR;
-            case VOLUNTARIO:
-                return UsuarioServiceProto.Role.VOLUNTARIO;
-            default:
-                throw new IllegalArgumentException("Tipo de rol desconocido: " + tipoDeRol);
+        Optional<Usuario> usuarioOptional = userRepository.findByEmail(req.getEmail());
+        if (!usuarioOptional.isPresent()) {
+            responseObserver.onError(Status.NOT_FOUND
+                .withDescription("Usuario no encontrado")
+                .asRuntimeException());
+            return;
         }
+        Usuario usuario = usuarioOptional.get();
+        UsuarioServiceProto.UsuarioSinClave response = UsuarioServiceProto.UsuarioSinClave.newBuilder()
+            .setId(usuario.getId().intValue())
+            .setNombreUsuario(usuario.getNombreUsuario())
+            .setNombre(usuario.getNombre())
+            .setApellido(usuario.getApellido())
+            .setTelefono(usuario.getTelefono())
+            .setEmail(usuario.getEmail())
+            .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuario.getRolUsuario().iterator().next().getType()))
+            .setActivo(usuario.isEstado())
+            .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    } catch (Exception e) {
+        responseObserver.onError(Status.INTERNAL
+            .withDescription("Error al obtener usuario: " + e.getMessage())
+            .asRuntimeException());
     }
+}
 
     private Rol mapProtoRoleToEntityRol(UsuarioServiceProto.Role protoRole) {
-        TipoDeRol tipoDeRol = mapProtoRoleToTipoDeRol(protoRole);
+        TipoDeRol tipoDeRol = RoleMapper.mapProtoRoleToTipoDeRol(protoRole);
         Optional<Rol> rolOptional = rolRepository.findByType(tipoDeRol);
         if (rolOptional.isPresent()) {
             return rolOptional.get();
@@ -543,6 +418,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
             return rolRepository.save(newRol);
         }
     }
+
     private String generarClaveAleatoria(int length) {
     final String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#-$%";
     SecureRandom random = new SecureRandom();

@@ -46,9 +46,11 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     private long jwtExpiration;
 
     private final SecretKey key;
+    private final TokenValidator tokenValidator;
 
-    public AuthServiceImpl(@Value("${jwt.secret}") String base64Key) {
+    public AuthServiceImpl(@Value("${jwt.secret}") String base64Key, TokenValidator tokenValidator) {
         this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Key));
+        this.tokenValidator = tokenValidator;
     }
 
     @Override
@@ -125,16 +127,10 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     public void logout(LogoutRequest req, StreamObserver<LogoutResponse> responseObserver) {
         try {
             String token = req.getToken();
-            if (token == null || token.isEmpty()) {
-                LogoutResponse response = LogoutResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token no proporcionado")
-                    .build();
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
+            if (!tokenValidator.validarToken(token, responseObserver, "Auth")) {
                 return;
             }
-
+            
             String email;
             try {
                 email = Jwts.parser()
@@ -172,45 +168,11 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
     public void validarToken(AuthServiceProto.TokenValidationRequest req, StreamObserver<AuthServiceProto.TokenValidationResponse> responseObserver) {
         try {
             String token = req.getToken();
-            if (token == null || token.isEmpty()) {
-                TokenValidationResponse response = TokenValidationResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token no proporcionado")
-                    .build();
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
-                return;
-            }
-
-            // Verifica si el token está en la lista negra
-            if (blacklistedTokenRepository.existsById(token)) {
-                AuthServiceProto.TokenValidationResponse response = TokenValidationResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token inválido: está en la lista negra")
-                    .build();
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
-                return;
-            }
-
-            // Verifica el token JWT
-            try {
-                Jwts.parser()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token);
-                AuthServiceProto.TokenValidationResponse response = TokenValidationResponse.newBuilder()
+            if (tokenValidator.validarToken(token, responseObserver, "Auth")) {
+                responseObserver.onNext(AuthServiceProto.TokenValidationResponse.newBuilder()
                     .setStatus("SUCCESS")
                     .setMessage("Token válido")
-                    .build();
-                responseObserver.onNext(response);
-                responseObserver.onCompleted();
-            } catch (JwtException e) {
-                AuthServiceProto.TokenValidationResponse response = TokenValidationResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("Token inválido: " + e.getMessage())
-                    .build();
-                responseObserver.onNext(response);
+                    .build());
                 responseObserver.onCompleted();
             }
         } catch (Exception e) {
@@ -220,9 +182,6 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
         }
     }
     
-    public boolean isTokenValid(String token) {
-        return !blacklistedTokenRepository.existsByToken(token);
-    }
 }
 
 

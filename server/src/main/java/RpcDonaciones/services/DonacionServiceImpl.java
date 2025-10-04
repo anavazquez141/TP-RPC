@@ -23,13 +23,14 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     
     @Autowired
     private AuthServiceImpl authService;
+    private final TokenValidator tokenValidator = null;
 
     @Override
     public void registrarDonacion(RegistrarDonacionRequest request, 
                                 StreamObserver<DonacionResponse> responseObserver) {
         try {
             // Validacion de token y donacion
-            if (!authService.isTokenValid(request.getToken())) {
+            if (!tokenValidator.isTokenValid(request.getToken())) {
                 sendErrorResponse(responseObserver, "Token inválido o expirado");
                 return;
             }
@@ -71,7 +72,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     public void listarDonaciones(ListarDonacionesRequest request,
                                StreamObserver<ListarDonacionesResponse> responseObserver) {
         try {
-            if (!authService.isTokenValid(request.getToken())) {
+            if (!tokenValidator.isTokenValid(request.getToken())) {
                 sendErrorResponse(responseObserver, "Token inválido o expirado");
                 return;
             }
@@ -102,7 +103,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     public void eliminarDonacion(EliminarDonacionRequest request,
                                StreamObserver<EliminarDonacionResponse> responseObserver) {
         try {
-            if (!authService.isTokenValid(request.getToken())) {
+            if (!tokenValidator.isTokenValid(request.getToken())) {
                 sendErrorResponse(responseObserver, "Token inválido o expirado");
                 return;
             }
