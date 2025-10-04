@@ -53,12 +53,12 @@ class ClienteUsuario:
             print(f"Error inesperado: {str(e)}")
             return None
 
-    def logout(self):
-        """Cierra la sesión y elimina el token."""
+    def logout(self, token=None):
         self.connect()
-        if not self.token:
+        token = token or self.token
+        if not token:
             return auth_pb2.LogoutResponse(status="FAILURE", message="No hay token para cerrar sesión")
-        request = auth_pb2.LogoutRequest(token=self.token)
+        request = auth_pb2.LogoutRequest(token=token)
         try:
             response = self.auth_stub.logout(request)
             if response.status == "SUCCESS":
@@ -67,6 +67,7 @@ class ClienteUsuario:
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
             return None
+    
 
     def validar_token(self, token):
         """Valida un token con el servidor."""
@@ -79,9 +80,9 @@ class ClienteUsuario:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
             return None
 
-    def traer_usuario_por_email(self, email):
+    def traer_usuario_por_email(self, email, token):
         self.connect()
-        request = usuario_pb2.UsuarioEmailRequest(email=email)
+        request = usuario_pb2.UsuarioEmailRequest(email=email, token=token)
         try:
             response = self.usuario_stub.traerUsuarioPorEmail(request)
             return response
@@ -113,10 +114,10 @@ class ClienteUsuario:
         self.connect()
         print(f"Enviando token para registrar_usuario: {token}")
         rol_map = {
-            "PRESIDENTE": 0,
-            "VOCAL": 1,
-            "COORDINADOR": 2,
-            "VOLUNTARIO": 3
+            "PRESIDENTE": usuario_pb2.Role.PRESIDENTE,
+            "VOCAL": usuario_pb2.Role.VOCAL,
+            "COORDINADOR": usuario_pb2.Role.COORDINADOR,
+            "VOLUNTARIO": usuario_pb2.Role.VOLUNTARIO
         }
         request = usuario_pb2.UsuarioRequest(
             nombreUsuario=nombre_usuario,
@@ -124,7 +125,7 @@ class ClienteUsuario:
             apellido=apellido,
             telefono=telefono,
             email=email,
-            rol=rol_map.get(rol, 3),  # Por defecto VOLUNTARIO
+            rol=rol_map.get(rol, usuario_pb2.Role.VOLUNTARIO),
             token=token
         )
         try:
@@ -133,20 +134,19 @@ class ClienteUsuario:
             return response
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
-            return None
+            return usuario_pb2.UsuarioResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
 
     def modificar_usuario(self, user_id, nombre_usuario, nombre, apellido, telefono, email, rol, token):
-        """Modifica un usuario existente."""
         self.connect()
         rol_map = {
-            0: 0,
-            1: 1,
-            2: 2,
-            3: 3,
-            "PRESIDENTE": 0,
-            "VOCAL": 1,
-            "COORDINADOR": 2,
-            "VOLUNTARIO": 3
+            "PRESIDENTE": usuario_pb2.Role.PRESIDENTE,
+            "VOCAL": usuario_pb2.Role.VOCAL,
+            "COORDINADOR": usuario_pb2.Role.COORDINADOR,
+            "VOLUNTARIO": usuario_pb2.Role.VOLUNTARIO,
+            0: usuario_pb2.Role.PRESIDENTE,
+            1: usuario_pb2.Role.VOCAL,
+            2: usuario_pb2.Role.COORDINADOR,
+            3: usuario_pb2.Role.VOLUNTARIO
         }
         request = usuario_pb2.UsuarioRequest(
             id=user_id,
@@ -155,15 +155,16 @@ class ClienteUsuario:
             apellido=apellido,
             telefono=telefono,
             email=email,
-            rol=rol_map.get(rol, 3),  # Por defecto VOLUNTARIO
+            rol=rol_map.get(rol, usuario_pb2.Role.VOLUNTARIO),  # Por defecto VOLUNTARIO
             token=token
         )
         try:
             response = self.usuario_stub.modificarUsuario(request)
+            print(f"Respuesta de modificarUsuario: {response}")
             return response
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
-            return None
+            return usuario_pb2.UsuarioResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
 
     def eliminar_usuario(self, user_id, token):
         self.connect()

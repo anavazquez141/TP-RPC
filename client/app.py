@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente
 from cliente_usuario import ClienteUsuario
 from proto import usuarioService_pb2 as usuario_pb2
 from proto import usuarioService_pb2_grpc as usuario_pb2_grpc
@@ -29,31 +30,14 @@ def obtener_usuarios():
         return []
 
 @app.route('/', methods=['GET'])
+@requiere_autenticacion(cliente)
 def index():
-    if 'token' not in session:
-        session.clear()
-        flash("Debes iniciar sesión primero", "error")
-        return redirect(url_for('login'))
-    
-    response = cliente.validar_token(session['token'])
-    if response is None or response.status != "SUCCESS":
-        session.clear()
-        flash("Sesión inválida, inicia sesión nuevamente", "error")
-        return redirect(url_for('login'))
-    
-    usuario = cliente.traer_usuario_por_email(session['email'])
+    usuario = cliente.traer_usuario_por_email(session['email'], session['token'])
     if usuario is None:
         session.clear()
         flash("Error al obtener datos del usuario", "error")
         return redirect(url_for('login'))
     
-    # Mapear el valor del enum rol al nombre
-    rol_map = {
-        0: "PRESIDENTE",
-        1: "VOCAL",
-        2: "COORDINADOR",
-        3: "VOLUNTARIO"
-    }
     usuario_dict = {
         "id": usuario.id,
         "nombreUsuario": usuario.nombreUsuario,
@@ -61,13 +45,11 @@ def index():
         "apellido": usuario.apellido,
         "telefono": usuario.telefono,
         "email": usuario.email,
-        "rol": rol_map.get(usuario.rol, "Desconocido"),
+        "rol": mapear_rol(usuario.rol),
         "activo": usuario.activo
     }
     
-    # Bandera para determinar si el usuario es PRESIDENTE
     es_presidente = usuario.rol == 0
-    
     return render_template('perfil.html', usuario=usuario_dict, es_presidente=es_presidente)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -107,7 +89,7 @@ def login():
 def logout():
     if 'token' in session:
         try:
-            response = cliente.logout()  
+            response = cliente.logout(session['token'])
             if response and response.status == "SUCCESS":
                 flash("Cierre de sesión exitoso", "success")
             else:
@@ -118,52 +100,21 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+
+
 @app.route('/usuarios', methods=['GET'])
+@requiere_autenticacion(cliente)
+@requiere_rol_presidente(cliente)
 def usuarios():
-    if 'token' not in session:
-        session.clear()
-        flash("Debes iniciar sesión primero", "error")
-        return redirect(url_for('login'))
-    
-    response = cliente.validar_token(session['token'])
-    if response is None or response.status != "SUCCESS":
-        session.clear()
-        flash("Sesión inválida, inicia sesión nuevamente", "error")
-        return redirect(url_for('login'))
-    
-    usuario = cliente.traer_usuario_por_email(session['email'])
-    if usuario is None:
-        session.clear()
-        flash("Error al obtener datos del usuario", "error")
-        return redirect(url_for('login'))
-    
-    if usuario.rol != 0:  # Solo PRESIDENTE puede acceder
-        flash("No tienes permisos para gestionar usuarios", "error")
-        return redirect(url_for('index'))
-    
     usuarios = obtener_usuarios()
     return render_template('usuarios.html', usuarios=usuarios)
 
 
 
-
 @app.route('/registrar', methods=['GET', 'POST'])
+@requiere_autenticacion(cliente)
+@requiere_rol_presidente(cliente)
 def registrar():
-    if 'token' not in session:
-        session.clear()
-        flash("Debes iniciar sesión primero", "error")
-        return redirect(url_for('login'))
-    
-    response = cliente.validar_token(session['token'])
-    if response is None or response.status != "SUCCESS":
-        session.clear()
-        flash("Sesión inválida, inicia sesión nuevamente", "error")
-        return redirect(url_for('login'))
-    
-    usuario = cliente.traer_usuario_por_email(session['email'])
-    if usuario is None or usuario.rol != 0:  # Solo PRESIDENTE puede registrar
-        flash("No tienes permisos para registrar usuarios", "error")
-        return redirect(url_for('index'))
     
     if request.method == 'POST':
         nombre_usuario = request.form['nombreUsuario']
@@ -187,24 +138,10 @@ def registrar():
     return render_template('registrar.html')
 
 
-
-
-
-
 @app.route('/cuenta', methods=['GET', 'POST'])
+@requiere_autenticacion(cliente)
 def cuenta():
-    if 'token' not in session:
-        session.clear()
-        flash("Debes iniciar sesión primero", "error")
-        return redirect(url_for('login'))
-    
-    response = cliente.validar_token(session['token'])
-    if response is None or response.status != "SUCCESS":
-        session.clear()
-        flash("Sesión inválida, inicia sesión nuevamente", "error")
-        return redirect(url_for('login'))
-    
-    usuario = cliente.traer_usuario_por_email(session['email'])
+    usuario = cliente.traer_usuario_por_email(session['email'], session['token'])
     if usuario is None:
         session.clear()
         flash("Error al obtener datos del usuario", "error")
@@ -229,13 +166,12 @@ def cuenta():
             apellido = request.form['apellido']
             telefono = request.form['telefono']
             email = request.form['email']
-            rol = usuario.rol  # Mantener el rol actual
-            
+            rol = mapear_rol(usuario.rol)  
             try:
                 response = cliente.modificar_usuario(usuario.id, nombre_usuario, nombre, apellido, telefono, email, rol, session['token'])
                 if response.status == "SUCCESS":
                     session['email'] = email
-                    flash("Cuenta modificada exitosamente", "success")
+                    flash(response.message, "success")
                     return redirect(url_for('index'))
                 else:
                     flash(response.message, "error")
@@ -243,13 +179,6 @@ def cuenta():
                 print(f"Error al modificar cuenta: {e}")
                 flash("Error al modificar cuenta", "error")
     
-    # Mapear el valor del enum rol al nombre
-    rol_map = {
-        0: "PRESIDENTE",
-        1: "VOCAL",
-        2: "COORDINADOR",
-        3: "VOLUNTARIO"
-    }
     usuario_dict = {
         "id": usuario.id,
         "nombreUsuario": usuario.nombreUsuario,
@@ -257,7 +186,7 @@ def cuenta():
         "apellido": usuario.apellido,
         "telefono": usuario.telefono,
         "email": usuario.email,
-        "rol": rol_map.get(usuario.rol, "Desconocido"),
+        "rol": mapear_rol(usuario.rol),
         "activo": usuario.activo
     }
     

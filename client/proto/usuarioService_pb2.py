@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14usuarioService.proto\x12\x07usuario\"\xb1\x01\n\x0eUsuarioRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\x12\x15\n\rnombreUsuario\x18\x03 \x01(\t\x12\x0e\n\x06nombre\x18\x04 \x01(\t\x12\x10\n\x08\x61pellido\x18\x05 \x01(\t\x12\x10\n\x08telefono\x18\x06 \x01(\t\x12\r\n\x05\x65mail\x18\x07 \x01(\t\x12\x1a\n\x03rol\x18\x08 \x01(\x0e\x32\r.usuario.Role\x12\x0e\n\x06\x61\x63tivo\x18\t \x01(\x08\"-\n\x10UsuarioIdRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\"$\n\x13UsuarioEmailRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\"\xc4\x01\n\x0fUsuarioResponse\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x15\n\rnombreUsuario\x18\x02 \x01(\t\x12\x0e\n\x06nombre\x18\x03 \x01(\t\x12\x10\n\x08\x61pellido\x18\x04 \x01(\t\x12\x10\n\x08telefono\x18\x05 \x01(\t\x12\r\n\x05\x65mail\x18\x06 \x01(\t\x12\x1a\n\x03rol\x18\x07 \x01(\x0e\x32\r.usuario.Role\x12\x0e\n\x06\x61\x63tivo\x18\x08 \x01(\x08\x12\x0e\n\x06status\x18\t \x01(\t\x12\x0f\n\x07message\x18\n \x01(\t\"\xa3\x01\n\x0fUsuarioSinClave\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x15\n\rnombreUsuario\x18\x02 \x01(\t\x12\x0e\n\x06nombre\x18\x03 \x01(\t\x12\x10\n\x08\x61pellido\x18\x04 \x01(\t\x12\x10\n\x08telefono\x18\x05 \x01(\t\x12\r\n\x05\x65mail\x18\x06 \x01(\t\x12\x1a\n\x03rol\x18\x07 \x01(\x0e\x32\r.usuario.Role\x12\x0e\n\x06\x61\x63tivo\x18\x08 \x01(\x08\";\n\x17\x45liminarUsuarioResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"&\n\x15ListarUsuariosRequest\x12\r\n\x05token\x18\x01 \x01(\t\"D\n\x16ListarUsuariosResponse\x12*\n\x08usuarios\x18\x01 \x03(\x0b\x32\x18.usuario.UsuarioSinClave*B\n\x04Role\x12\x0e\n\nPRESIDENTE\x10\x00\x12\t\n\x05VOCAL\x10\x01\x12\x0f\n\x0b\x43OORDINADOR\x10\x02\x12\x0e\n\nVOLUNTARIO\x10\x03\x32\xdb\x03\n\x0eUsuarioService\x12\x45\n\x10registrarUsuario\x12\x17.usuario.UsuarioRequest\x1a\x18.usuario.UsuarioResponse\x12H\n\x11traerUsuarioPorId\x12\x19.usuario.UsuarioIdRequest\x1a\x18.usuario.UsuarioSinClave\x12\x45\n\x10modificarUsuario\x12\x17.usuario.UsuarioRequest\x1a\x18.usuario.UsuarioResponse\x12N\n\x0f\x65liminarUsuario\x12\x19.usuario.UsuarioIdRequest\x1a .usuario.EliminarUsuarioResponse\x12Q\n\x0elistarUsuarios\x12\x1e.usuario.ListarUsuariosRequest\x1a\x1f.usuario.ListarUsuariosResponse\x12N\n\x14traerUsuarioPorEmail\x12\x1c.usuario.UsuarioEmailRequest\x1a\x18.usuario.UsuarioSinClaveB)\n\x12RpcDonaciones.grpcB\x13UsuarioServiceProtob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x14usuarioService.proto\x12\x07usuario\"\xb1\x01\n\x0eUsuarioRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\x12\x15\n\rnombreUsuario\x18\x03 \x01(\t\x12\x0e\n\x06nombre\x18\x04 \x01(\t\x12\x10\n\x08\x61pellido\x18\x05 \x01(\t\x12\x10\n\x08telefono\x18\x06 \x01(\t\x12\r\n\x05\x65mail\x18\x07 \x01(\t\x12\x1a\n\x03rol\x18\x08 \x01(\x0e\x32\r.usuario.Role\x12\x0e\n\x06\x61\x63tivo\x18\t \x01(\x08\"-\n\x10UsuarioIdRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\"3\n\x13UsuarioEmailRequest\x12\r\n\x05\x65mail\x18\x01 \x01(\t\x12\r\n\x05token\x18\x02 \x01(\t\"\xc4\x01\n\x0fUsuarioResponse\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x15\n\rnombreUsuario\x18\x02 \x01(\t\x12\x0e\n\x06nombre\x18\x03 \x01(\t\x12\x10\n\x08\x61pellido\x18\x04 \x01(\t\x12\x10\n\x08telefono\x18\x05 \x01(\t\x12\r\n\x05\x65mail\x18\x06 \x01(\t\x12\x1a\n\x03rol\x18\x07 \x01(\x0e\x32\r.usuario.Role\x12\x0e\n\x06\x61\x63tivo\x18\x08 \x01(\x08\x12\x0e\n\x06status\x18\t \x01(\t\x12\x0f\n\x07message\x18\n \x01(\t\"\xa3\x01\n\x0fUsuarioSinClave\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x15\n\rnombreUsuario\x18\x02 \x01(\t\x12\x0e\n\x06nombre\x18\x03 \x01(\t\x12\x10\n\x08\x61pellido\x18\x04 \x01(\t\x12\x10\n\x08telefono\x18\x05 \x01(\t\x12\r\n\x05\x65mail\x18\x06 \x01(\t\x12\x1a\n\x03rol\x18\x07 \x01(\x0e\x32\r.usuario.Role\x12\x0e\n\x06\x61\x63tivo\x18\x08 \x01(\x08\";\n\x17\x45liminarUsuarioResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"&\n\x15ListarUsuariosRequest\x12\r\n\x05token\x18\x01 \x01(\t\"D\n\x16ListarUsuariosResponse\x12*\n\x08usuarios\x18\x01 \x03(\x0b\x32\x18.usuario.UsuarioSinClave*B\n\x04Role\x12\x0e\n\nPRESIDENTE\x10\x00\x12\t\n\x05VOCAL\x10\x01\x12\x0f\n\x0b\x43OORDINADOR\x10\x02\x12\x0e\n\nVOLUNTARIO\x10\x03\x32\xdb\x03\n\x0eUsuarioService\x12\x45\n\x10registrarUsuario\x12\x17.usuario.UsuarioRequest\x1a\x18.usuario.UsuarioResponse\x12H\n\x11traerUsuarioPorId\x12\x19.usuario.UsuarioIdRequest\x1a\x18.usuario.UsuarioSinClave\x12\x45\n\x10modificarUsuario\x12\x17.usuario.UsuarioRequest\x1a\x18.usuario.UsuarioResponse\x12N\n\x0f\x65liminarUsuario\x12\x19.usuario.UsuarioIdRequest\x1a .usuario.EliminarUsuarioResponse\x12Q\n\x0elistarUsuarios\x12\x1e.usuario.ListarUsuariosRequest\x1a\x1f.usuario.ListarUsuariosResponse\x12N\n\x14traerUsuarioPorEmail\x12\x1c.usuario.UsuarioEmailRequest\x1a\x18.usuario.UsuarioSinClaveB)\n\x12RpcDonaciones.grpcB\x13UsuarioServiceProtob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,24 +32,24 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'usuarioService_pb2', _globa
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\022RpcDonaciones.grpcB\023UsuarioServiceProto'
-  _globals['_ROLE']._serialized_start=834
-  _globals['_ROLE']._serialized_end=900
+  _globals['_ROLE']._serialized_start=849
+  _globals['_ROLE']._serialized_end=915
   _globals['_USUARIOREQUEST']._serialized_start=34
   _globals['_USUARIOREQUEST']._serialized_end=211
   _globals['_USUARIOIDREQUEST']._serialized_start=213
   _globals['_USUARIOIDREQUEST']._serialized_end=258
   _globals['_USUARIOEMAILREQUEST']._serialized_start=260
-  _globals['_USUARIOEMAILREQUEST']._serialized_end=296
-  _globals['_USUARIORESPONSE']._serialized_start=299
-  _globals['_USUARIORESPONSE']._serialized_end=495
-  _globals['_USUARIOSINCLAVE']._serialized_start=498
-  _globals['_USUARIOSINCLAVE']._serialized_end=661
-  _globals['_ELIMINARUSUARIORESPONSE']._serialized_start=663
-  _globals['_ELIMINARUSUARIORESPONSE']._serialized_end=722
-  _globals['_LISTARUSUARIOSREQUEST']._serialized_start=724
-  _globals['_LISTARUSUARIOSREQUEST']._serialized_end=762
-  _globals['_LISTARUSUARIOSRESPONSE']._serialized_start=764
-  _globals['_LISTARUSUARIOSRESPONSE']._serialized_end=832
-  _globals['_USUARIOSERVICE']._serialized_start=903
-  _globals['_USUARIOSERVICE']._serialized_end=1378
+  _globals['_USUARIOEMAILREQUEST']._serialized_end=311
+  _globals['_USUARIORESPONSE']._serialized_start=314
+  _globals['_USUARIORESPONSE']._serialized_end=510
+  _globals['_USUARIOSINCLAVE']._serialized_start=513
+  _globals['_USUARIOSINCLAVE']._serialized_end=676
+  _globals['_ELIMINARUSUARIORESPONSE']._serialized_start=678
+  _globals['_ELIMINARUSUARIORESPONSE']._serialized_end=737
+  _globals['_LISTARUSUARIOSREQUEST']._serialized_start=739
+  _globals['_LISTARUSUARIOSREQUEST']._serialized_end=777
+  _globals['_LISTARUSUARIOSRESPONSE']._serialized_start=779
+  _globals['_LISTARUSUARIOSRESPONSE']._serialized_end=847
+  _globals['_USUARIOSERVICE']._serialized_start=918
+  _globals['_USUARIOSERVICE']._serialized_end=1393
 # @@protoc_insertion_point(module_scope)

@@ -31,6 +31,7 @@ message UsuarioIdRequest {
 
 message UsuarioEmailRequest {
     string email = 1;
+    string token = 2;
 }
 
 message UsuarioResponse {
