@@ -1,30 +1,53 @@
 import grpc
-from proto import eventoSolidarioService_pb2 as eventoSolidario_pb2
-from proto import eventoSolidarioService_pb2_grpc as eventoSolidario_pb2_grpc
-from datetime import datetime
-import sys
-
+from proto import eventoSolidarioService_pb2 as evento_pb2
+from proto import eventoSolidarioService_pb2_grpc as evento_pb2_grpc
+from proto import authService_pb2 as auth_pb2
+from proto import authService_pb2_grpc as auth_pb2_grpc
 
 class ClienteEvento:
-    def __init__(self, base_url="localhost"):
-        self.base_url = base_url
-        self.headers = {"Content-Type": "application/json"}
-        self.host = "localhost"
-        self.port = 9090
+    def __init__(self, host='localhost', port=9090):
+        self.host = host
+        self.port = port
         self.channel = None
         self.evento_stub = None
+        self.auth_stub = None
+        self.token = None
 
-    def create_evento(self, nombre_evento, descripcion, fecha_hora, usuario_ids=None):
-        #payload = {
-        #    "nombreEvento": nombre_evento,
-        #    "descripcion": descripcion,
-        #    "fechaHora": fecha_hora,
-        #    "usuarioIds": usuario_ids or []
-        #}
+    def connect(self):
+        """Establece la conexión gRPC con el servidor."""
+        if self.channel is None or self.is_channel_closed():
+            self.channel = grpc.insecure_channel(f"{self.host}:{self.port}")
+            self.evento_stub = evento_pb2_grpc.EventosServiceStub(self.channel)
+            self.auth_stub = auth_pb2_grpc.AuthServiceStub(self.channel)
 
+    def is_channel_closed(self):
+        """Verifica si el canal gRPC está cerrado."""
+        try:
+            self.channel.subscribe(lambda connectivity: None)
+            return False
+        except Exception:
+            return True
 
+    def validar_token(self, token):
+        """Valida un token con el servidor."""
         self.connect()
-        request = eventoSolidario_pb2.CreateEventoRequest(
+        request = auth_pb2.TokenValidationRequest(token=token)
+        try:
+            response = self.auth_stub.validarToken(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return None
+
+    def create_evento(self, nombre_evento, descripcion, fecha_hora, usuario_ids=None, token=None):
+        """Crea un evento enviando un CreateEventoRequest."""
+        self.connect()
+        token = token or self.token
+        if not token:
+            return evento_pb2.CreateEventoResponse(status="FAILURE", message="No hay token para crear evento")
+
+        request = evento_pb2.CreateEventoRequest(
+            token=token,
             nombreEvento=nombre_evento,
             descripcion=descripcion,
             fecha_hora=fecha_hora,
@@ -32,42 +55,95 @@ class ClienteEvento:
         )
         try:
             response = self.evento_stub.CreateEvento(request)
-            print(f"Respuesta de registrarEvento: {response}")
+            print(f"Respuesta de createEvento: {response}")
             return response
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
-            return None
-        
+            return evento_pb2.CreateEventoResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
 
-        #response = requests.post(self.base_url, json=payload, headers=self.headers)
-        #response.raise_for_status()
-        #return response.json()
+    def get_evento(self, id_evento, token=None):
+        """Obtiene un evento por su ID enviando un GetEventoRequest."""
+        self.connect()
+        token = token or self.token
+        if not token:
+            return evento_pb2.GetEventoResponse(status="FAILURE", message="No hay token para obtener evento")
 
-    def get_evento(self, id_evento):
-        response = requests.get(f"{self.base_url}/{id_evento}", headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+        request = evento_pb2.GetEventoRequest(
+            token=token,
+            idEvento=id_evento
+        )
+        try:
+            response = self.evento_stub.GetEvento(request)
+            print(f"Respuesta de getEvento: {response}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return evento_pb2.GetEventoResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
 
-    def list_eventos(self):
-        response = requests.get(self.base_url, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+    def update_evento(self, id_evento, nombre_evento=None, descripcion=None, fecha_hora=None, usuario_ids=None, token=None):
+        """Actualiza un evento enviando un UpdateEventoRequest."""
+        self.connect()
+        token = token or self.token
+        if not token:
+            return evento_pb2.UpdateEventoResponse(status="FAILURE", message="No hay token para actualizar evento")
 
-    def update_evento(self, id_evento, nombre_evento=None, descripcion=None, fecha_hora=None, usuario_ids=None):
-        payload = {}
-        if nombre_evento:
-            payload["nombreEvento"] = nombre_evento
-        if descripcion:
-            payload["descripcion"] = descripcion
-        if fecha_hora:
-            payload["fechaHora"] = fecha_hora
-        if usuario_ids is not None:
-            payload["usuarioIds"] = usuario_ids
-        response = requests.post(f"{self.base_url}/{id_evento}", json=payload, headers=self.headers)
-        response.raise_for_status()
-        return response.json()
+        request = evento_pb2.UpdateEventoRequest(
+            token=token,
+            idEvento=id_evento,
+            nombreEvento=nombre_evento or "",
+            descripcion=descripcion or "",
+            fecha_hora=fecha_hora or "",
+            usuarioIds=usuario_ids or []
+        )
+        try:
+            response = self.evento_stub.UpdateEvento(request)
+            print(f"Respuesta de updateEvento: {response}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return evento_pb2.UpdateEventoResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
 
-    def delete_evento(self, id_evento):
-        response = requests.post(f"{self.base_url}/{id_evento}/delete", headers=self.headers)
-        response.raise_for_status()
-        return True
+    def delete_evento(self, id_evento, token=None):
+        """Elimina un evento enviando un DeleteEventoRequest."""
+        self.connect()
+        token = token or self.token
+        if not token:
+            return evento_pb2.DeleteEventoResponse(success=False, message="No hay token para eliminar evento")
+
+        request = evento_pb2.DeleteEventoRequest(
+            token=token,
+            idEvento=id_evento
+        )
+        try:
+            response = self.evento_stub.DeleteEvento(request)
+            print(f"Respuesta de deleteEvento: success={response.success}, message={response.message}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return evento_pb2.DeleteEventoResponse(success=False, message=f"Error en el servidor: {e.details()}")
+
+    def list_eventos(self, token=None):
+        """Lista todos los eventos enviando un ListEventosRequest."""
+        self.connect()
+        token = token or self.token
+        if not token:
+            return evento_pb2.ListEventosResponse(status="FAILURE", message="No hay token para listar eventos")
+
+        request = evento_pb2.ListEventosRequest(
+            token=token
+        )
+        try:
+            response = self.evento_stub.ListEventos(request)
+            print(f"Respuesta de listEventos: {response}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return evento_pb2.ListEventosResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
+
+    def cerrar(self):
+        """Cierra el canal gRPC."""
+        if self.channel is not None:
+            self.channel.close()
+            self.channel = None
+            self.evento_stub = None
+            self.auth_stub = None

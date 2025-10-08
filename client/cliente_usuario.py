@@ -112,7 +112,6 @@ class ClienteUsuario:
 
     def registrar_usuario(self, nombre_usuario, nombre, apellido, telefono, email, rol, token):
         self.connect()
-        print(f"Enviando token para registrar_usuario: {token}")
         rol_map = {
             "PRESIDENTE": usuario_pb2.Role.PRESIDENTE,
             "VOCAL": usuario_pb2.Role.VOCAL,
