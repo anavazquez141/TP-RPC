@@ -18,10 +18,13 @@ public class EventoSolidario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idEvento;
 
+    @Column(length = 50, unique = true, nullable = false)
     private String nombreEvento;
 
+    @Column(length = 500)
     private String descripcion;
 
+    @Column(length = 20)
     private LocalDateTime fechaHora;
 
     @ManyToMany

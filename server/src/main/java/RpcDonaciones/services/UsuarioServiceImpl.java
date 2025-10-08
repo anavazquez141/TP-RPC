@@ -142,7 +142,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
         }
     }
 
-    @Override
+   @Override
     public void modificarUsuario(UsuarioServiceProto.UsuarioRequest request, StreamObserver<UsuarioServiceProto.UsuarioResponse> responseObserver) {
         try {
             String token = request.getToken();
@@ -150,7 +150,7 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-        Optional<Usuario> usuarioOptional = userRepository.findById((long) request.getId());
+            Optional<Usuario> usuarioOptional = userRepository.findById((long) request.getId());
             if (!usuarioOptional.isPresent()) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
                     .setStatus("FAILURE")
@@ -160,53 +160,66 @@ public class UsuarioServiceImpl extends UsuarioServiceGrpc.UsuarioServiceImplBas
                 return;
             }
 
-        boolean sinCambios = usuarioOptional.get().getNombreUsuario().equals(request.getNombreUsuario()) &&
-                            usuarioOptional.get().getNombre().equals(request.getNombre()) &&
-                            usuarioOptional.get().getApellido().equals(request.getApellido()) &&
-                            usuarioOptional.get().getTelefono().equals(request.getTelefono()) &&
-                            usuarioOptional.get().getEmail().equals(request.getEmail());
+            Usuario usuario = usuarioOptional.get();
 
-        if (sinCambios) {
-            responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                .setStatus("SUCCESS")
-                .setMessage("No se hicieron cambios")
-                .setId(usuarioOptional.get().getId().intValue())
-                .setNombreUsuario(usuarioOptional.get().getNombreUsuario())
-                .setNombre(usuarioOptional.get().getNombre())
-                .setApellido(usuarioOptional.get().getApellido())
-                .setTelefono(usuarioOptional.get().getTelefono())
-                .setEmail(usuarioOptional.get().getEmail())
-                .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuarioOptional.get().getRolUsuario().iterator().next().getType()))
-                .setActivo(usuarioOptional.get().isEstado())
-                .build());
-            responseObserver.onCompleted();
-            return;
-        }
-        
-            
-            System.out.println("Buscando nombreUsuario: " + request.getNombreUsuario());
-            Optional<Usuario> usuarioPorNombre = userRepository.findByNombreUsuario(request.getNombreUsuario());
-            if (usuarioPorNombre.isPresent() && !usuarioPorNombre.get().getId().equals((long) request.getId())) {
+            // Verificación de "sin cambios" con normalización ligera para espacios
+            boolean sinCambios = usuario.getNombreUsuario().trim().equals(request.getNombreUsuario().trim()) &&
+                                usuario.getNombre().trim().equals(request.getNombre().trim()) &&
+                                usuario.getApellido().trim().equals(request.getApellido().trim()) &&
+                                usuario.getTelefono().trim().equals(request.getTelefono().trim()) &&
+                                usuario.getEmail().trim().equals(request.getEmail().trim());
+
+            if (sinCambios) {
                 responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("El nombre de usuario ya está registrado")
+                    .setStatus("SUCCESS")
+                    .setMessage("No se hicieron cambios")
+                    .setId(usuario.getId().intValue())
+                    .setNombreUsuario(usuario.getNombreUsuario())
+                    .setNombre(usuario.getNombre())
+                    .setApellido(usuario.getApellido())
+                    .setTelefono(usuario.getTelefono())
+                    .setEmail(usuario.getEmail())
+                    .setRol(RoleMapper.mapTipoDeRolToProtoRole(usuario.getRolUsuario().iterator().next().getType()))
+                    .setActivo(usuario.isEstado())
                     .build());
                 responseObserver.onCompleted();
                 return;
+            }
+
+            // Verificar duplicados sin normalización
+            System.out.println("Buscando nombreUsuario: " + request.getNombreUsuario());
+            Optional<Usuario> usuarioPorNombre = userRepository.findByNombreUsuario(request.getNombreUsuario());
+            if (usuarioPorNombre.isPresent()) {
+                System.out.println("Encontrado usuario con nombreUsuario: " + usuarioPorNombre.get().getNombreUsuario() + ", ID: " + usuarioPorNombre.get().getId());
+                if (!usuarioPorNombre.get().getId().equals((long) request.getId())) {
+                    responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("El nombre de usuario ya está registrado")
+                        .build());
+                    responseObserver.onCompleted();
+                    return;
+                }
+            } else {
+                System.out.println("No se encontró usuario con nombreUsuario: " + request.getNombreUsuario());
             }
 
             System.out.println("Buscando email: " + request.getEmail());
             Optional<Usuario> usuarioPorEmail = userRepository.findByEmail(request.getEmail());
-            if (usuarioPorEmail.isPresent() && !usuarioPorEmail.get().getId().equals((long) request.getId())) {
-                responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
-                    .setStatus("FAILURE")
-                    .setMessage("El email ya está registrado")
-                    .build());
-                responseObserver.onCompleted();
-                return;
+            if (usuarioPorEmail.isPresent()) {
+                System.out.println("Encontrado usuario con email: " + usuarioPorEmail.get().getEmail() + ", ID: " + usuarioPorEmail.get().getId());
+                if (!usuarioPorEmail.get().getId().equals((long) request.getId())) {
+                    responseObserver.onNext(UsuarioServiceProto.UsuarioResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("El email ya está registrado")
+                        .build());
+                    responseObserver.onCompleted();
+                    return;
+                }
+            } else {
+                System.out.println("No se encontró usuario con email: " + request.getEmail());
             }
 
-            Usuario usuario = usuarioOptional.get();
+            // Actualizar los datos del usuario
             usuario.setNombreUsuario(request.getNombreUsuario());
             usuario.setNombre(request.getNombre());
             usuario.setApellido(request.getApellido());
