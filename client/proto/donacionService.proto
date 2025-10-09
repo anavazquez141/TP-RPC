@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+option java_package = "RpcDonaciones.grpc";
+option java_outer_classname = "DonacionServiceProto";
+
+enum CategoriaDonacion {
+    ROPA = 0;
+    ALIMENTOS = 1;
+    JUGUETES = 2;
+    UTILES_ESCOLARES = 3;
+}
+
+message RegistrarDonacionRequest {
+    string token = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+message ModificarDonacionRequest {
+    string token = 1;
+    int64 id = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+message EliminarDonacionRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+message ListarDonacionesRequest {
+    string token = 1;
+}
+
+message DonacionIdRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+message DonacionResponse {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+    string status = 5;
+    string message = 6;
+}
+
+message EliminarDonacionResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListarDonacionesResponse {
+    repeated DonacionItem donaciones = 1;
+}
+
+message DonacionItem {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+service DonacionService {
+    rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
+    rpc modificarDonacion (ModificarDonacionRequest) returns (DonacionResponse);
+    rpc eliminarDonacion (EliminarDonacionRequest) returns (EliminarDonacionResponse);
+    rpc listarDonaciones (ListarDonacionesRequest) returns (ListarDonacionesResponse);
+    rpc traerDonacionPorId (DonacionIdRequest) returns (DonacionResponse);
+}
