@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agregar Donación</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+
+    <div class="profile-card">
+
+        <h2>Agregar Nueva Donación</h2>
+
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Formulario para agregar donación -->
+        <form method="POST" class="modern-login-form">
+            <div class="input-group-row">
+                <label for="categoria">Categoría:</label>
+                <select id="categoria" name="categoria" required>
+                    <option value="">Seleccione una categoría</option>
+                    <option value="ROPA">Ropa</option>
+                    <option value="ALIMENTOS">Alimentos</option>
+                    <option value="JUGUETES">Juguetes</option>
+                    <option value="UTILES_ESCOLARES">Útiles Escolares</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="descripcion" name="descripcion" required placeholder=" ">
+                <label>Descripción</label>
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="cantidad" name="cantidad" min="1" required placeholder=" ">
+                <label>Cantidad</label>
+            </div>
+
+            <button type="submit" class="btn primary">Registrar Donación</button>
+        </form>
+
+        <!-- Enlaces -->
+        <div class="actions">
+            <a href="{{ url_for('donaciones') }}" class="btn secondary">Volver a Donaciones</a>
+            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Inicio</a>
+        </div>
+
+    </div>
+
+</body>
+</html>

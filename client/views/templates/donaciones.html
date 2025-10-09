@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Donaciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+
+    <div class="profile-card">
+
+        <h2>Gestión de Donaciones</h2>
+
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Botón para agregar donación -->
+        <div class="actions">
+            <a href="{{ url_for('agregar_donacion') }}" class="btn primary">Agregar Donación</a>
+            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Inicio</a>
+        </div>
+
+        <!-- Tabla de donaciones -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Categoría</th>
+                    <th>Descripción</th>
+                    <th>Cantidad</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for donacion in donaciones %}
+                <tr>
+                    <td>{{ donacion.id }}</td>
+                    <td>{{ donacion.categoria }}</td>
+                    <td>{{ donacion.descripcion }}</td>
+                    <td>{{ donacion.cantidad }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('modificar_donacion', donacion_id=donacion.id) }}" 
+                           class="btn primary" style="padding: 5px 10px; font-size: 12px;">Modificar</a>
+                        <form action="{{ url_for('eliminar_donacion', donacion_id=donacion.id) }}" 
+                              method="POST" style="display: inline;">
+                            <button type="submit" class="btn delete-btn" 
+                                    style="padding: 5px 10px; font-size: 12px;"
+                                    onclick="return confirm('¿Estás seguro de eliminar esta donación?')">
+                                Eliminar
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">No hay donaciones registradas</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+</body>
+</html>
