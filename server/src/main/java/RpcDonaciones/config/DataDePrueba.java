@@ -10,6 +10,7 @@ import RpcDonaciones.entities.enums.TipoDeRol;
 import RpcDonaciones.repositories.IUsuario;
 import RpcDonaciones.repositories.IRol;
 
+
 @Configuration
 public class DataDePrueba {
 

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Evento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Registrar Nuevo Evento</h1>
+
+    <form method="POST">
+        <label>Nombre:</label>
+        <input type="text" name="nombreEvento" required>
+
+        <label>Descripción:</label>
+        <textarea name="descripcion" required></textarea>
+
+        <label>Fecha y Hora:</label>
+        <input type="datetime-local" name="fechaHora" required>
+
+        <label>Usuarios asignados:</label>
+        <select name="usuarioIds" multiple>
+            {% for u in usuarios %}
+            <option value="{{ u.id }}">{{ u.nombreUsuario }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn primary">Registrar</button>
+    </form>
+
+    <a href="{{ url_for('eventos') }}" class="btn secondary">Volver a Eventos</a>
+</body>
+</html>

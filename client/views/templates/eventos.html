@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Eventos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <h1>Lista de Eventos</h1>
+
+    {% if es_presidente %}
+    <a href="{{ url_for('registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
+    {% endif %}
+
+    <table>
+        <tr>
+            <th>Nombre</th>
+            <th>Fecha</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+        </tr>
+        {% for e in eventos %}
+        <tr>
+            <td>{{ e.nombre }}</td>
+            <td>{{ e.fecha_hora }}</td>
+            <td>{{ e.descripcion }}</td>
+            <td>
+                <a href="{{ url_for('eventos', id_evento=e.id) }}" class="btn secondary">Modificar / Eliminar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
+</body>
+</html>

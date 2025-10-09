@@ -22,9 +22,10 @@ _runtime_version.ValidateProtobufRuntimeVersion(
 _sym_db = _symbol_database.Default()
 
 
+from proto import usuarioService_pb2 as usuarioService__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x65ventoSolidarioService.proto\"X\n\x06\x45vento\x12\x10\n\x08idEvento\x18\x01 \x01(\x03\x12\x14\n\x0cnombreEvento\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x11\n\tfechaHora\x18\x04 \x01(\t\"g\n\x13\x43reateEventoRequest\x12\x14\n\x0cnombreEvento\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x02 \x01(\t\x12\x11\n\tfechaHora\x18\x03 \x01(\t\x12\x12\n\nusuarioIds\x18\x04 \x03(\x03\"/\n\x14\x43reateEventoResponse\x12\x17\n\x06\x65vento\x18\x01 \x01(\x0b\x32\x07.Evento\"$\n\x10GetEventoRequest\x12\x10\n\x08idEvento\x18\x01 \x01(\x03\",\n\x11GetEventoResponse\x12\x17\n\x06\x65vento\x18\x01 \x01(\x0b\x32\x07.Evento\"y\n\x13UpdateEventoRequest\x12\x10\n\x08idEvento\x18\x01 \x01(\x03\x12\x14\n\x0cnombreEvento\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x11\n\tfechaHora\x18\x04 \x01(\t\x12\x12\n\nusuarioIds\x18\x05 \x03(\x03\"/\n\x14UpdateEventoResponse\x12\x17\n\x06\x65vento\x18\x01 \x01(\x0b\x32\x07.Evento\"\'\n\x13\x44\x65leteEventoRequest\x12\x10\n\x08idEvento\x18\x01 \x01(\x03\"\'\n\x14\x44\x65leteEventoResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\"\x14\n\x12ListEventosRequest\"/\n\x13ListEventosResponse\x12\x18\n\x07\x65ventos\x18\x01 \x03(\x0b\x32\x07.Evento2\xb5\x02\n\x0e\x45ventosService\x12;\n\x0c\x43reateEvento\x12\x14.CreateEventoRequest\x1a\x15.CreateEventoResponse\x12\x32\n\tGetEvento\x12\x11.GetEventoRequest\x1a\x12.GetEventoResponse\x12;\n\x0cUpdateEvento\x12\x14.UpdateEventoRequest\x1a\x15.UpdateEventoResponse\x12;\n\x0c\x44\x65leteEvento\x12\x14.DeleteEventoRequest\x1a\x15.DeleteEventoResponse\x12\x38\n\x0bListEventos\x12\x13.ListEventosRequest\x1a\x14.ListEventosResponseB1\n\x12RpcDonaciones.grpcB\x1b\x45ventoSolidarioServiceProtob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1c\x65ventoSolidarioService.proto\x1a\x14usuarioService.proto\"\x84\x01\n\x06\x45vento\x12\x10\n\x08idEvento\x18\x01 \x01(\x03\x12\x14\n\x0cnombreEvento\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x11\n\tfechaHora\x18\x04 \x01(\t\x12*\n\x08usuarios\x18\x05 \x03(\x0b\x32\x18.usuario.UsuarioSinClave\"c\n\x11\x45ventoSinUsuarios\x12\x10\n\x08idEvento\x18\x01 \x01(\x03\x12\x14\n\x0cnombreEvento\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x11\n\tfechaHora\x18\x04 \x01(\t\"\x92\x01\n\x13\x43reateEventoRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x14\n\x0cnombreEvento\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x11\n\tfechaHora\x18\x04 \x01(\t\x12\x12\n\nusuarioIds\x18\x05 \x03(\x03\x12\x1a\n\x03rol\x18\x06 \x01(\x0e\x32\r.usuario.Role\"P\n\x14\x43reateEventoResponse\x12\x17\n\x06\x65vento\x18\x01 \x01(\x0b\x32\x07.Evento\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"3\n\x10GetEventoRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x10\n\x08idEvento\x18\x02 \x01(\x03\"X\n\x11GetEventoResponse\x12\"\n\x06\x65vento\x18\x01 \x01(\x0b\x32\x12.EventoSinUsuarios\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"\xa4\x01\n\x13UpdateEventoRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x10\n\x08idEvento\x18\x02 \x01(\x03\x12\x14\n\x0cnombreEvento\x18\x03 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x04 \x01(\t\x12\x11\n\tfechaHora\x18\x05 \x01(\t\x12\x12\n\nusuarioIds\x18\x06 \x03(\x03\x12\x1a\n\x03rol\x18\x07 \x01(\x0e\x32\r.usuario.Role\"P\n\x14UpdateEventoResponse\x12\x17\n\x06\x65vento\x18\x01 \x01(\x0b\x32\x07.Evento\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"R\n\x13\x44\x65leteEventoRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x10\n\x08idEvento\x18\x02 \x01(\x03\x12\x1a\n\x03rol\x18\x03 \x01(\x0e\x32\r.usuario.Role\"H\n\x14\x44\x65leteEventoResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\"#\n\x12ListEventosRequest\x12\r\n\x05token\x18\x01 \x01(\t\"[\n\x13ListEventosResponse\x12#\n\x07\x65ventos\x18\x01 \x03(\x0b\x32\x12.EventoSinUsuarios\x12\x0e\n\x06status\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t2\xb5\x02\n\x0e\x45ventosService\x12;\n\x0c\x43reateEvento\x12\x14.CreateEventoRequest\x1a\x15.CreateEventoResponse\x12\x32\n\tGetEvento\x12\x11.GetEventoRequest\x1a\x12.GetEventoResponse\x12;\n\x0cUpdateEvento\x12\x14.UpdateEventoRequest\x1a\x15.UpdateEventoResponse\x12;\n\x0c\x44\x65leteEvento\x12\x14.DeleteEventoRequest\x1a\x15.DeleteEventoResponse\x12\x38\n\x0bListEventos\x12\x13.ListEventosRequest\x1a\x14.ListEventosResponseB1\n\x12RpcDonaciones.grpcB\x1b\x45ventoSolidarioServiceProtob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,28 +33,30 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'eventoSolidarioService_pb2'
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\022RpcDonaciones.grpcB\033EventoSolidarioServiceProto'
-  _globals['_EVENTO']._serialized_start=32
-  _globals['_EVENTO']._serialized_end=120
-  _globals['_CREATEEVENTOREQUEST']._serialized_start=122
-  _globals['_CREATEEVENTOREQUEST']._serialized_end=225
-  _globals['_CREATEEVENTORESPONSE']._serialized_start=227
-  _globals['_CREATEEVENTORESPONSE']._serialized_end=274
-  _globals['_GETEVENTOREQUEST']._serialized_start=276
-  _globals['_GETEVENTOREQUEST']._serialized_end=312
-  _globals['_GETEVENTORESPONSE']._serialized_start=314
-  _globals['_GETEVENTORESPONSE']._serialized_end=358
-  _globals['_UPDATEEVENTOREQUEST']._serialized_start=360
-  _globals['_UPDATEEVENTOREQUEST']._serialized_end=481
-  _globals['_UPDATEEVENTORESPONSE']._serialized_start=483
-  _globals['_UPDATEEVENTORESPONSE']._serialized_end=530
-  _globals['_DELETEEVENTOREQUEST']._serialized_start=532
-  _globals['_DELETEEVENTOREQUEST']._serialized_end=571
-  _globals['_DELETEEVENTORESPONSE']._serialized_start=573
-  _globals['_DELETEEVENTORESPONSE']._serialized_end=612
-  _globals['_LISTEVENTOSREQUEST']._serialized_start=614
-  _globals['_LISTEVENTOSREQUEST']._serialized_end=634
-  _globals['_LISTEVENTOSRESPONSE']._serialized_start=636
-  _globals['_LISTEVENTOSRESPONSE']._serialized_end=683
-  _globals['_EVENTOSSERVICE']._serialized_start=686
-  _globals['_EVENTOSSERVICE']._serialized_end=995
+  _globals['_EVENTO']._serialized_start=55
+  _globals['_EVENTO']._serialized_end=187
+  _globals['_EVENTOSINUSUARIOS']._serialized_start=189
+  _globals['_EVENTOSINUSUARIOS']._serialized_end=288
+  _globals['_CREATEEVENTOREQUEST']._serialized_start=291
+  _globals['_CREATEEVENTOREQUEST']._serialized_end=437
+  _globals['_CREATEEVENTORESPONSE']._serialized_start=439
+  _globals['_CREATEEVENTORESPONSE']._serialized_end=519
+  _globals['_GETEVENTOREQUEST']._serialized_start=521
+  _globals['_GETEVENTOREQUEST']._serialized_end=572
+  _globals['_GETEVENTORESPONSE']._serialized_start=574
+  _globals['_GETEVENTORESPONSE']._serialized_end=662
+  _globals['_UPDATEEVENTOREQUEST']._serialized_start=665
+  _globals['_UPDATEEVENTOREQUEST']._serialized_end=829
+  _globals['_UPDATEEVENTORESPONSE']._serialized_start=831
+  _globals['_UPDATEEVENTORESPONSE']._serialized_end=911
+  _globals['_DELETEEVENTOREQUEST']._serialized_start=913
+  _globals['_DELETEEVENTOREQUEST']._serialized_end=995
+  _globals['_DELETEEVENTORESPONSE']._serialized_start=997
+  _globals['_DELETEEVENTORESPONSE']._serialized_end=1069
+  _globals['_LISTEVENTOSREQUEST']._serialized_start=1071
+  _globals['_LISTEVENTOSREQUEST']._serialized_end=1106
+  _globals['_LISTEVENTOSRESPONSE']._serialized_start=1108
+  _globals['_LISTEVENTOSRESPONSE']._serialized_end=1199
+  _globals['_EVENTOSSERVICE']._serialized_start=1202
+  _globals['_EVENTOSSERVICE']._serialized_end=1511
 # @@protoc_insertion_point(module_scope)

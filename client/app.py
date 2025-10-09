@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente
+from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente, requiere_rol_coordinador
 from cliente_usuario import ClienteUsuario
 from cliente_evento import ClienteEvento
 from proto import usuarioService_pb2 as usuario_pb2
@@ -215,14 +215,14 @@ def eventos():
     if usuario is None:
         session.clear()
         flash("Error al obtener datos del usuario", "error")
-        return redirect(url_for('login'))
+        return redirect(url_for('index'))
     es_presidente = usuario.rol == 0
     return render_template('eventos.html', eventos=eventos, es_presidente=es_presidente)
 
 @app.route('/eventos/registrar', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente(cliente_usuario)
-@requiere_rol_coordinador(cliente_usuario)
+#@requiere_rol_coordinador(cliente_usuario)
 def registrar_evento():
     if request.method == 'POST':
         nombre_evento = request.form['nombreEvento']
