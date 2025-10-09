@@ -6,6 +6,8 @@ from proto import usuarioService_pb2 as usuario_pb2
 from proto import usuarioService_pb2_grpc as usuario_pb2_grpc
 from proto import authService_pb2 as auth_pb2
 from proto import authService_pb2_grpc as auth_pb2_grpc
+from controllers.donacion_controller import DonacionController
+from views.interfaz_donaciones import InterfazDonaciones
 import atexit
 
 app = Flask(
@@ -16,7 +18,9 @@ app = Flask(
 app.secret_key = "super_secret_key"
 cliente_usuario = ClienteUsuario()
 cliente_evento = ClienteEvento()
+cliente_donacion = DonacionController()
 atexit.register(cliente_usuario.cerrar)
+atexit.register(cliente_evento.cerrar)
 atexit.register(cliente_evento.cerrar)
 
 def obtener_usuarios():
@@ -302,6 +306,27 @@ def evento(id_evento):
     usuario = cliente_usuario.traer_usuario_por_email(session['email'], session['token'])
     es_presidente = usuario.rol == 0 if usuario else False
     return render_template('evento.html', evento=evento, usuarios=usuarios, es_presidente=es_presidente)
+
+@app.route('/donaciones', methods=['GET'])
+@requiere_autenticacion(cliente_usuario)
+def donaciones():
+    return InterfazDonaciones.listar_donaciones()
+
+@app.route('/agregar_donacion', methods=['GET', 'POST'])
+@requiere_autenticacion(cliente_usuario)
+def agregar_donacion():
+    return InterfazDonaciones.agregar_donacion()
+
+@app.route('/eliminar_donacion/<int:donacion_id>', methods=['POST'])
+@requiere_autenticacion(cliente_usuario)
+def eliminar_donacion(donacion_id):
+    return InterfazDonaciones.eliminar_donacion(donacion_id)
+
+@app.route('/modificar_donacion/<int:donacion_id>', methods=['GET', 'POST'])
+@requiere_autenticacion(cliente_usuario)
+def modificar_donacion(donacion_id):
+    return InterfazDonaciones.modificar_donacion(donacion_id)
+    
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
