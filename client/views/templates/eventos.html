@@ -6,31 +6,58 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
-    <h1>Lista de Eventos</h1>
+    <!-- Mostrar mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
-    {% if es_presidente %}
-    <a href="{{ url_for('registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
+    <h1>Eventos</h1>
+
+    <!-- Botón para registrar nuevo evento -->
+    {% if puede_administrar_eventos %}
+        <a href="{{ url_for('registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
     {% endif %}
 
-    <table>
-        <tr>
-            <th>Nombre</th>
-            <th>Fecha</th>
-            <th>Descripción</th>
-            <th>Acciones</th>
-        </tr>
-        {% for e in eventos %}
-        <tr>
-            <td>{{ e.nombre }}</td>
-            <td>{{ e.fecha_hora }}</td>
-            <td>{{ e.descripcion }}</td>
-            <td>
-                <a href="{{ url_for('eventos', id_evento=e.id) }}" class="btn secondary">Modificar / Eliminar</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+    <!-- Lista de eventos -->
+    {% if eventos %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Fecha y Hora</th>
+                    {% if puede_administrar_eventos %}
+                        <th>Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for evento in eventos %}
+                    <tr>
+                        <td>{{ evento.idEvento }}</td>
+                        <td>{{ evento.nombreEvento }}</td>
+                        <td>{{ evento.descripcion }}</td>
+                        <td>{{ evento.fechaHora | datetimeformat }}</td>
+                        {% if puede_administrar_eventos %}
+                            <td>
+                                <a href="{{ url_for('evento', id_evento=evento.idEvento) }}" class="btn secondary">Modificar / Eliminar</a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No hay eventos disponibles.</p>
+    {% endif %}
 
-    <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
+    <a href="{{ url_for('index') }}" class="btn secondary">Volver al Inicio</a>
 </body>
 </html>

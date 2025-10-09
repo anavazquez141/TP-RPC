@@ -41,7 +41,7 @@ message GetEventoRequest {
 }
 
 message GetEventoResponse {
-    EventoSinUsuarios evento = 1;
+    Evento evento = 1;
     string status = 2;
     string message = 3;
 }

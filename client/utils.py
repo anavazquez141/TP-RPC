@@ -65,3 +65,19 @@ def requiere_rol_coordinador(cliente):
             return f(*args, **kwargs)
         return wrapper
     return decorador
+
+def requiere_rol_presidente_o_coordinador(cliente):
+    def decorador(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            usuario = cliente.traer_usuario_por_email(session['email'], session['token'])
+            if usuario is None:
+                session.clear()
+                flash("Error al obtener datos del usuario", "error")
+                return redirect(url_for('login'))
+            if usuario.rol not in [0, 2]:  # Presidente (0) o Coordinador (2)
+                flash("No tienes permisos para acceder a esta funcionalidad", "error")
+                return redirect(url_for('index'))
+            return f(*args, **kwargs)
+        return wrapper
+    return decorador

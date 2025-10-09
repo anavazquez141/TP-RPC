@@ -50,7 +50,7 @@ class ClienteEvento:
             token=token,
             nombreEvento=nombre_evento,
             descripcion=descripcion,
-            fecha_hora=fecha_hora,
+            fechaHora=fecha_hora,
             usuarioIds=usuario_ids or []
         )
         try:
@@ -92,7 +92,7 @@ class ClienteEvento:
             idEvento=id_evento,
             nombreEvento=nombre_evento or "",
             descripcion=descripcion or "",
-            fecha_hora=fecha_hora or "",
+            fechaHora=fecha_hora or "",
             usuarioIds=usuario_ids or []
         )
         try:

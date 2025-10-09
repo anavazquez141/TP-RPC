@@ -6,22 +6,35 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
-    <h1>Registrar Nuevo Evento</h1>
+    <!-- Mostrar mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <h1>Registrar Evento</h1>
 
     <form method="POST">
         <label>Nombre:</label>
-        <input type="text" name="nombreEvento" required>
+        <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or '' }}" required>
 
         <label>Descripción:</label>
-        <textarea name="descripcion" required></textarea>
+        <textarea name="descripcion" required>{{ request.form.descripcion or '' }}</textarea>
 
         <label>Fecha y Hora:</label>
-        <input type="datetime-local" name="fechaHora" required>
+        <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or '' }}" required>
 
-        <label>Usuarios asignados:</label>
+        <label>Usuarios:</label>
         <select name="usuarioIds" multiple>
-            {% for u in usuarios %}
-            <option value="{{ u.id }}">{{ u.nombreUsuario }}</option>
+            {% for usuario in usuarios %}
+                <option value="{{ usuario.id }}" {% if usuario.id in request.form.getlist('usuarioIds') %}selected{% endif %}>
+                    {{ usuario.nombre }} {{ usuario.apellido }}
+                </option>
             {% endfor %}
         </select>
 

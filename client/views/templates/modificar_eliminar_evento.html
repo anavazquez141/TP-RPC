@@ -2,35 +2,47 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Modificar Evento</title>
+    <title>Modificar / Eliminar Evento</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
-    <h1>Modificar Evento</h1>
+    <!-- Mostrar mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <p class="{{ category }}">{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <h1>Modificar / Eliminar Evento</h1>
 
     <form method="POST">
         <label>Nombre:</label>
-        <input type="text" name="nombreEvento" value="{{ evento.nombre }}" required>
+        <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or evento.nombreEvento }}" required>
 
         <label>Descripción:</label>
-        <textarea name="descripcion" required>{{ evento.descripcion }}</textarea>
+        <textarea name="descripcion" required>{{ request.form.descripcion or evento.descripcion }}</textarea>
 
         <label>Fecha y Hora:</label>
-        <input type="datetime-local" name="fechaHora" value="{{ evento.fecha_hora }}" required>
+        <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or evento.fechaHora }}" required>
 
-        <label>Usuarios asignados:</label>
+        <label>Usuarios:</label>
         <select name="usuarioIds" multiple>
-            {% for u in usuarios %}
-            <option value="{{ u.id }}" {% if u.id in evento.usuario_ids %}selected{% endif %}>{{ u.nombreUsuario }}</option>
+            {% for usuario in usuarios %}
+                <option value="{{ usuario.id }}"
+                        {% if usuario.id in (request.form.getlist('usuarioIds') | map('int') | list) or usuario.id in (evento.usuarios | map(attribute='id') | list) %}selected{% endif %}>
+                    {{ usuario.nombre }} {{ usuario.apellido }}
+                </option>
             {% endfor %}
         </select>
 
         <button type="submit" class="btn primary">Actualizar</button>
-    </form>
-
-    <form method="POST" style="margin-top:10px;">
-        <input type="hidden" name="eliminar" value="1">
-        <button type="submit" class="btn secondary">Eliminar Evento</button>
+        {% if puede_administrar_eventos %}
+            <button type="submit" name="eliminar" value="eliminar" class="btn danger">Eliminar</button>
+        {% endif %}
     </form>
 
     <a href="{{ url_for('eventos') }}" class="btn secondary">Volver a Eventos</a>

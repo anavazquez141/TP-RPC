@@ -1,13 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente, requiere_rol_coordinador
+from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente, requiere_rol_coordinador, requiere_rol_presidente_o_coordinador
 from cliente_usuario import ClienteUsuario
 from cliente_evento import ClienteEvento
+from cliente_donacion import ClienteDonacion
 from proto import usuarioService_pb2 as usuario_pb2
 from proto import usuarioService_pb2_grpc as usuario_pb2_grpc
 from proto import authService_pb2 as auth_pb2
 from proto import authService_pb2_grpc as auth_pb2_grpc
-from controllers.donacion_controller import DonacionController
-from views.interfaz_donaciones import InterfazDonaciones
+from datetime import datetime
 import atexit
 
 app = Flask(
@@ -18,7 +18,7 @@ app = Flask(
 app.secret_key = "super_secret_key"
 cliente_usuario = ClienteUsuario()
 cliente_evento = ClienteEvento()
-cliente_donacion = DonacionController()
+cliente_donacion = ClienteDonacion()
 atexit.register(cliente_usuario.cerrar)
 atexit.register(cliente_evento.cerrar)
 atexit.register(cliente_evento.cerrar)
@@ -48,6 +48,15 @@ def obtener_eventos():
         print(f"Error al obtener eventos: {e}")
         flash("Error al obtener la lista de eventos", "error")
         return []
+    
+
+@app.template_filter('datetimeformat')
+def datetimeformat(value):
+    try:
+        dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
+        return dt.strftime('%Y-%m-%dT%H:%M')
+    except Exception:
+        return value
 
 @app.route('/', methods=['GET'])
 @requiere_autenticacion(cliente_usuario)
@@ -215,18 +224,19 @@ def cuenta():
 @requiere_autenticacion(cliente_usuario)
 def eventos():
     eventos = obtener_eventos()
+    for evento in eventos:
+        print(f"Evento: idEvento={evento.idEvento}, nombreEvento={evento.nombreEvento}, descripcion={evento.descripcion}, fechaHora={evento.fechaHora}")
     usuario = cliente_usuario.traer_usuario_por_email(session['email'], session['token'])
     if usuario is None:
         session.clear()
         flash("Error al obtener datos del usuario", "error")
         return redirect(url_for('index'))
-    es_presidente = usuario.rol == 0
-    return render_template('eventos.html', eventos=eventos, es_presidente=es_presidente)
+    puede_administrar_eventos = usuario.rol in [0, 2]
+    return render_template('eventos.html', eventos=eventos, puede_administrar_eventos=puede_administrar_eventos)
 
 @app.route('/eventos/registrar', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
-@requiere_rol_presidente(cliente_usuario)
-#@requiere_rol_coordinador(cliente_usuario)
+@requiere_rol_presidente_o_coordinador(cliente_usuario)
 def registrar_evento():
     if request.method == 'POST':
         nombre_evento = request.form['nombreEvento']
@@ -243,26 +253,34 @@ def registrar_evento():
                 usuario_ids=usuario_ids,
                 token=session['token']
             )
+            print(f"Respuesta de create_evento: status={response.status}, message={response.message}")
             if response.status == "SUCCESS":
                 flash("Evento registrado exitosamente", "success")
                 return redirect(url_for('eventos'))
             else:
-                flash(response.message, "error")
+                flash(response.message or "Error al registrar evento", "error")
+                return render_template('registrar_evento.html', usuarios=obtener_usuarios())
         except Exception as e:
             print(f"Error al registrar evento: {e}")
-            flash("Error al registrar evento", "error")
+            flash(f"Error al registrar evento: {str(e)}", "error")
+            return render_template('registrar_evento.html', usuarios=obtener_usuarios())
     
     usuarios = obtener_usuarios()  # Para seleccionar usuarios en el formulario
     return render_template('registrar_evento.html', usuarios=usuarios)
 
 @app.route('/eventos/<int:id_evento>', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
-@requiere_rol_coordinador(cliente_usuario)
+@requiere_rol_presidente_o_coordinador(cliente_usuario)
 def evento(id_evento):
+    print(f"Accediendo a evento con id_evento={id_evento}, token={session.get('token')}")
+    usuario = cliente_usuario.traer_usuario_por_email(session['email'], session['token'])
+    print(f"Usuario: {usuario.email if usuario else None}, Rol: {usuario.rol if usuario else None}")
+    
     if request.method == 'POST':
         if 'eliminar' in request.form:
             try:
                 response = cliente_evento.delete_evento(id_evento, session['token'])
+                print(f"Respuesta de delete_evento: success={response.success}, message={response.message}")
                 if response.success:
                     flash("Evento eliminado exitosamente", "success")
                     return redirect(url_for('eventos'))
@@ -270,7 +288,7 @@ def evento(id_evento):
                     flash(response.message, "error")
             except Exception as e:
                 print(f"Error al eliminar evento: {e}")
-                flash("Error al eliminar evento", "error")
+                flash(f"Error al eliminar evento: {str(e)}", "error")
         else:
             nombre_evento = request.form['nombreEvento']
             descripcion = request.form['descripcion']
@@ -287,6 +305,7 @@ def evento(id_evento):
                     usuario_ids=usuario_ids,
                     token=session['token']
                 )
+                print(f"Respuesta de update_evento: status={response.status}, message={response.message}")
                 if response.status == "SUCCESS":
                     flash("Evento actualizado exitosamente", "success")
                     return redirect(url_for('eventos'))
@@ -294,38 +313,157 @@ def evento(id_evento):
                     flash(response.message, "error")
             except Exception as e:
                 print(f"Error al actualizar evento: {e}")
-                flash("Error al actualizar evento", "error")
+                flash(f"Error al actualizar evento: {str(e)}", "error")
     
     response = cliente_evento.get_evento(id_evento, session['token'])
+    print(f"Respuesta de get_evento: status={response.status if response else None}, message={response.message if response else None}")
     if response is None or response.status != "SUCCESS":
         flash(response.message if response else "Error al obtener el evento", "error")
         return redirect(url_for('eventos'))
     
     evento = response.evento
     usuarios = obtener_usuarios()
-    usuario = cliente_usuario.traer_usuario_por_email(session['email'], session['token'])
-    es_presidente = usuario.rol == 0 if usuario else False
-    return render_template('evento.html', evento=evento, usuarios=usuarios, es_presidente=es_presidente)
+    puede_administrar_eventos = usuario.rol in [0, 2] if usuario else False
+    return render_template('modificar_eliminar_evento.html', evento=evento, usuarios=usuarios, puede_administrar_eventos=puede_administrar_eventos)
 
 @app.route('/donaciones', methods=['GET'])
 @requiere_autenticacion(cliente_usuario)
 def donaciones():
-    return InterfazDonaciones.listar_donaciones()
+    try:
+            token = session.get('token')
+            if not token:
+                flash("Debes iniciar sesión primero", "error")
+                return redirect(url_for('login'))
+            
+            controller = ClienteDonacion()
+            response = controller.listar_donaciones(token)
+            
+            if response and hasattr(response, 'donaciones'):
+                donaciones = response.donaciones
+            else:
+                donaciones = []
+                flash("Error al obtener las donaciones", "error")
+            
+            return render_template('donaciones.html', donaciones=donaciones)
+    except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+            return render_template('donaciones.html', donaciones=[])
 
 @app.route('/agregar_donacion', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
 def agregar_donacion():
-    return InterfazDonaciones.agregar_donacion()
+    if request.method == 'POST':
+            try:
+                token = session.get('token')
+                if not token:
+                    flash("Debes iniciar sesión primero", "error")
+                    return redirect(url_for('login'))
+                
+                categoria = request.form['categoria']
+                descripcion = request.form['descripcion']
+                cantidad = int(request.form['cantidad'])
+                
+                if cantidad <= 0:
+                    flash("La cantidad debe ser mayor a 0", "error")
+                    return render_template('agregar_donacion.html')
+                
+                controller = ClienteDonacion()
+                response = controller.registrar_donacion(token, categoria, descripcion, cantidad)
+                
+                if response and hasattr(response, 'status') and response.status == "SUCCESS":
+                    flash("Donación registrada exitosamente", "success")
+                    return redirect(url_for('donaciones'))
+                else:
+                    message = getattr(response, 'message', 'Error al registrar donación') if response else "Error al registrar donación"
+                    flash(message, "error")
+                    return render_template('agregar_donacion.html')
+                    
+            except ValueError:
+                flash("La cantidad debe ser un número válido", "error")
+                return render_template('agregar_donacion.html')
+            except Exception as e:
+                flash(f"Error al registrar donación: {str(e)}", "error")
+                return render_template('agregar_donacion.html')
+        
+    return render_template('agregar_donacion.html')
 
 @app.route('/eliminar_donacion/<int:donacion_id>', methods=['POST'])
 @requiere_autenticacion(cliente_usuario)
 def eliminar_donacion(donacion_id):
-    return InterfazDonaciones.eliminar_donacion(donacion_id)
+    try:
+            token = session.get('token')
+            if not token:
+                flash("Debes iniciar sesión primero", "error")
+                return redirect(url_for('login'))
+            
+            controller = ClienteDonacion()
+            response = controller.eliminar_donacion(token, donacion_id)
+            
+            if response and hasattr(response, 'success') and response.success:
+                flash("Donación eliminada exitosamente", "success")
+            else:
+                message = getattr(response, 'message', 'Error al eliminar donación') if response else "Error al eliminar donación"
+                flash(message, "error")
+                
+    except Exception as e:
+            flash(f"Error al eliminar donación: {str(e)}", "error")
+        
+    return redirect(url_for('donaciones'))
 
 @app.route('/modificar_donacion/<int:donacion_id>', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
 def modificar_donacion(donacion_id):
-    return InterfazDonaciones.modificar_donacion(donacion_id)
+    if request.method == 'POST':
+            try:
+                token = session.get('token')
+                if not token:
+                    flash("Debes iniciar sesión primero", "error")
+                    return redirect(url_for('login'))
+                
+                descripcion = request.form['descripcion']
+                cantidad = int(request.form['cantidad'])
+                
+                # Validaciones
+                if cantidad <= 0:
+                    flash("La cantidad debe ser mayor a 0", "error")
+                    return redirect(url_for('modificar_donacion', donacion_id=donacion_id))
+                
+                controller = ClienteDonacion()
+                response = controller.modificar_donacion(token, donacion_id, descripcion, cantidad)
+                
+                if response and hasattr(response, 'status') and response.status == "SUCCESS":
+                    flash("Donación modificada exitosamente", "success")
+                    return redirect(url_for('donaciones'))
+                else:
+                    message = getattr(response, 'message', 'Error al modificar donación') if response else "Error al modificar donación"
+                    flash(message, "error")
+                    return redirect(url_for('modificar_donacion', donacion_id=donacion_id))
+                    
+            except ValueError:
+                flash("La cantidad debe ser un número válido", "error")
+                return redirect(url_for('modificar_donacion', donacion_id=donacion_id))
+            except Exception as e:
+                flash(f"Error al modificar donación: {str(e)}", "error")
+                return redirect(url_for('modificar_donacion', donacion_id=donacion_id))
+    try:
+            token = session.get('token')
+            if not token:
+                flash("Debes iniciar sesión primero", "error")
+                return redirect(url_for('login'))
+            
+            controller = ClienteDonacion()
+            response = controller.traer_donacion_por_id(token, donacion_id)
+            
+            if response and hasattr(response, 'status') and response.status == "SUCCESS":
+                donacion = response
+                return render_template('modificar_donacion.html', donacion=donacion)
+            else:
+                flash("Error al cargar la donación", "error")
+                return redirect(url_for('donaciones'))
+                
+    except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+            return redirect(url_for('donaciones'))
     
 
 if __name__ == '__main__':
