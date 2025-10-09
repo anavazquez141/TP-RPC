@@ -28,6 +28,7 @@ import io.jsonwebtoken.security.Keys;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -79,11 +80,21 @@ public class EventosServiceImpl extends EventosServiceGrpc.EventosServiceImplBas
                 responseObserver.onCompleted();
                 return;
             }
+        
 
         EventoSolidario evento = new EventoSolidario();
         evento.setNombreEvento(request.getNombreEvento());
         evento.setDescripcion(request.getDescripcion());
         evento.setFechaHora(LocalDateTime.parse(request.getFechaHora(), DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        if (evento.getFechaHora().isBefore(LocalDateTime.now())) {
+            responseObserver.onNext(CreateEventoResponse.newBuilder()
+                .setStatus("FAILURE")
+                .setMessage("La fecha y hora del evento no puede ser en el pasado")
+                .build());
+            responseObserver.onCompleted();
+            return;
+            
+        }    
 
         List<Usuario> usuarios = request.getUsuarioIdsList().stream()
                 .map(id -> usuarioRepository.findById(id).orElseThrow())
@@ -93,6 +104,8 @@ public class EventosServiceImpl extends EventosServiceGrpc.EventosServiceImplBas
         EventoSolidario saved = eventosRepository.save(evento);
         CreateEventoResponse response = CreateEventoResponse.newBuilder()
                 .setEvento(toProto(saved))
+                .setStatus("SUCCESS")
+                .setMessage("Evento registrado exitosamente")
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -115,8 +128,8 @@ public class EventosServiceImpl extends EventosServiceGrpc.EventosServiceImplBas
             Optional<EventoSolidario> optional = eventosRepository.findById(request.getIdEvento());
             if (optional.isPresent()) {
                 GetEventoResponse response = GetEventoResponse.newBuilder()
-                        .setEvento(toEventoSinUsuariosProto(optional.get()))
-                        .setStatus("OK")
+                        .setEvento(toProto(optional.get()))
+                        .setStatus("SUCCESS")
                         .setMessage("Evento encontrado")
                         .build();
                 responseObserver.onNext(response);
@@ -133,13 +146,14 @@ public class EventosServiceImpl extends EventosServiceGrpc.EventosServiceImplBas
         }
     }
 
-    @Override
-    public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEventoResponse> responseObserver) {
-        try {
-            String token = request.getToken();
-            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
-                return;
-            }
+@Override
+public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEventoResponse> responseObserver) {
+    try {
+        String token = request.getToken();
+        if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+            return;
+        }
+
         Claims claims = Jwts.parser()
                 .verifyWith(key)
                 .build()
@@ -147,22 +161,38 @@ public class EventosServiceImpl extends EventosServiceGrpc.EventosServiceImplBas
                 .getPayload();
 
         List<String> roles = claims.get("roles", List.class);
-            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_COORDINADOR")) {
-                responseObserver.onNext(UpdateEventoResponse.newBuilder()
+        if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_COORDINADOR")) {
+            responseObserver.onNext(UpdateEventoResponse.newBuilder()
                     .setStatus("FAILURE")
                     .setMessage("No tienes permiso para modificar eventos")
                     .build());
-                responseObserver.onCompleted();
-                return;
-            }
+            responseObserver.onCompleted();
+            return;
+        }
 
         Optional<EventoSolidario> optional = eventosRepository.findById(request.getIdEvento());
         if (optional.isPresent()) {
             EventoSolidario evento = optional.get();
-            if (!request.getNombreEvento().isEmpty()) evento.setNombreEvento(request.getNombreEvento());
-            if (!request.getDescripcion().isEmpty()) evento.setDescripcion(request.getDescripcion());
-            if (!request.getFechaHora().isEmpty()) evento.setFechaHora(LocalDateTime.parse(request.getFechaHora(), DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
+            if (!request.getFechaHora().isEmpty()) {
+                LocalDateTime fechaHora = LocalDateTime.parse(request.getFechaHora(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                if (fechaHora.isBefore(LocalDateTime.now())) {
+                    responseObserver.onNext(UpdateEventoResponse.newBuilder()
+                            .setStatus("FAILURE")
+                            .setMessage("No puedes cambiar datos de un evento del pasado")
+                            .build());
+                    responseObserver.onCompleted();
+                    return;
+                }
+                evento.setFechaHora(fechaHora);
+            }
+
+            if (!request.getNombreEvento().isEmpty()) {
+                evento.setNombreEvento(request.getNombreEvento());
+            }
+            if (!request.getDescripcion().isEmpty()) {
+                evento.setDescripcion(request.getDescripcion());
+            }
             if (!request.getUsuarioIdsList().isEmpty()) {
                 List<Usuario> usuarios = request.getUsuarioIdsList().stream()
                         .map(id -> usuarioRepository.findById(id).orElseThrow())
@@ -173,18 +203,23 @@ public class EventosServiceImpl extends EventosServiceGrpc.EventosServiceImplBas
             EventoSolidario updated = eventosRepository.save(evento);
             UpdateEventoResponse response = UpdateEventoResponse.newBuilder()
                     .setEvento(toProto(updated))
+                    .setStatus("SUCCESS")
+                    .setMessage("Evento actualizado exitosamente")
                     .build();
             responseObserver.onNext(response);
         } else {
-            responseObserver.onError(new RuntimeException("Evento not found"));
+            responseObserver.onNext(UpdateEventoResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Evento no encontrado")
+                    .build());
         }
         responseObserver.onCompleted();
-        } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL
+    } catch (Exception e) {
+        responseObserver.onError(Status.INTERNAL
                 .withDescription("Error al modificar evento: " + e.getMessage())
                 .asRuntimeException());
-        }
     }
+}
 
     @Override
     public void deleteEvento(DeleteEventoRequest request, StreamObserver<DeleteEventoResponse> responseObserver) {
@@ -252,7 +287,7 @@ public class EventosServiceImpl extends EventosServiceGrpc.EventosServiceImplBas
             List<EventoSolidario> eventos = eventosRepository.findAll();
             ListEventosResponse response = ListEventosResponse.newBuilder()
                     .addAllEventos(eventos.stream().map(this::toEventoSinUsuariosProto).collect(Collectors.toList()))
-                    .setStatus("OK")
+                    .setStatus("SUCCESS")
                     .setMessage("Eventos listados exitosamente")
                     .build();
             responseObserver.onNext(response);

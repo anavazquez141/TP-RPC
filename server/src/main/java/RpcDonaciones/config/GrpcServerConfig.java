@@ -12,6 +12,7 @@ import javax.annotation.PreDestroy;
 import RpcDonaciones.services.AuthServiceImpl;
 import RpcDonaciones.services.DonacionServiceImpl;
 import RpcDonaciones.services.UsuarioServiceImpl;
+import RpcDonaciones.services.EventosServiceImpl;
 //import RpcDonaciones.services.DonacionServiceImpl;
 
 import java.io.BufferedReader;
@@ -30,6 +31,9 @@ public class GrpcServerConfig {
     
     @Autowired
     private DonacionServiceImpl donacionService;
+
+    @Autowired
+    private EventosServiceImpl eventoService;
 
     @Value("${grpc.server.port}")
     private int grpcPort;
@@ -51,6 +55,7 @@ public class GrpcServerConfig {
                 .addService(authService)
                 .addService(usuarioService)
                 .addService(this.donacionService)
+                .addService(eventoService)
                 .build()
                 .start();
         System.out.println("gRPC server started on port " + grpcPort);

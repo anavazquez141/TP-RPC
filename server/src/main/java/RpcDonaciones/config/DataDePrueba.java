@@ -1,5 +1,8 @@
 package RpcDonaciones.config;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,15 +10,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import RpcDonaciones.entities.Rol;
 import RpcDonaciones.entities.Usuario;
 import RpcDonaciones.entities.enums.TipoDeRol;
+import RpcDonaciones.entities.EventoSolidario;
 import RpcDonaciones.repositories.IUsuario;
 import RpcDonaciones.repositories.IRol;
+import RpcDonaciones.repositories.IEventoSolidario;
 
 
 @Configuration
 public class DataDePrueba {
 
     @Bean
-    public CommandLineRunner initData(IUsuario userRepository, IRol rolRepository, PasswordEncoder passwordEncoder) {
+    public CommandLineRunner initData(IUsuario userRepository, IRol rolRepository, PasswordEncoder passwordEncoder, IEventoSolidario eventoRepository) {
         return args -> {
 
             // Crear roles si no existen
@@ -64,6 +69,17 @@ public class DataDePrueba {
                 user2.agregarRoles(rolVoluntario);
                 userRepository.save(user2);
                 System.out.println("Usuario de prueba creado: voluntario@example.com con rol VOLUNTARIO");
+            }
+
+            // Crear eventos solidarios de prueba si no existen
+            if (eventoRepository.count() == 0) {
+                EventoSolidario evento1 = new EventoSolidario();
+                evento1.setNombreEvento("Campaña de Invierno");
+                evento1.setDescripcion("Recolección de ropa y alimentos para personas en situación de calle durante el invierno.");
+                evento1.setFechaHora(LocalDateTime.parse("2025-12-16 10:00", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                eventoRepository.save(evento1);
+
+                System.out.println("Evento solidario de prueba creado.");
             }
         };
     }
