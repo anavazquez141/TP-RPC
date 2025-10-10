@@ -23,6 +23,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     
     @Autowired
     private AuthServiceImpl authService;
+    @Autowired
     private final TokenValidator tokenValidator = null;
 
     @Override
@@ -134,6 +135,55 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 .asRuntimeException());
         }
     }
+
+    @Override
+    public void traerDonacionPorId(DonacionIdRequest request,
+                                StreamObserver<DonacionResponse> responseObserver) {
+        try {
+            // Validar token
+            if (!tokenValidator.isTokenValid(request.getToken())) {
+                sendErrorResponse(responseObserver, "Token inválido o expirado");
+                return;
+            }
+
+            // Buscar donación por ID
+            Optional<Donacion> donacionOpt = donacionRepository.findById(request.getId());
+
+            if (donacionOpt.isPresent() && !donacionOpt.get().isEliminado()) {
+                Donacion donacion = donacionOpt.get();
+
+                DonacionResponse response = DonacionResponse.newBuilder()
+                    .setId(donacion.getId())
+                    .setCategoria(donacion.getCategoria().name())
+                    .setDescripcion(donacion.getDescripcion())
+                    .setCantidad(donacion.getCantidad())
+                    .setStatus("SUCCESS")
+                    .setMessage("Donación encontrada correctamente")
+                    .build();
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            } else {
+                DonacionResponse response = DonacionResponse.newBuilder()
+                    .setStatus("ERROR")
+                    .setMessage("Donación no encontrada o eliminada")
+                    .build();
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            }
+
+        } catch (Exception e) {
+            DonacionResponse response = DonacionResponse.newBuilder()
+                .setStatus("ERROR")
+                .setMessage("Error al obtener la donación: " + e.getMessage())
+                .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        }
+    }
+
 
     private void sendErrorResponse(StreamObserver<?> responseObserver, String message) {
         responseObserver.onError(Status.INTERNAL
