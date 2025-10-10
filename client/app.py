@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente, requiere_rol_coordinador, requiere_rol_presidente_o_coordinador
+from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente, requiere_rol_presidente_o_coordinador, requiere_rol_presidente_o_vocal
 from cliente_usuario import ClienteUsuario
 from cliente_evento import ClienteEvento
 from cliente_donacion import ClienteDonacion
@@ -330,6 +330,7 @@ def evento(id_evento):
 
 @app.route('/donaciones', methods=['GET'])
 @requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
 def donaciones():
     try:
             token = session.get('token')
@@ -353,6 +354,7 @@ def donaciones():
 
 @app.route('/agregar_donacion', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
 def agregar_donacion():
     if request.method == 'POST':
             try:
@@ -391,6 +393,7 @@ def agregar_donacion():
 
 @app.route('/eliminar_donacion/<int:donacion_id>', methods=['POST'])
 @requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
 def eliminar_donacion(donacion_id):
     try:
             token = session.get('token')
@@ -414,6 +417,7 @@ def eliminar_donacion(donacion_id):
 
 @app.route('/modificar_donacion/<int:donacion_id>', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
 def modificar_donacion(donacion_id):
     if request.method == 'POST':
             try:

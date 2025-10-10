@@ -26,7 +26,8 @@ if _version_not_supported:
 
 
 class DonacionServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """--------------------- SERVICIOS -----------------------
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -62,7 +63,8 @@ class DonacionServiceStub(object):
 
 
 class DonacionServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """--------------------- SERVICIOS -----------------------
+    """
 
     def registrarDonacion(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -131,7 +133,8 @@ def add_DonacionServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class DonacionService(object):
-    """Missing associated documentation comment in .proto file."""
+    """--------------------- SERVICIOS -----------------------
+    """
 
     @staticmethod
     def registrarDonacion(request,
