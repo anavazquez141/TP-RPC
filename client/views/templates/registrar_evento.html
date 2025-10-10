@@ -4,43 +4,130 @@
     <meta charset="UTF-8">
     <title>Registrar Evento</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        /* --- Mejora del formulario --- */
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input,
+        .input-group textarea,
+        .input-group select[multiple] {
+            width: 100%;
+            padding: 12px 12px 12px 0;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            font-size: 15px;
+            font-family: Arial, sans-serif;
+            outline: none;
+            background: none;
+            transition: 0.3s;
+            border-radius: 6px;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus,
+        .input-group select[multiple]:focus {
+            border-bottom-color: #3498db;
+        }
+
+        /* Label flotante */
+        .input-group label {
+            position: absolute;
+            left: 0;
+            top: 12px;
+            color: #3498db; /* azul */
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label,
+        .input-group textarea:focus + label,
+        .input-group textarea:not(:placeholder-shown) + label,
+        .input-group select[multiple]:focus + label,
+        .input-group select[multiple]:not(:placeholder-shown) + label {
+            top: -8px;
+            font-size: 12px;
+            color: #3498db;
+        }
+
+        /* Textarea específico */
+        .input-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Select multiple */
+        .input-group select[multiple] {
+            height: 120px;
+        }
+
+        /* Título de la tarjeta igual que los demás */
+        .profile-card h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Mostrar mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                    <p class="{{ category }}">{{ message }}</p>
-                {% endfor %}
+    <div class="profile-card">
+        <h1>Registrar Evento</h1>
+
+        <!-- Mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="modern-login-form">
+            <!-- Nombre del evento -->
+            <div class="input-group">
+                <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or '' }}" required placeholder=" ">
+                <label>Nombre</label>
             </div>
-        {% endif %}
-    {% endwith %}
 
-    <h1>Registrar Evento</h1>
+            <!-- Descripción -->
+            <div class="input-group">
+                <textarea name="descripcion" required placeholder=" ">{{ request.form.descripcion or '' }}</textarea>
+                <label>Descripción</label>
+            </div>
 
-    <form method="POST">
-        <label>Nombre:</label>
-        <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or '' }}" required>
+            <!-- Fecha y hora -->
+            <div class="input-group">
+                <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or '' }}" required placeholder=" ">
+                <label>Fecha y Hora</label>
+            </div>
 
-        <label>Descripción:</label>
-        <textarea name="descripcion" required>{{ request.form.descripcion or '' }}</textarea>
+            <!-- Selección de usuarios -->
+            <div class="input-group">
+                <select name="usuarioIds" multiple required>
+                    {% for usuario in usuarios %}
+                        <option value="{{ usuario.id }}" {% if usuario.id in request.form.getlist('usuarioIds') %}selected{% endif %}>
+                            {{ usuario.nombre }} {{ usuario.apellido }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <label>Usuarios</label>
+            </div>
 
-        <label>Fecha y Hora:</label>
-        <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or '' }}" required>
+            <!-- Botón registrar -->
+            <button type="submit" class="btn primary">Registrar</button>
+        </form>
 
-        <label>Usuarios:</label>
-        <select name="usuarioIds" multiple>
-            {% for usuario in usuarios %}
-                <option value="{{ usuario.id }}" {% if usuario.id in request.form.getlist('usuarioIds') %}selected{% endif %}>
-                    {{ usuario.nombre }} {{ usuario.apellido }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <button type="submit" class="btn primary">Registrar</button>
-    </form>
-
-    <a href="{{ url_for('eventos') }}" class="btn secondary">Volver a Eventos</a>
+        <!-- Botón volver -->
+        <div class="actions">
+            <a href="{{ url_for('eventos') }}" class="btn secondary">Volver a Eventos</a>
+        </div>
+    </div>
 </body>
 </html>

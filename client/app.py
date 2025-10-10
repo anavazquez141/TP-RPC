@@ -274,40 +274,59 @@ def registrar_evento():
 def evento(id_evento):
     print(f"Accediendo a evento con id_evento={id_evento}, token={session.get('token')}")
     usuario = cliente_usuario.traer_usuario_por_email(session['email'], session['token'])
+    print(f"Usuario: {usuario.email if usuario else None}, Rol: {usuario.rol if usuario else None}")
+    
+    if request.method == 'POST':
+        if 'eliminar' in request.form:
+            try:
+                response = cliente_evento.delete_evento(id_evento, session['token'])
+                print(f"Respuesta de delete_evento: success={response.success}, message={response.message}")
+                if response.success:
+                    flash("Evento eliminado exitosamente", "success")
+                    return redirect(url_for('eventos'))
+                else:
+                    flash(response.message, "error")
+            except Exception as e:
+                print(f"Error al eliminar evento: {e}")
+                flash(f"Error al eliminar evento: {str(e)}", "error")
+        else:
+            nombre_evento = request.form['nombreEvento']
+            descripcion = request.form['descripcion']
+            fecha_hora = request.form['fechaHora']
+            usuario_ids = request.form.get('usuarioIds', '').split(',')
+            usuario_ids = [int(id.strip()) for id in usuario_ids if id.strip()]
+            
+            try:
+                response = cliente_evento.update_evento(
+                    id_evento=id_evento,
+                    nombre_evento=nombre_evento,
+                    descripcion=descripcion,
+                    fecha_hora=fecha_hora,
+                    usuario_ids=usuario_ids,
+                    token=session['token']
+                )
+                print(f"Respuesta de update_evento: status={response.status}, message={response.message}")
+                if response.status == "SUCCESS":
+                    flash("Evento actualizado exitosamente", "success")
+                    return redirect(url_for('eventos'))
+                else:
+                    flash(response.message, "error")
+            except Exception as e:
+                print(f"Error al actualizar evento: {e}")
+                flash(f"Error al actualizar evento: {str(e)}", "error")
     
     response = cliente_evento.get_evento(id_evento, session['token'])
-    print(f"Respuesta de get_evento: status={response.status if response else None}")
-    
+    print(f"Respuesta de get_evento: status={response.status if response else None}, message={response.message if response else None}")
     if response is None or response.status != "SUCCESS":
         flash(response.message if response else "Error al obtener el evento", "error")
         return redirect(url_for('eventos'))
-    
+        
     evento = response.evento
     usuarios = obtener_usuarios()
-    
-    # Debug seguro
-    print('Evento:', evento)
-    print('Atributos del evento:', dir(evento))
-    usuarios_evento = getattr(evento, 'usuarios', [])
-    print('Usuarios del evento:', usuarios_evento)
-    
     puede_administrar_eventos = usuario.rol in [0, 2] if usuario else False
     
-    # Convertir el evento a un diccionario para mejor manejo en la plantilla
-    evento_dict = {
-        'idEvento': evento.idEvento,
-        'nombreEvento': evento.nombreEvento,
-        'descripcion': evento.descripcion,
-        'fechaHora': evento.fechaHora,
-        'usuarios': getattr(evento, 'usuarios', [])
-    }
-    
-    return render_template(
-        'modificar_eliminar_evento.html',
-        evento=evento_dict,
-        usuarios=usuarios,
-        puede_administrar_eventos=puede_administrar_eventos
-    )
+    return render_template('modificar_eliminar_evento.html', evento=evento, usuarios=usuarios, puede_administrar_eventos=puede_administrar_eventos)
+
 
 @app.route('/donaciones', methods=['GET'])
 @requiere_autenticacion(cliente_usuario)

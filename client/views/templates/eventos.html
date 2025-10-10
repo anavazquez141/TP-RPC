@@ -4,60 +4,102 @@
     <meta charset="UTF-8">
     <title>Eventos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        /* --- Header con título y botón --- */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .header .btn.primary {
+            width: auto; /* Para que no ocupe todo el ancho */
+            padding: 10px 20px;
+        }
+
+        /* --- Botones Modificar/Eliminar estilo igual que registrar evento --- */
+        .btn.event-action {
+            padding: 8px 16px;
+            font-weight: bold;
+            font-size: 14px;
+            border-radius: 6px;
+            background-color: #3498db;
+            color: #fff;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+        }
+
+        .btn.event-action:hover {
+            background-color: #2980b9;
+        }
+    </style>
 </head>
 <body>
-    <!-- Mostrar mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                    <p class="{{ category }}">{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+    <div class="profile-card">
+        <!-- Header con título y botón -->
+        <div class="header">
+            <h1>Eventos</h1>
+            {% if puede_administrar_eventos %}
+                <a href="{{ url_for('registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
+            {% endif %}
+        </div>
 
-    <h1>Eventos</h1>
+        <!-- Mostrar mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
-    <!-- Botón para registrar nuevo evento -->
-    {% if puede_administrar_eventos %}
-        <a href="{{ url_for('registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
-    {% endif %}
-
-    <!-- Lista de eventos -->
-    {% if eventos %}
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Fecha y Hora</th>
-                    {% if puede_administrar_eventos %}
-                        <th>Acciones</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for evento in eventos %}
+        <!-- Lista de eventos -->
+        {% if eventos %}
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ evento.idEvento }}</td>
-                        <td>{{ evento.nombreEvento }}</td>
-                        <td>{{ evento.descripcion }}</td>
-                        <td>{{ evento.fechaHora | datetimeformat }}</td>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Fecha y Hora</th>
                         {% if puede_administrar_eventos %}
-                            <td>
-                                <a href="{{ url_for('evento', id_evento=evento.idEvento) }}" class="btn secondary">Modificar / Eliminar</a>
-                            </td>
+                            <th>Acciones</th>
                         {% endif %}
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>No hay eventos disponibles.</p>
-    {% endif %}
+                </thead>
+                <tbody>
+                    {% for evento in eventos %}
+                        <tr>
+                            <td>{{ evento.idEvento }}</td>
+                            <td>{{ evento.nombreEvento }}</td>
+                            <td>{{ evento.descripcion }}</td>
+                            <td>{{ evento.fechaHora | datetimeformat }}</td>
+                            {% if puede_administrar_eventos %}
+                                <td>
+                                    <a href="{{ url_for('evento', id_evento=evento.idEvento) }}" class="btn event-action">Modificar / Eliminar</a>
+                                </td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No hay eventos disponibles.</p>
+        {% endif %}
 
-    <a href="{{ url_for('index') }}" class="btn secondary">Volver al Inicio</a>
+        <!-- Botón de volver al inicio -->
+        <div class="actions">
+            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Inicio</a>
+        </div>
+    </div>
 </body>
 </html>

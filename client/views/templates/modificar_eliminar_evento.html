@@ -4,127 +4,231 @@
     <meta charset="UTF-8">
     <title>Modificar / Eliminar Evento</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        /* --- Tarjeta de contenido --- */
+        .profile-card {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 700px;
+            width: 100%;
+            margin: 40px auto;
+        }
+
+        .profile-card h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        /* --- Formulario moderno --- */
+        .modern-login-form .input-group {
+            position: relative;
+            margin-bottom: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+        }
+
+        .input-group input,
+        .input-group textarea,
+        .input-group select[multiple],
+        .input-group input[type="datetime-local"] {
+            width: 100%;
+            padding: 12px 12px 12px 0;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            font-size: 15px;
+            font-family: Arial, sans-serif;
+            font-weight: normal;
+            outline: none;
+            background: none;
+            transition: 0.3s;
+            border-radius: 6px;
+            box-sizing: border-box;
+            color: #000;
+            height: 42px;
+        }
+
+        .input-group textarea {
+            min-height: 120px;
+            height: auto;
+            resize: vertical;
+        }
+
+        .input-group select[multiple] {
+            height: 150px;
+            padding-top: 12px;
+            padding-bottom: 12px;
+            font-weight: normal;
+            background-color: #fff;
+        }
+
+        .input-group label {
+            position: absolute;
+            left: 0;
+            top: 12px;
+            color: #3498db;
+            font-size: 14px;
+            font-weight: bold;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label,
+        .input-group textarea:focus + label,
+        .input-group textarea:not(:placeholder-shown) + label,
+        .input-group select[multiple]:focus + label,
+        .input-group select[multiple]:not(:placeholder-shown) + label {
+            top: -8px;
+            font-size: 12px;
+            color: #3498db;
+        }
+
+        /* --- Usuarios asignados/disponibles --- */
+        .user-lists { display: flex; gap: 20px; margin-bottom: 20px; }
+        .list-container { flex: 1; }
+        .list-container select { width: 100%; min-height: 200px; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+        .list-container h4 { margin-bottom: 10px; color: #3498db; text-align: center; }
+        .list-container button { display: block; width: 100%; margin-top: 8px; padding: 8px; border: none; border-radius: 6px; background-color: #3498db; color: #fff; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .list-container button:hover { background-color: #2980b9; }
+
+        /* --- Botones principales --- */
+        .btn.primary {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            background-color: #3498db;
+            color: #fff;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn.primary:hover { background-color: #2980b9; }
+
+        .btn.danger {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 15px;
+            cursor: pointer;
+            background-color: #e74c3c;
+            color: #fff;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn.danger:hover { background-color: #c0392b; }
+
+        .actions { margin-top: 20px; text-align: center; }
+        .actions a { display: inline-block; padding: 10px 20px; border-radius: 6px; background-color: #95a5a6; color: #fff; text-decoration: none; font-weight: bold; transition: 0.3s; }
+        .actions a:hover { background-color: #7f8c8d; }
+    </style>
 </head>
 <body>
-    <!-- Mostrar mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                    <p class="{{ category }}">{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+    <div class="profile-card">
+        <h1>Modificar / Eliminar Evento</h1>
 
-    <h1>Modificar / Eliminar Evento</h1>
-
-    <form method="POST">
-        <label>Nombre:</label>
-        <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or evento.nombreEvento }}" required>
-
-        <label>Descripción:</label>
-        <textarea name="descripcion" required>{{ request.form.descripcion or evento.descripcion }}</textarea>
-
-        <label>Fecha y Hora:</label>
-        <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or evento.fechaHora }}" required>
-
-        <label>Usuarios:</label>
-
-        <!-- Agregar esto justo antes del div user-lists para debug -->
-        <div style="display:none">
-            <!-- Debug info -->
-            <p>Usuarios del evento: {{ evento.usuarios|map(attribute='id')|list }}</p>
-            <p>Todos los usuarios: {{ usuarios|map(attribute='id')|list }}</p>
-        </div>
-
-        <div class="user-lists">
-            <div class="list-container">
-                <h4>Usuarios Asignados</h4>
-                <select id="assigned-users" multiple size="10">
-                    {% for usuario in usuarios %}
-                        {% if evento.usuarios and usuario.id|string in evento.usuarios|map(attribute='id')|map('string')|list %}
-                            <option value="{{ usuario.id }}">{{ usuario.nombre }} {{ usuario.apellido }}</option>
-                        {% endif %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
                     {% endfor %}
-                </select>
-                <br>
-                <button type="button" onclick="moveToAvailable()">Desasignar →</button>
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="modern-login-form" id="evento-form">
+            <!-- Nombre -->
+            <div class="input-group">
+                <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or evento.nombreEvento }}" required placeholder=" ">
+                <label>Nombre</label>
             </div>
 
-            <div class="list-container">
-                <h4>Usuarios Disponibles</h4>
-                <select id="available-users" multiple size="10">
-                    {% for usuario in usuarios %}
-                        {% if not evento.usuarios or usuario.id|string not in evento.usuarios|map(attribute='id')|map('string')|list %}
-                            <option value="{{ usuario.id }}">{{ usuario.nombre }} {{ usuario.apellido }}</option>
-                        {% endif %}
-                    {% endfor %}
-                </select>
-                <br>
-                <button type="button" onclick="moveToAssigned()">← Asignar</button>
+            <!-- Descripción -->
+            <div class="input-group">
+                <textarea name="descripcion" required placeholder=" ">{{ request.form.descripcion or evento.descripcion }}</textarea>
+                <label>Descripción</label>
             </div>
+
+            <!-- Fecha y Hora -->
+            <div class="input-group">
+                <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or evento.fechaHora }}" required placeholder=" ">
+                <label>Fecha y Hora</label>
+            </div>
+
+            <!-- Usuarios asignados y disponibles -->
+            <div class="user-lists">
+                <div class="list-container">
+                    <h4>Usuarios Asignados</h4>
+                    <select id="assigned-users" multiple size="10">
+                        {% for usuario in usuarios %}
+                            {% if evento.usuarios and usuario.id|string in evento.usuarios|map(attribute='id')|map('string')|list %}
+                                <option value="{{ usuario.id }}">{{ usuario.nombre }} {{ usuario.apellido }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <button type="button" onclick="moveToAvailable()">Desasignar →</button>
+                </div>
+
+                <div class="list-container">
+                    <h4>Usuarios Disponibles</h4>
+                    <select id="available-users" multiple size="10">
+                        {% for usuario in usuarios %}
+                            {% if not evento.usuarios or usuario.id|string not in evento.usuarios|map(attribute='id')|map('string')|list %}
+                                <option value="{{ usuario.id }}">{{ usuario.nombre }} {{ usuario.apellido }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <button type="button" onclick="moveToAssigned()">← Asignar</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="usuarioIds" id="usuarioIds">
+
+            <!-- Botones -->
+            <button type="submit" class="btn primary">Actualizar</button>
+            {% if puede_administrar_eventos %}
+                <button type="submit" name="eliminar" value="eliminar" class="btn danger">Eliminar</button>
+            {% endif %}
+        </form>
+
+        <div class="actions">
+            <a href="{{ url_for('eventos') }}" class="btn secondary">Volver a Eventos</a>
         </div>
-
-        <input type="hidden" name="usuarioIds" id="usuarioIds">
-
-        <button type="submit" class="btn primary">Actualizar</button>
-        {% if puede_administrar_eventos %}
-            <button type="submit" name="eliminar" value="eliminar" class="btn danger">Eliminar</button>
-        {% endif %}
-    </form>
-
-    <a href="{{ url_for('eventos') }}" class="btn secondary">Volver a Eventos</a>
+    </div>
 
     <script>
         function moveToAvailable() {
-            var assigned = document.getElementById('assigned-users');
-            var available = document.getElementById('available-users');
-            for (var option of assigned.selectedOptions) {
-                available.appendChild(option);
-            }
+            const assigned = document.getElementById('assigned-users');
+            const available = document.getElementById('available-users');
+            Array.from(assigned.selectedOptions).forEach(option => available.appendChild(option));
             updateHiddenField();
         }
 
         function moveToAssigned() {
-            var available = document.getElementById('available-users');
-            var assigned = document.getElementById('assigned-users');
-            for (var option of available.selectedOptions) {
-                assigned.appendChild(option);
-            }
+            const available = document.getElementById('available-users');
+            const assigned = document.getElementById('assigned-users');
+            Array.from(available.selectedOptions).forEach(option => assigned.appendChild(option));
             updateHiddenField();
         }
 
         function updateHiddenField() {
-            var assigned = document.getElementById('assigned-users');
-            var hidden = document.getElementById('usuarioIds');
-            var ids = Array.from(assigned.options).map(option => option.value);
-            hidden.value = ids.join(',');
-            console.log('Hidden usuarioIds:', hidden.value); // Depuración
+            const assigned = document.getElementById('assigned-users');
+            const hidden = document.getElementById('usuarioIds');
+            hidden.value = Array.from(assigned.options).map(option => option.value).join(',');
         }
 
-        // Inicializar al cargar: Eliminar usuarios asignados de disponibles (por si falla Jinja2)
-        window.onload = function() {
-            var assigned = document.getElementById('assigned-users');
-            var available = document.getElementById('available-users');
-            var assignedIds = new Set(Array.from(assigned.options).map(opt => opt.value.toString()));
-            console.log('Assigned IDs:', Array.from(assignedIds)); // Depuración
-
-            // Eliminar usuarios asignados de disponibles
-            for (var i = available.options.length - 1; i >= 0; i--) {
-                if (assignedIds.has(available.options[i].value.toString())) {
-                    available.remove(i);
-                }
-            }
-            updateHiddenField();
-        };
+        // Actualizar hidden al cargar la página
+        window.onload = updateHiddenField;
     </script>
-
-    <style>
-        .user-lists { display: flex; gap: 20px; }
-        .list-container { flex: 1; }
-        .list-container select { width: 100%; min-height: 200px; }
-        button { margin: 5px; }
-    </style>
 </body>
 </html>
