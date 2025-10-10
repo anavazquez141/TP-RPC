@@ -30,14 +30,43 @@
         <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or evento.fechaHora }}" required>
 
         <label>Usuarios:</label>
-        <select name="usuarioIds" multiple>
-            {% for usuario in usuarios %}
-                <option value="{{ usuario.id }}"
-                        {% if usuario.id in (request.form.getlist('usuarioIds') | map('int') | list) or usuario.id in (evento.usuarios | map(attribute='id') | list) %}selected{% endif %}>
-                    {{ usuario.nombre }} {{ usuario.apellido }}
-                </option>
-            {% endfor %}
-        </select>
+
+        <!-- Agregar esto justo antes del div user-lists para debug -->
+        <div style="display:none">
+            <!-- Debug info -->
+            <p>Usuarios del evento: {{ evento.usuarios|map(attribute='id')|list }}</p>
+            <p>Todos los usuarios: {{ usuarios|map(attribute='id')|list }}</p>
+        </div>
+
+        <div class="user-lists">
+            <div class="list-container">
+                <h4>Usuarios Asignados</h4>
+                <select id="assigned-users" multiple size="10">
+                    {% for usuario in usuarios %}
+                        {% if evento.usuarios and usuario.id|string in evento.usuarios|map(attribute='id')|map('string')|list %}
+                            <option value="{{ usuario.id }}">{{ usuario.nombre }} {{ usuario.apellido }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <br>
+                <button type="button" onclick="moveToAvailable()">Desasignar →</button>
+            </div>
+
+            <div class="list-container">
+                <h4>Usuarios Disponibles</h4>
+                <select id="available-users" multiple size="10">
+                    {% for usuario in usuarios %}
+                        {% if not evento.usuarios or usuario.id|string not in evento.usuarios|map(attribute='id')|map('string')|list %}
+                            <option value="{{ usuario.id }}">{{ usuario.nombre }} {{ usuario.apellido }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <br>
+                <button type="button" onclick="moveToAssigned()">← Asignar</button>
+            </div>
+        </div>
+
+        <input type="hidden" name="usuarioIds" id="usuarioIds">
 
         <button type="submit" class="btn primary">Actualizar</button>
         {% if puede_administrar_eventos %}
@@ -46,5 +75,56 @@
     </form>
 
     <a href="{{ url_for('eventos') }}" class="btn secondary">Volver a Eventos</a>
+
+    <script>
+        function moveToAvailable() {
+            var assigned = document.getElementById('assigned-users');
+            var available = document.getElementById('available-users');
+            for (var option of assigned.selectedOptions) {
+                available.appendChild(option);
+            }
+            updateHiddenField();
+        }
+
+        function moveToAssigned() {
+            var available = document.getElementById('available-users');
+            var assigned = document.getElementById('assigned-users');
+            for (var option of available.selectedOptions) {
+                assigned.appendChild(option);
+            }
+            updateHiddenField();
+        }
+
+        function updateHiddenField() {
+            var assigned = document.getElementById('assigned-users');
+            var hidden = document.getElementById('usuarioIds');
+            var ids = Array.from(assigned.options).map(option => option.value);
+            hidden.value = ids.join(',');
+            console.log('Hidden usuarioIds:', hidden.value); // Depuración
+        }
+
+        // Inicializar al cargar: Eliminar usuarios asignados de disponibles (por si falla Jinja2)
+        window.onload = function() {
+            var assigned = document.getElementById('assigned-users');
+            var available = document.getElementById('available-users');
+            var assignedIds = new Set(Array.from(assigned.options).map(opt => opt.value.toString()));
+            console.log('Assigned IDs:', Array.from(assignedIds)); // Depuración
+
+            // Eliminar usuarios asignados de disponibles
+            for (var i = available.options.length - 1; i >= 0; i--) {
+                if (assignedIds.has(available.options[i].value.toString())) {
+                    available.remove(i);
+                }
+            }
+            updateHiddenField();
+        };
+    </script>
+
+    <style>
+        .user-lists { display: flex; gap: 20px; }
+        .list-container { flex: 1; }
+        .list-container select { width: 100%; min-height: 200px; }
+        button { margin: 5px; }
+    </style>
 </body>
 </html>
