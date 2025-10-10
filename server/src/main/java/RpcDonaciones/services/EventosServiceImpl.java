@@ -193,12 +193,12 @@ public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEvent
             if (!request.getDescripcion().isEmpty()) {
                 evento.setDescripcion(request.getDescripcion());
             }
-            if (!request.getUsuarioIdsList().isEmpty()) {
-                List<Usuario> usuarios = request.getUsuarioIdsList().stream()
-                        .map(id -> usuarioRepository.findById(id).orElseThrow())
-                        .collect(Collectors.toList());
-                evento.setUsuarios(usuarios);
-            }
+
+            // Siempre actualiza la lista de usuarios, incluso si está vacía
+            List<Usuario> usuarios = request.getUsuarioIdsList().stream()
+                    .map(id -> usuarioRepository.findById(id).orElseThrow())
+                    .collect(Collectors.toList());
+            evento.setUsuarios(usuarios);
 
             EventoSolidario updated = eventosRepository.save(evento);
             UpdateEventoResponse response = UpdateEventoResponse.newBuilder()
