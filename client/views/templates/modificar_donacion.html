@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Modificar Donación</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+
+    <div class="profile-card">
+
+        <h2>Modificar Donación</h2>
+
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Formulario para modificar donación -->
+        <form method="POST" class="modern-login-form">
+            <div class="input-group">
+                <input type="text" value="{{ donacion.categoria }}" readonly placeholder=" ">
+                <label>Categoría (no editable)</label>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="descripcion" name="descripcion" 
+                       value="{{ donacion.descripcion }}" required placeholder=" ">
+                <label>Descripción</label>
+            </div>
+
+            <div class="input-group">
+                <input type="number" id="cantidad" name="cantidad" 
+                       value="{{ donacion.cantidad }}" min="1" required placeholder=" ">
+                <label>Cantidad</label>
+            </div>
+
+            <button type="submit" class="btn primary">Guardar Cambios</button>
+        </form>
+
+        <!-- Enlaces -->
+        <div class="actions">
+            <a href="{{ url_for('donaciones') }}" class="btn secondary">Volver a Donaciones</a>
+            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Inicio</a>
+        </div>
+
+    </div>
+
+</body>
+</html>

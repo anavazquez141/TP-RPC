@@ -9,11 +9,11 @@ class ClienteDonacion:
         self.channel = None
         self.stub = None
 
-    # Se conecta con el gRPC servidor
     def connect(self):
         if self.channel is None or self.is_channel_closed():
             self.channel = grpc.insecure_channel(f"{self.host}:{self.port}")
-            self.stub = donacion_pb2_grpc(self.channel)
+            # CORRECCIÓN: Usa DonacionServiceStub en lugar de llamar al módulo directamente
+            self.stub = donacion_pb2_grpc.DonacionServiceStub(self.channel)
 
     #Verifica si el canal está cerrado
     def is_channel_closed(self):
@@ -26,7 +26,7 @@ class ClienteDonacion:
     #Registra donación
     def registrar_donacion(self, token, categoria, descripcion, cantidad):
         self.connect()
-        request = RegistrarDonacionRequest(
+        request = donacion_pb2.RegistrarDonacionRequest(
             token=token,
             categoria=categoria,
             descripcion=descripcion,
@@ -42,7 +42,7 @@ class ClienteDonacion:
     #Lista de las donaciones
     def listar_donaciones(self, token):
         self.connect()
-        request = ListarDonacionesRequest(token=token)
+        request = donacion_pb2.ListarDonacionesRequest(token=token)
         try:
             response = self.stub.listarDonaciones(request)
             return response
@@ -53,7 +53,7 @@ class ClienteDonacion:
     # Elimina donación
     def eliminar_donacion(self, token, donacion_id):
         self.connect()
-        request = EliminarDonacionRequest(
+        request = donacion_pb2.EliminarDonacionRequest(
             token=token,
             id=donacion_id
         )
@@ -67,7 +67,7 @@ class ClienteDonacion:
     # Modifica donacion
     def modificar_donacion(self, token, donacion_id, descripcion, cantidad):
         self.connect()
-        request = ModificarDonacionRequest(
+        request = donacion_pb2.ModificarDonacionRequest(
             token=token,
             id=donacion_id,
             descripcion=descripcion,
@@ -83,7 +83,7 @@ class ClienteDonacion:
     # Trae donación por su ID
     def traer_donacion_por_id(self, token, donacion_id):
         self.connect()
-        request = DonacionIdRequest(
+        request = donacion_pb2.DonacionIdRequest(
             token=token,
             id=donacion_id
         )
