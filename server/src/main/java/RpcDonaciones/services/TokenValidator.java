@@ -93,4 +93,17 @@ public class TokenValidator {
             return false;
         }
     }
+
+    public String getEmailFromToken(String token) {
+    try {
+        return Jwts.parser()
+            .setSigningKey(key)
+            .build()
+            .parseClaimsJws(token)
+            .getBody()
+            .getSubject(); // el subject es el email
+    } catch (JwtException e) {
+        throw new RuntimeException("Token inválido: " + e.getMessage());
+    }
+}
 }

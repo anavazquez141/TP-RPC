@@ -39,6 +39,8 @@ public class DataDePrueba {
 
             // Recuperar roles desde DB (para evitar problemas de referencia)
             Rol rolPresidente = rolRepository.findById(1L).orElseThrow();
+            Rol rolVocal = rolRepository.findById(2L).orElseThrow();
+            Rol rolCoordinador = rolRepository.findById(3L).orElseThrow();
             Rol rolVoluntario = rolRepository.findById(4L).orElseThrow();
 
             // Crear usuario de prueba PRESIDENTE si no existe
@@ -69,6 +71,34 @@ public class DataDePrueba {
                 user2.agregarRoles(rolVoluntario);
                 userRepository.save(user2);
                 System.out.println("Usuario de prueba creado: voluntario@example.com con rol VOLUNTARIO");
+            }
+
+            if (!userRepository.existsByNombreUsuario("coordinador")) {
+                Usuario user3 = new Usuario();
+                user3.setEmail("coordinador@example.com");
+                user3.setNombreUsuario("coordinador");
+                user3.setClave(passwordEncoder.encode("password123"));
+                user3.setNombre("Coordinador");
+                user3.setApellido("coordinador22");
+                user3.setTelefono("222222222");
+                user3.setEstado(true); // Habilitado
+                user3.agregarRoles(rolCoordinador);
+                userRepository.save(user3);
+                System.out.println("Usuario de prueba creado: voluntario@example.com con rol COORDINADOR");
+            }
+
+            if (!userRepository.existsByNombreUsuario("vocal")) {
+                Usuario user4 = new Usuario();
+                user4.setEmail("vocal@example.com");
+                user4.setNombreUsuario("vocal");
+                user4.setClave(passwordEncoder.encode("password123"));
+                user4.setNombre("Vocal");
+                user4.setApellido("vocal22");
+                user4.setTelefono("222222222");
+                user4.setEstado(true); // Habilitado
+                user4.agregarRoles(rolVocal);
+                userRepository.save(user4);
+                System.out.println("Usuario de prueba creado: voluntario@example.com con rol VOCAL");
             }
 
             // Crear eventos solidarios de prueba si no existen

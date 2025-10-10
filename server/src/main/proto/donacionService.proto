@@ -60,6 +60,7 @@ message DonacionResponse {
 message EliminarDonacionResponse {
     bool success = 1;
     string message = 2;
+    string status = 3;
 }
 
 // Mensaje de respuesta para listado

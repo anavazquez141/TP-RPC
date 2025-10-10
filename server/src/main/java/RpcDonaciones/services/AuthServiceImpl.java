@@ -4,7 +4,6 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,7 +19,6 @@ import RpcDonaciones.grpc.AuthServiceProto.LoginRequest;
 import RpcDonaciones.grpc.AuthServiceProto.LoginResponse;
 import RpcDonaciones.grpc.AuthServiceProto.LogoutRequest;
 import RpcDonaciones.grpc.AuthServiceProto.LogoutResponse;
-import RpcDonaciones.grpc.AuthServiceProto.TokenValidationResponse;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -182,6 +180,11 @@ public class AuthServiceImpl extends AuthServiceGrpc.AuthServiceImplBase {
         }
     }
     
+
+    public Usuario getUsuarioFromToken(String token) {
+        String email = tokenValidator.getEmailFromToken(token);
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    }
+
 }
-
-

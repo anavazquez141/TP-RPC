@@ -2,37 +2,72 @@ package RpcDonaciones.services;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import RpcDonaciones.grpc.DonacionServiceGrpc;
 import RpcDonaciones.grpc.DonacionServiceProto.*;
+import RpcDonaciones.grpc.EventoSolidarioServiceProto.UpdateEventoResponse;
+import RpcDonaciones.repositories.IAuditoria;
 import RpcDonaciones.repositories.IDonacion;
+import RpcDonaciones.entities.Auditoria;
 import RpcDonaciones.entities.Donacion;
 import RpcDonaciones.entities.enums.CategoriaDonacion;
+import RpcDonaciones.entities.enums.TipoAccion;
 import RpcDonaciones.repositories.IUsuario;
 import RpcDonaciones.entities.Usuario;
 
+import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+
+import javax.crypto.SecretKey;
 
 @Service
 public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImplBase {
 
     @Autowired
     private IDonacion donacionRepository;
+    @Autowired
+    private IAuditoria auditoriaRepository;
     
     @Autowired
     private AuthServiceImpl authService;
-    @Autowired
-    private final TokenValidator tokenValidator = null;
+    
+    private final TokenValidator tokenValidator;
+    private final SecretKey key;
+
+    public DonacionServiceImpl(@Value("${jwt.secret}") String base64Key, TokenValidator tokenValidator) {
+        this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Key));
+        this.tokenValidator = tokenValidator;
+    }
 
     @Override
-    public void registrarDonacion(RegistrarDonacionRequest request, 
-                                StreamObserver<DonacionResponse> responseObserver) {
+    public void registrarDonacion(RegistrarDonacionRequest request, StreamObserver<DonacionResponse> responseObserver) {
         try {
-            // Validacion de token y donacion
-            if (!tokenValidator.isTokenValid(request.getToken())) {
-                sendErrorResponse(responseObserver, "Token inválido o expirado");
+            String token = request.getToken();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                return;
+            }
+
+            Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseClaimsJws(token)
+                .getPayload();
+
+            List<String> roles = claims.get("roles", List.class);
+                if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(DonacionResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No tienes permiso para modificar eventos")
+                        .build());
+                responseObserver.onCompleted();
                 return;
             }
         
@@ -42,12 +77,14 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 return;
             }
             
+            Usuario usuario = authService.getUsuarioFromToken(request.getToken());
             // Crear y persistir la donacion
             Donacion donacion = new Donacion();
             donacion.setCategoria(CategoriaDonacion.fromString(request.getCategoria()));
             donacion.setDescripcion(request.getDescripcion());
             donacion.setCantidad(request.getCantidad());
-            
+            donacion.setUsuarioAlta(usuario.getNombreUsuario());
+            donacion.setFechaAlta(java.time.LocalDateTime.now());
             // Guarda la donacion en la base de datos
             Donacion saved = donacionRepository.save(donacion);
             
@@ -101,40 +138,138 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     }
 
     @Override
-    public void eliminarDonacion(EliminarDonacionRequest request,
-                               StreamObserver<EliminarDonacionResponse> responseObserver) {
+    public void modificarDonacion(ModificarDonacionRequest request, StreamObserver<DonacionResponse> responseObserver) {
         try {
-            if (!tokenValidator.isTokenValid(request.getToken())) {
-                sendErrorResponse(responseObserver, "Token inválido o expirado");
+            String token = request.getToken();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
                 return;
             }
-            
-            Optional<Donacion> donacionOpt = donacionRepository.findById(request.getId());
-            if (donacionOpt.isPresent()) {
-                Donacion donacion = donacionOpt.get();
-                donacion.setEliminado(true);
-                donacionRepository.save(donacion);
-                
-                EliminarDonacionResponse response = EliminarDonacionResponse.newBuilder()
-                    .setSuccess(true)
-                    .setMessage("Donación eliminada exitosamente")
-                    .build();
-                responseObserver.onNext(response);
-            } else {
-                EliminarDonacionResponse response = EliminarDonacionResponse.newBuilder()
+
+            Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseClaimsJws(token)
+                .getPayload();
+
+            List<String> roles = claims.get("roles", List.class);
+                if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(DonacionResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No tienes permiso para modificar eventos")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            Optional<Donacion> optional = donacionRepository.findById(request.getId());
+            if (optional.isEmpty() || optional.get().isEliminado()) {
+                sendErrorResponse(responseObserver, "Donación no encontrada o eliminada");
+                return;
+            }
+
+            Donacion donacion = optional.get();
+            Usuario usuario = authService.getUsuarioFromToken(request.getToken());
+
+            // Guardar auditorías solo si cambia algo
+            if (!donacion.getCantidad().equals(request.getCantidad())) {
+                guardarAuditoria(donacion, usuario, "cantidad", 
+                    donacion.getCantidad().toString(), 
+                    String.valueOf(request.getCantidad()), 
+                    TipoAccion.MODIFICACION);
+                donacion.setCantidad(request.getCantidad());
+            }
+
+            if (!donacion.getDescripcion().equals(request.getDescripcion())) {
+                guardarAuditoria(donacion, usuario, "descripcion", 
+                    donacion.getDescripcion(), 
+                    request.getDescripcion(), 
+                    TipoAccion.MODIFICACION);
+                donacion.setDescripcion(request.getDescripcion());
+            }
+
+            donacionRepository.save(donacion);
+
+            DonacionResponse response = DonacionResponse.newBuilder()
+                .setId(donacion.getId())
+                .setCategoria(donacion.getCategoria().name())
+                .setDescripcion(donacion.getDescripcion())
+                .setCantidad(donacion.getCantidad())
+                .setStatus("SUCCESS")
+                .setMessage("Donación modificada exitosamente")
+                .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            sendErrorResponse(responseObserver, "Error al modificar donación: " + e.getMessage());
+        }
+    }
+
+
+    @Override
+    public void eliminarDonacion(EliminarDonacionRequest request, StreamObserver<EliminarDonacionResponse> responseObserver) {
+        try {
+            String token = request.getToken();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                return;
+            }
+
+            Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseClaimsJws(token)
+                .getPayload();
+
+            List<String> roles = claims.get("roles", List.class);
+                if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(EliminarDonacionResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No tienes permiso para modificar eventos")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            Optional<Donacion> optional = donacionRepository.findById(request.getId());
+            if (optional.isEmpty()) {
+                responseObserver.onNext(EliminarDonacionResponse.newBuilder()
                     .setSuccess(false)
                     .setMessage("Donación no encontrada")
-                    .build();
-                responseObserver.onNext(response);
+                    .build());
+                responseObserver.onCompleted();
+                return;
             }
+
+            Donacion donacion = optional.get();
+            if (donacion.isEliminado()) {
+                responseObserver.onNext(EliminarDonacionResponse.newBuilder()
+                    .setSuccess(false)
+                    .setMessage("La donación ya estaba eliminada")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            Usuario usuario = authService.getUsuarioFromToken(request.getToken());
+            donacion.setEliminado(true);
+            donacionRepository.save(donacion);
+
+            guardarAuditoria(donacion, usuario, null, null, null, TipoAccion.ELIMINACION);
+
+            responseObserver.onNext(EliminarDonacionResponse.newBuilder()
+                .setSuccess(true)
+                .setMessage("Donación dada de baja lógicamente")
+                .build());
             responseObserver.onCompleted();
-            
+
         } catch (Exception e) {
             responseObserver.onError(Status.INTERNAL
                 .withDescription("Error al eliminar donación: " + e.getMessage())
                 .asRuntimeException());
         }
     }
+
 
     @Override
     public void traerDonacionPorId(DonacionIdRequest request,
@@ -184,6 +319,32 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
         }
     }
 
+    private void guardarAuditoria(Donacion donacion, Usuario usuario, String campoModificado, String valorAnterior, String valorNuevo, TipoAccion tipoAccion) {
+        if (donacion == null || usuario == null) {
+        throw new IllegalArgumentException("Donacion o Usuario no pueden ser nulos");
+    }
+        Auditoria auditoria = new Auditoria();
+        auditoria.setDonacion(donacion);
+        auditoria.setUsuario(usuario.getNombreUsuario());
+        auditoria.setFecha(LocalDateTime.now());
+        auditoria.setTipoAccion(tipoAccion);
+
+        if (tipoAccion == TipoAccion.ELIMINACION) {
+            auditoria.setCampoModificado("eliminado");
+            auditoria.setValorAnterior("false");
+            auditoria.setValorNuevo("true");
+        } else if (tipoAccion == TipoAccion.MODIFICACION) {
+            auditoria.setCampoModificado(campoModificado);
+            auditoria.setValorAnterior(valorAnterior);
+            auditoria.setValorNuevo(valorNuevo);
+        }
+
+        // Agregar la auditoría a la lista de la donación
+        donacion.getAuditorias().add(auditoria);
+        auditoriaRepository.save(auditoria);
+        // Opcional: Guardar la donación para persistir la relación
+        donacionRepository.save(donacion);
+    }
 
     private void sendErrorResponse(StreamObserver<?> responseObserver, String message) {
         responseObserver.onError(Status.INTERNAL
