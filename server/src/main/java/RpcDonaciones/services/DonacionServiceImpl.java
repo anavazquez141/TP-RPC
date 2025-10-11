@@ -11,20 +11,28 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import RpcDonaciones.grpc.DonacionServiceGrpc;
 import RpcDonaciones.grpc.DonacionServiceProto.*;
-import RpcDonaciones.grpc.EventoSolidarioServiceProto.UpdateEventoResponse;
+import RpcDonaciones.kafka.messages.BajaSolicitudMessage;
+import RpcDonaciones.kafka.messages.SolicitudDonacionMessage;
+import RpcDonaciones.kafka.messages.SolicitudDonacionMessage.ItemDonacion;
+import RpcDonaciones.kafka.producers.KafkaProducerService;
 import RpcDonaciones.repositories.IAuditoria;
 import RpcDonaciones.repositories.IDonacion;
+import RpcDonaciones.repositories.ISolicitudDonacion;
 import RpcDonaciones.entities.Auditoria;
+import RpcDonaciones.entities.BajaSolicitud;
 import RpcDonaciones.entities.Donacion;
+import RpcDonaciones.entities.SolicitudDonacion;
 import RpcDonaciones.entities.enums.CategoriaDonacion;
 import RpcDonaciones.entities.enums.TipoAccion;
 import RpcDonaciones.repositories.IUsuario;
+import RpcDonaciones.repositories.IBajaSolicitud;
 import RpcDonaciones.entities.Usuario;
 
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
@@ -35,10 +43,15 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     private IDonacion donacionRepository;
     @Autowired
     private IAuditoria auditoriaRepository;
-    
     @Autowired
     private AuthServiceImpl authService;
-    
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
+    @Autowired
+    private ISolicitudDonacion solicitudDonacionRepository;
+    @Autowired
+    private IBajaSolicitud bajaSolicitudRepository;
+
     private final TokenValidator tokenValidator;
     private final SecretKey key;
 
@@ -351,4 +364,104 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             .withDescription(message)
             .asRuntimeException());
     }
+
+    @Override
+    public void solicitarDonacion(SolicitarDonacionRequest request, StreamObserver<SolicitarDonacionResponse> responseObserver) {
+        try {
+            if (!tokenValidator.validarToken(request.getToken(), responseObserver, "SolicitarDonacionResponse")) {
+                return;
+            }
+            // Validar roles (PRESIDENTE o VOCAL)
+            Claims claims = Jwts.parser().verifyWith(key).build().parseClaimsJws(request.getToken()).getPayload();
+            List<String> roles = claims.get("roles", List.class);
+            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("No tienes permiso")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+            // Persistir en BD
+            SolicitudDonacion solicitud = new SolicitudDonacion();
+            solicitud.setIdOrganizacion(request.getIdOrganizacion());
+            solicitud.setIdSolicitud(request.getIdSolicitud());
+            solicitud.setItems(request.getItemsList().stream()
+                .map(item -> new RpcDonaciones.entities.ItemDonacion(item.getCategoria(), item.getDescripcion()))
+                .collect(Collectors.toList()));
+            solicitud.setVigente(true);
+            solicitudDonacionRepository.save(solicitud);
+            // Producir mensaje a Kafka
+            SolicitudDonacionMessage message = new SolicitudDonacionMessage();
+            message.setIdOrganizacion(request.getIdOrganizacion());
+            message.setIdSolicitud(request.getIdSolicitud());
+            message.setDonaciones(request.getItemsList().stream().map(item -> {
+                SolicitudDonacionMessage.ItemDonacion msgItem = new SolicitudDonacionMessage.ItemDonacion(item.getCategoria(), item.getDescripcion());
+                return msgItem;
+            }).collect(Collectors.toList()));
+            kafkaProducerService.sendSolicitudDonacion(message);
+            // Respuesta gRPC
+            responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
+                .setStatus("SUCCESS")
+                .setMessage("Solicitud enviada")
+                .build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL.withDescription("Error: " + e.getMessage()).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void bajaSolicitudDonacion(BajaSolicitudRequest request, StreamObserver<BajaSolicitudResponse> responseObserver) {
+        try {
+            if (!tokenValidator.validarToken(request.getToken(), responseObserver, "BajaSolicitudResponse")) {
+                return;
+            }
+            // Validar roles (PRESIDENTE o VOCAL)
+            Claims claims = Jwts.parser().verifyWith(key).build().parseClaimsJws(request.getToken()).getPayload();
+            List<String> roles = claims.get("roles", List.class);
+            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(BajaSolicitudResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("No tienes permiso para dar de baja solicitudes")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+            // Buscar la solicitud
+            Optional<SolicitudDonacion> solicitudOpt = solicitudDonacionRepository.findByIdOrganizacionAndIdSolicitud(
+                request.getIdOrganizacion(), request.getIdSolicitud());
+            if (solicitudOpt.isEmpty() || !solicitudOpt.get().isVigente()) {
+                responseObserver.onNext(BajaSolicitudResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Solicitud no encontrada o ya dada de baja")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+            // Marcar como no vigente
+            SolicitudDonacion solicitud = solicitudOpt.get();
+            solicitud.setVigente(false);
+            solicitudDonacionRepository.save(solicitud);
+            // Registrar baja
+            BajaSolicitud baja = new BajaSolicitud();
+            baja.setIdOrganizacion(request.getIdOrganizacion());
+            baja.setIdSolicitud(request.getIdSolicitud());
+            bajaSolicitudRepository.save(baja);
+            // Producir mensaje a Kafka
+            BajaSolicitudMessage message = new BajaSolicitudMessage();
+            message.setIdOrganizacion(request.getIdOrganizacion());
+            message.setIdSolicitud(request.getIdSolicitud());
+            kafkaProducerService.sendBajaSolicitud(message);
+            // Respuesta gRPC
+            responseObserver.onNext(BajaSolicitudResponse.newBuilder()
+                .setStatus("SUCCESS")
+                .setMessage("Solicitud dada de baja exitosamente")
+                .build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL.withDescription("Error: " + e.getMessage()).asRuntimeException());
+        }
+    }
 }
+
