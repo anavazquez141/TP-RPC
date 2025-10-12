@@ -60,6 +60,21 @@ class DonacionServiceStub(object):
                 request_serializer=donacionService__pb2.DonacionIdRequest.SerializeToString,
                 response_deserializer=donacionService__pb2.DonacionResponse.FromString,
                 _registered_method=True)
+        self.solicitarDonacion = channel.unary_unary(
+                '/DonacionService/solicitarDonacion',
+                request_serializer=donacionService__pb2.SolicitarDonacionRequest.SerializeToString,
+                response_deserializer=donacionService__pb2.SolicitarDonacionResponse.FromString,
+                _registered_method=True)
+        self.bajaSolicitudDonacion = channel.unary_unary(
+                '/DonacionService/bajaSolicitudDonacion',
+                request_serializer=donacionService__pb2.BajaSolicitudRequest.SerializeToString,
+                response_deserializer=donacionService__pb2.BajaSolicitudResponse.FromString,
+                _registered_method=True)
+        self.listarSolicitudes = channel.unary_unary(
+                '/DonacionService/listarSolicitudes',
+                request_serializer=donacionService__pb2.ListarSolicitudesRequest.SerializeToString,
+                response_deserializer=donacionService__pb2.ListarSolicitudesResponse.FromString,
+                _registered_method=True)
 
 
 class DonacionServiceServicer(object):
@@ -96,6 +111,24 @@ class DonacionServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def solicitarDonacion(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def bajaSolicitudDonacion(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def listarSolicitudes(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DonacionServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -123,6 +156,21 @@ def add_DonacionServiceServicer_to_server(servicer, server):
                     servicer.traerDonacionPorId,
                     request_deserializer=donacionService__pb2.DonacionIdRequest.FromString,
                     response_serializer=donacionService__pb2.DonacionResponse.SerializeToString,
+            ),
+            'solicitarDonacion': grpc.unary_unary_rpc_method_handler(
+                    servicer.solicitarDonacion,
+                    request_deserializer=donacionService__pb2.SolicitarDonacionRequest.FromString,
+                    response_serializer=donacionService__pb2.SolicitarDonacionResponse.SerializeToString,
+            ),
+            'bajaSolicitudDonacion': grpc.unary_unary_rpc_method_handler(
+                    servicer.bajaSolicitudDonacion,
+                    request_deserializer=donacionService__pb2.BajaSolicitudRequest.FromString,
+                    response_serializer=donacionService__pb2.BajaSolicitudResponse.SerializeToString,
+            ),
+            'listarSolicitudes': grpc.unary_unary_rpc_method_handler(
+                    servicer.listarSolicitudes,
+                    request_deserializer=donacionService__pb2.ListarSolicitudesRequest.FromString,
+                    response_serializer=donacionService__pb2.ListarSolicitudesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -261,6 +309,87 @@ class DonacionService(object):
             '/DonacionService/traerDonacionPorId',
             donacionService__pb2.DonacionIdRequest.SerializeToString,
             donacionService__pb2.DonacionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def solicitarDonacion(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/DonacionService/solicitarDonacion',
+            donacionService__pb2.SolicitarDonacionRequest.SerializeToString,
+            donacionService__pb2.SolicitarDonacionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def bajaSolicitudDonacion(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/DonacionService/bajaSolicitudDonacion',
+            donacionService__pb2.BajaSolicitudRequest.SerializeToString,
+            donacionService__pb2.BajaSolicitudResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def listarSolicitudes(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/DonacionService/listarSolicitudes',
+            donacionService__pb2.ListarSolicitudesRequest.SerializeToString,
+            donacionService__pb2.ListarSolicitudesResponse.FromString,
             options,
             channel_credentials,
             insecure,

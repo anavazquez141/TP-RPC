@@ -93,7 +93,31 @@ class ClienteDonacion:
         except grpc.RpcError as e:
             print(f"Error al obtener donación: {e.code()} - {e.details()}")
             return None
+
+    def baja_solicitud_donacion(self, token, id_organizacion, id_solicitud):
+        self.connect()
+        request = donacion_pb2.BajaSolicitudRequest(
+            token=token,
+            id_organizacion=id_organizacion,
+            id_solicitud=id_solicitud
+        )
+        try:
+            response = self.stub.bajaSolicitudDonacion(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error al dar de baja solicitud: {e.code()} - {e.details()}")
+            return None
         
+    def listar_solicitudes(self, token):
+        self.connect()
+        request = donacion_pb2.ListarSolicitudesRequest(token=token)
+        try:
+            response = self.stub.listarSolicitudes(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error al listar solicitudes: {e.code()} - {e.details()}")
+            return None
+    
     def cerrar(self):
         if self.channel is not None:
             self.channel.close()

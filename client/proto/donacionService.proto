@@ -76,6 +76,52 @@ message DonacionItem {
     int32 cantidad = 4;
 }
 
+// Mensaje para un item de donación en la solicitud
+message ItemDonacionP {
+    string categoria = 1;
+    string descripcion = 2;
+}
+
+// Mensaje para solicitar donaciones
+message SolicitarDonacionRequest {
+    string token = 1;
+    string id_organizacion = 2;
+    string id_solicitud = 3;
+    repeated ItemDonacionP items = 4;
+}
+
+// Mensaje de respuesta para solicitud de donaciones
+message SolicitarDonacionResponse {
+    string status = 1;
+    string message = 2;
+}
+
+// Mensaje para baja de solicitud de donación
+message BajaSolicitudRequest {
+    string token = 1;
+    string id_organizacion = 2;
+    string id_solicitud = 3;
+}
+
+message BajaSolicitudResponse {
+    string status = 1;
+    string message = 2;
+}
+
+message ListarSolicitudesRequest {
+    string token = 1;
+}
+
+message SolicitudDonacionRequest {
+    string id_organizacion = 1;
+    string id_solicitud = 2;
+    repeated ItemDonacionP items = 3;
+}
+
+message ListarSolicitudesResponse {
+    repeated SolicitudDonacionRequest solicitudes = 1;
+}
+
 // --------------------- SERVICIOS -----------------------
 service DonacionService {
     rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
@@ -83,4 +129,7 @@ service DonacionService {
     rpc eliminarDonacion (EliminarDonacionRequest) returns (EliminarDonacionResponse);
     rpc listarDonaciones (ListarDonacionesRequest) returns (ListarDonacionesResponse);
     rpc traerDonacionPorId (DonacionIdRequest) returns (DonacionResponse);
+    rpc solicitarDonacion (SolicitarDonacionRequest) returns (SolicitarDonacionResponse);
+    rpc bajaSolicitudDonacion (BajaSolicitudRequest) returns (BajaSolicitudResponse);
+    rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
 }

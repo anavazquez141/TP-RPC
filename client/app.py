@@ -471,6 +471,59 @@ def modificar_donacion(donacion_id):
             flash(f"Error: {str(e)}", "error")
             return redirect(url_for('donaciones'))
     
+@app.route('/solicitudes', methods=['GET'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def solicitudes():
+    try:
+        token = session.get('token')
+        if not token:
+            flash("Debes iniciar sesión primero", "error")
+            return redirect(url_for('login'))
+        response = cliente_donacion.listar_solicitudes(token)
+        if response and hasattr(response, 'solicitudes'):
+            solicitudes = response.solicitudes
+        else:
+            solicitudes = []
+            flash("Error al obtener las solicitudes", "error")
+        return render_template('solicitudes.html', solicitudes=solicitudes)
+    except Exception as e:
+        flash(f"Error: {str(e)}", "error")
+        return render_template('solicitudes.html', solicitudes=[])
+
+@app.route('/solicitudes/baja/<id_solicitud>', methods=['POST'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def baja_solicitud(id_solicitud):
+    try:
+        token = session.get('token')
+        if not token:
+            flash("Debes iniciar sesión primero", "error")
+            return redirect(url_for('login'))
+        # Obtener la solicitud para extraer id_organizacion
+        response = cliente_donacion.listar_solicitudes(token)
+        if not response or not hasattr(response, 'solicitudes'):
+            flash("Error al obtener solicitudes", "error")
+            return redirect(url_for('solicitudes'))
+        solicitud = next((s for s in response.solicitudes if s.id_solicitud == id_solicitud), None)
+        if not solicitud:
+            flash("Solicitud no encontrada", "error")
+            return redirect(url_for('solicitudes'))
+        id_organizacion = solicitud.id_organizacion
+        response = cliente_donacion.baja_solicitud_donacion(
+            token=token,
+            id_organizacion=id_organizacion,
+            id_solicitud=id_solicitud
+        )
+        if response and hasattr(response, 'status') and response.status == "SUCCESS":
+            flash("Solicitud dada de baja exitosamente", "success")
+        else:
+            message = getattr(response, 'message', 'Error al dar de baja solicitud') if response else "Error al dar de baja solicitud"
+            flash(message, "error")
+    except Exception as e:
+        flash(f"Error al dar de baja solicitud: {str(e)}", "error")
+    return redirect(url_for('solicitudes'))
+    
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

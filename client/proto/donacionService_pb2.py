@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x64onacionService.proto\"c\n\x18RegistrarDonacionRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x11\n\tcategoria\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\"\\\n\x18ModificarDonacionRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\"4\n\x17\x45liminarDonacionRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\"(\n\x17ListarDonacionesRequest\x12\r\n\x05token\x18\x01 \x01(\t\".\n\x11\x44onacionIdRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\"y\n\x10\x44onacionResponse\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x11\n\tcategoria\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x0f\n\x07message\x18\x06 \x01(\t\"L\n\x18\x45liminarDonacionResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0e\n\x06status\x18\x03 \x01(\t\"=\n\x18ListarDonacionesResponse\x12!\n\ndonaciones\x18\x01 \x03(\x0b\x32\r.DonacionItem\"T\n\x0c\x44onacionItem\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x11\n\tcategoria\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05*P\n\x11\x43\x61tegoriaDonacion\x12\x08\n\x04ROPA\x10\x00\x12\r\n\tALIMENTOS\x10\x01\x12\x0c\n\x08JUGUETES\x10\x02\x12\x14\n\x10UTILES_ESCOLARES\x10\x03\x32\xe6\x02\n\x0f\x44onacionService\x12\x41\n\x11registrarDonacion\x12\x19.RegistrarDonacionRequest\x1a\x11.DonacionResponse\x12\x41\n\x11modificarDonacion\x12\x19.ModificarDonacionRequest\x1a\x11.DonacionResponse\x12G\n\x10\x65liminarDonacion\x12\x18.EliminarDonacionRequest\x1a\x19.EliminarDonacionResponse\x12G\n\x10listarDonaciones\x12\x18.ListarDonacionesRequest\x1a\x19.ListarDonacionesResponse\x12;\n\x12traerDonacionPorId\x12\x12.DonacionIdRequest\x1a\x11.DonacionResponseB*\n\x12RpcDonaciones.grpcB\x14\x44onacionServiceProtob\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x15\x64onacionService.proto\"c\n\x18RegistrarDonacionRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x11\n\tcategoria\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\"\\\n\x18ModificarDonacionRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\"4\n\x17\x45liminarDonacionRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\"(\n\x17ListarDonacionesRequest\x12\r\n\x05token\x18\x01 \x01(\t\".\n\x11\x44onacionIdRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\n\n\x02id\x18\x02 \x01(\x03\"y\n\x10\x44onacionResponse\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x11\n\tcategoria\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\x12\x0e\n\x06status\x18\x05 \x01(\t\x12\x0f\n\x07message\x18\x06 \x01(\t\"L\n\x18\x45liminarDonacionResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x0e\n\x06status\x18\x03 \x01(\t\"=\n\x18ListarDonacionesResponse\x12!\n\ndonaciones\x18\x01 \x03(\x0b\x32\r.DonacionItem\"T\n\x0c\x44onacionItem\x12\n\n\x02id\x18\x01 \x01(\x03\x12\x11\n\tcategoria\x18\x02 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x03 \x01(\t\x12\x10\n\x08\x63\x61ntidad\x18\x04 \x01(\x05\"7\n\rItemDonacionP\x12\x11\n\tcategoria\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scripcion\x18\x02 \x01(\t\"w\n\x18SolicitarDonacionRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x17\n\x0fid_organizacion\x18\x02 \x01(\t\x12\x14\n\x0cid_solicitud\x18\x03 \x01(\t\x12\x1d\n\x05items\x18\x04 \x03(\x0b\x32\x0e.ItemDonacionP\"<\n\x19SolicitarDonacionResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\"T\n\x14\x42\x61jaSolicitudRequest\x12\r\n\x05token\x18\x01 \x01(\t\x12\x17\n\x0fid_organizacion\x18\x02 \x01(\t\x12\x14\n\x0cid_solicitud\x18\x03 \x01(\t\"8\n\x15\x42\x61jaSolicitudResponse\x12\x0e\n\x06status\x18\x01 \x01(\t\x12\x0f\n\x07message\x18\x02 \x01(\t\")\n\x18ListarSolicitudesRequest\x12\r\n\x05token\x18\x01 \x01(\t\"h\n\x18SolicitudDonacionRequest\x12\x17\n\x0fid_organizacion\x18\x01 \x01(\t\x12\x14\n\x0cid_solicitud\x18\x02 \x01(\t\x12\x1d\n\x05items\x18\x03 \x03(\x0b\x32\x0e.ItemDonacionP\"K\n\x19ListarSolicitudesResponse\x12.\n\x0bsolicitudes\x18\x01 \x03(\x0b\x32\x19.SolicitudDonacionRequest*P\n\x11\x43\x61tegoriaDonacion\x12\x08\n\x04ROPA\x10\x00\x12\r\n\tALIMENTOS\x10\x01\x12\x0c\n\x08JUGUETES\x10\x02\x12\x14\n\x10UTILES_ESCOLARES\x10\x03\x32\xc6\x04\n\x0f\x44onacionService\x12\x41\n\x11registrarDonacion\x12\x19.RegistrarDonacionRequest\x1a\x11.DonacionResponse\x12\x41\n\x11modificarDonacion\x12\x19.ModificarDonacionRequest\x1a\x11.DonacionResponse\x12G\n\x10\x65liminarDonacion\x12\x18.EliminarDonacionRequest\x1a\x19.EliminarDonacionResponse\x12G\n\x10listarDonaciones\x12\x18.ListarDonacionesRequest\x1a\x19.ListarDonacionesResponse\x12;\n\x12traerDonacionPorId\x12\x12.DonacionIdRequest\x1a\x11.DonacionResponse\x12J\n\x11solicitarDonacion\x12\x19.SolicitarDonacionRequest\x1a\x1a.SolicitarDonacionResponse\x12\x46\n\x15\x62\x61jaSolicitudDonacion\x12\x15.BajaSolicitudRequest\x1a\x16.BajaSolicitudResponse\x12J\n\x11listarSolicitudes\x12\x19.ListarSolicitudesRequest\x1a\x1a.ListarSolicitudesResponseB*\n\x12RpcDonaciones.grpcB\x14\x44onacionServiceProtob\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,8 +32,8 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'donacionService_pb2', _glob
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'\n\022RpcDonaciones.grpcB\024DonacionServiceProto'
-  _globals['_CATEGORIADONACION']._serialized_start=714
-  _globals['_CATEGORIADONACION']._serialized_end=794
+  _globals['_CATEGORIADONACION']._serialized_start=1324
+  _globals['_CATEGORIADONACION']._serialized_end=1404
   _globals['_REGISTRARDONACIONREQUEST']._serialized_start=25
   _globals['_REGISTRARDONACIONREQUEST']._serialized_end=124
   _globals['_MODIFICARDONACIONREQUEST']._serialized_start=126
@@ -52,6 +52,22 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_LISTARDONACIONESRESPONSE']._serialized_end=626
   _globals['_DONACIONITEM']._serialized_start=628
   _globals['_DONACIONITEM']._serialized_end=712
-  _globals['_DONACIONSERVICE']._serialized_start=797
-  _globals['_DONACIONSERVICE']._serialized_end=1155
+  _globals['_ITEMDONACIONP']._serialized_start=714
+  _globals['_ITEMDONACIONP']._serialized_end=769
+  _globals['_SOLICITARDONACIONREQUEST']._serialized_start=771
+  _globals['_SOLICITARDONACIONREQUEST']._serialized_end=890
+  _globals['_SOLICITARDONACIONRESPONSE']._serialized_start=892
+  _globals['_SOLICITARDONACIONRESPONSE']._serialized_end=952
+  _globals['_BAJASOLICITUDREQUEST']._serialized_start=954
+  _globals['_BAJASOLICITUDREQUEST']._serialized_end=1038
+  _globals['_BAJASOLICITUDRESPONSE']._serialized_start=1040
+  _globals['_BAJASOLICITUDRESPONSE']._serialized_end=1096
+  _globals['_LISTARSOLICITUDESREQUEST']._serialized_start=1098
+  _globals['_LISTARSOLICITUDESREQUEST']._serialized_end=1139
+  _globals['_SOLICITUDDONACIONREQUEST']._serialized_start=1141
+  _globals['_SOLICITUDDONACIONREQUEST']._serialized_end=1245
+  _globals['_LISTARSOLICITUDESRESPONSE']._serialized_start=1247
+  _globals['_LISTARSOLICITUDESRESPONSE']._serialized_end=1322
+  _globals['_DONACIONSERVICE']._serialized_start=1407
+  _globals['_DONACIONSERVICE']._serialized_end=1989
 # @@protoc_insertion_point(module_scope)

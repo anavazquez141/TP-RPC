@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Solicitudes de Donaciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="profile-card">
+        <h1>Solicitudes de Donaciones</h1>
+        <div class="actions">
+            <a href="{{ url_for('index') }}">Volver al Perfil</a>
+        </div>
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+        {% endfor %}
+        {% if solicitudes %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID Solicitud</th>
+                        <th>Organización</th>
+                        <th>Items</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for solicitud in solicitudes %}
+                        <tr>
+                            <td>{{ solicitud.id_solicitud }}</td>
+                            <td>{{ solicitud.id_organizacion }}</td>
+                            <td>
+                                {% for item in solicitud.items %}
+                                    {{ item.categoria }} ({{ item.descripcion }})<br>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <form action="{{ url_for('baja_solicitud', id_solicitud=solicitud.id_solicitud) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn delete-btn">Dar de Baja</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No hay solicitudes disponibles.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
