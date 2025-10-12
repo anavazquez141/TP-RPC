@@ -18,4 +18,8 @@ public class KafkaProducerService {
     public void sendBajaSolicitud(BajaSolicitudMessage message) {
         kafkaTemplate.send("baja-solicitud-donaciones", message.getIdSolicitud(), message);
     }
+
+    public void sendOfertaDonacion(OfertaDonacionMessage message) {
+    kafkaTemplate.send("oferta-donaciones", message.getIdOferta(), message);
+}
 }
