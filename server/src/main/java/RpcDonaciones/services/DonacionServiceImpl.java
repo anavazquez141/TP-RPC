@@ -27,7 +27,11 @@ import RpcDonaciones.entities.enums.TipoAccion;
 import RpcDonaciones.repositories.IUsuario;
 import RpcDonaciones.repositories.IBajaSolicitud;
 import RpcDonaciones.entities.Usuario;
+<<<<<<< HEAD
 import RpcDonaciones.entities.ItemDonacion;
+=======
+import RpcDonaciones.kafka.messages.OfertaDonacionMessage;
+>>>>>>> refs/remotes/origin/feature/wip/rpc
 
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -465,6 +469,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
         }
     }
 
+<<<<<<< HEAD
     @Override
     public void listarSolicitudes(ListarSolicitudesRequest request, StreamObserver<ListarSolicitudesResponse> responseObserver) {
         try {
@@ -490,6 +495,55 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onCompleted();
         } catch (Exception e) {
             sendErrorResponse(responseObserver, "Error al listar solicitudes: " + e.getMessage());
+=======
+
+    @Override
+    public void ofrecerDonacion(OfertaDonacionRequest request,
+            StreamObserver<OfertaDonacionResponse> responseObserver) {
+        try {
+            // Validar token
+            if (!tokenValidator.validarToken(request.getToken(), responseObserver, "OfertaDonacionResponse")) {
+                return;
+            }
+
+            // Validar roles
+            Claims claims = Jwts.parser().verifyWith(key).build().parseClaimsJws(request.getToken()).getPayload();
+            List<String> roles = claims.get("roles", List.class);
+            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(OfertaDonacionResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No tienes permiso")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Construir mensaje Kafka
+            OfertaDonacionMessage mensaje = new OfertaDonacionMessage();
+            mensaje.setIdOferta(request.getIdOferta());
+            mensaje.setIdOrganizacion(request.getIdOrganizacion());
+            mensaje.setDonaciones(request.getItemsList().stream().map(
+                    item -> new OfertaDonacionMessage.ItemDonacionO(
+                            item.getCategoria(),
+                            item.getDescripcion(),
+                            item.getCantidad()))
+                    .collect(Collectors.toList()));
+
+            // Enviar mensaje a Kafka
+            kafkaProducerService.sendOfertaDonacion(mensaje);
+
+            // Responder gRPC
+            responseObserver.onNext(OfertaDonacionResponse.newBuilder()
+                    .setStatus("SUCCESS")
+                    .setMessage("Oferta publicada exitosamente")
+                    .build());
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Error al publicar oferta: " + e.getMessage())
+                    .asRuntimeException());
+>>>>>>> refs/remotes/origin/feature/wip/rpc
         }
     }
 }
