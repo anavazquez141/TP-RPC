@@ -4,12 +4,56 @@
     <meta charset="UTF-8">
     <title>Gestión de Donaciones</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        /* Header con los botones arriba */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn.primary {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .btn.primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn.secondary {
+            background-color: #95a5a6;
+            color: #fff;
+        }
+
+        .btn.secondary:hover {
+            background-color: #7f8c8d;
+        }
+    </style>
 </head>
 <body>
 
     <div class="profile-card">
 
-        <h2>Gestión de Donaciones</h2>
+        <!-- Header con título y botón de volver -->
+        <div class="header">
+            <h2>Inventario de Donaciones</h2>
+            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
+        </div>
 
         <!-- Mensajes flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -23,7 +67,6 @@
         <!-- Botón para agregar donación -->
         <div class="actions">
             <a href="{{ url_for('agregar_donacion') }}" class="btn primary">Agregar Donación</a>
-            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Inicio</a>
         </div>
 
         <!-- Tabla de donaciones -->

@@ -56,7 +56,7 @@
             {% endif %}
             <a href="{{ url_for('cuenta') }}" class="btn primary">Modificar Cuenta</a>
             {% if usuario.rol in ['PRESIDENTE', 'VOCAL'] %}
-                <a href="{{ url_for('donaciones') }}" class="btn secondary">Administrar donaciones</a>
+                <a href="{{ url_for('donaciones') }}" class="btn primary">Administrar donaciones</a>
             {% endif %}
             {% if usuario.rol in ['PRESIDENTE', 'COORDINADOR', 'VOLUNTARIO'] %}
                 <a href="{{ url_for('eventos') }}" class="btn primary">Ver Eventos</a>
