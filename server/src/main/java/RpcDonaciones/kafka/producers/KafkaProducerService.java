@@ -22,4 +22,8 @@ public class KafkaProducerService {
     public void sendOfertaDonacion(OfertaDonacionMessage message) {
     kafkaTemplate.send("oferta-donaciones", message.getIdOferta(), message);
 }
+     public void sendAdhesionEvento(String idOrganizador, AdhesionEventoMessage message) {
+        String topicName = "adhesion-evento-" + idOrganizador;
+        kafkaTemplate.send(topicName, message.getIdVoluntario(), message);
+    }
 }
