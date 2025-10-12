@@ -13,7 +13,7 @@ import RpcDonaciones.grpc.DonacionServiceGrpc;
 import RpcDonaciones.grpc.DonacionServiceProto.*;
 import RpcDonaciones.kafka.messages.BajaSolicitudMessage;
 import RpcDonaciones.kafka.messages.SolicitudDonacionMessage;
-import RpcDonaciones.kafka.messages.SolicitudDonacionMessage.ItemDonacion;
+import RpcDonaciones.kafka.messages.SolicitudDonacionMessage.ItemDonacionM;
 import RpcDonaciones.kafka.producers.KafkaProducerService;
 import RpcDonaciones.repositories.IAuditoria;
 import RpcDonaciones.repositories.IDonacion;
@@ -27,6 +27,7 @@ import RpcDonaciones.entities.enums.TipoAccion;
 import RpcDonaciones.repositories.IUsuario;
 import RpcDonaciones.repositories.IBajaSolicitud;
 import RpcDonaciones.entities.Usuario;
+import RpcDonaciones.entities.ItemDonacion;
 
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -396,7 +397,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             message.setIdOrganizacion(request.getIdOrganizacion());
             message.setIdSolicitud(request.getIdSolicitud());
             message.setDonaciones(request.getItemsList().stream().map(item -> {
-                SolicitudDonacionMessage.ItemDonacion msgItem = new SolicitudDonacionMessage.ItemDonacion(item.getCategoria(), item.getDescripcion());
+                SolicitudDonacionMessage.ItemDonacionM msgItem = new SolicitudDonacionMessage.ItemDonacionM(item.getCategoria(), item.getDescripcion());
                 return msgItem;
             }).collect(Collectors.toList()));
             kafkaProducerService.sendSolicitudDonacion(message);
@@ -461,6 +462,34 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(Status.INTERNAL.withDescription("Error: " + e.getMessage()).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void listarSolicitudes(ListarSolicitudesRequest request, StreamObserver<ListarSolicitudesResponse> responseObserver) {
+        try {
+            if (!tokenValidator.isTokenValid(request.getToken())) {
+                sendErrorResponse(responseObserver, "Token inválido o expirado");
+                return;
+            }
+            List<SolicitudDonacion> solicitudes = solicitudDonacionRepository.findByVigenteTrue();
+            ListarSolicitudesResponse.Builder responseBuilder = ListarSolicitudesResponse.newBuilder();
+            for (SolicitudDonacion solicitud : solicitudes) {
+                SolicitudDonacionRequest.Builder solicitudBuilder = SolicitudDonacionRequest.newBuilder()
+                    .setIdOrganizacion(solicitud.getIdOrganizacion())
+                    .setIdSolicitud(solicitud.getIdSolicitud());
+                for (ItemDonacion item : solicitud.getItems()) {
+                    solicitudBuilder.addItems(RpcDonaciones.grpc.DonacionServiceProto.ItemDonacionP.newBuilder()
+                        .setCategoria(item.getCategoria())
+                        .setDescripcion(item.getDescripcion())
+                        .build());
+                }
+                responseBuilder.addSolicitudes(solicitudBuilder.build());
+            }
+            responseObserver.onNext(responseBuilder.build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            sendErrorResponse(responseObserver, "Error al listar solicitudes: " + e.getMessage());
         }
     }
 }

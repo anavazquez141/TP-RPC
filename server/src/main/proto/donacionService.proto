@@ -77,7 +77,7 @@ message DonacionItem {
 }
 
 // Mensaje para un item de donación en la solicitud
-message ItemDonacion {
+message ItemDonacionP {
     string categoria = 1;
     string descripcion = 2;
 }
@@ -87,7 +87,7 @@ message SolicitarDonacionRequest {
     string token = 1;
     string id_organizacion = 2;
     string id_solicitud = 3;
-    repeated ItemDonacion items = 4;
+    repeated ItemDonacionP items = 4;
 }
 
 // Mensaje de respuesta para solicitud de donaciones
@@ -108,6 +108,20 @@ message BajaSolicitudResponse {
     string message = 2;
 }
 
+message ListarSolicitudesRequest {
+    string token = 1;
+}
+
+message SolicitudDonacionRequest {
+    string id_organizacion = 1;
+    string id_solicitud = 2;
+    repeated ItemDonacionP items = 3;
+}
+
+message ListarSolicitudesResponse {
+    repeated SolicitudDonacionRequest solicitudes = 1;
+}
+
 // --------------------- SERVICIOS -----------------------
 service DonacionService {
     rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
@@ -117,4 +131,5 @@ service DonacionService {
     rpc traerDonacionPorId (DonacionIdRequest) returns (DonacionResponse);
     rpc solicitarDonacion (SolicitarDonacionRequest) returns (SolicitarDonacionResponse);
     rpc bajaSolicitudDonacion (BajaSolicitudRequest) returns (BajaSolicitudResponse);
+    rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
 }
