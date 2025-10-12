@@ -1,0 +1,4 @@
+kafka:
+  clusters:
+    - name: LocalKafka
+      bootstrapServers: PLAINTEXT://localhost:9092
