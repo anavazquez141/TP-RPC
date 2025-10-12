@@ -26,4 +26,8 @@ public class KafkaProducerService {
         String topicName = "adhesion-evento-" + idOrganizador;
         kafkaTemplate.send(topicName, message.getIdVoluntario(), message);
     }
+
+    public void sendBajaEvento(BajaEventoMessage message) {
+        kafkaTemplate.send("baja-evento-solidario", message.getEventoId(), message);
+    }
 }
