@@ -27,11 +27,11 @@ import RpcDonaciones.entities.enums.TipoAccion;
 import RpcDonaciones.repositories.IUsuario;
 import RpcDonaciones.repositories.IBajaSolicitud;
 import RpcDonaciones.entities.Usuario;
-<<<<<<< HEAD
+
 import RpcDonaciones.entities.ItemDonacion;
-=======
+
 import RpcDonaciones.kafka.messages.OfertaDonacionMessage;
->>>>>>> refs/remotes/origin/feature/wip/rpc
+
 
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -387,7 +387,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 responseObserver.onCompleted();
                 return;
             }
-            // Persistir en BD
+          
             SolicitudDonacion solicitud = new SolicitudDonacion();
             solicitud.setIdOrganizacion(request.getIdOrganizacion());
             solicitud.setIdSolicitud(request.getIdSolicitud());
@@ -396,7 +396,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 .collect(Collectors.toList()));
             solicitud.setVigente(true);
             solicitudDonacionRepository.save(solicitud);
-            // Producir mensaje a Kafka
+            
             SolicitudDonacionMessage message = new SolicitudDonacionMessage();
             message.setIdOrganizacion(request.getIdOrganizacion());
             message.setIdSolicitud(request.getIdSolicitud());
@@ -405,7 +405,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 return msgItem;
             }).collect(Collectors.toList()));
             kafkaProducerService.sendSolicitudDonacion(message);
-            // Respuesta gRPC
+        
             responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
                 .setStatus("SUCCESS")
                 .setMessage("Solicitud enviada")
@@ -469,7 +469,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
         }
     }
 
-<<<<<<< HEAD
+
     @Override
     public void listarSolicitudes(ListarSolicitudesRequest request, StreamObserver<ListarSolicitudesResponse> responseObserver) {
         try {
@@ -495,7 +495,10 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onCompleted();
         } catch (Exception e) {
             sendErrorResponse(responseObserver, "Error al listar solicitudes: " + e.getMessage());
-=======
+
+    }
+    }
+
 
     @Override
     public void ofrecerDonacion(OfertaDonacionRequest request,
@@ -543,7 +546,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onError(Status.INTERNAL
                     .withDescription("Error al publicar oferta: " + e.getMessage())
                     .asRuntimeException());
->>>>>>> refs/remotes/origin/feature/wip/rpc
+
         }
     }
 }
