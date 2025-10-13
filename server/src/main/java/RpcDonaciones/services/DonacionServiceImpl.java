@@ -31,7 +31,7 @@ import RpcDonaciones.entities.Usuario;
 import RpcDonaciones.entities.ItemDonacion;
 
 import RpcDonaciones.kafka.messages.OfertaDonacionMessage;
-
+>>>>>>> refs/remotes/origin/feature/wip/rpc
 
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -495,8 +495,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onCompleted();
         } catch (Exception e) {
             sendErrorResponse(responseObserver, "Error al listar solicitudes: " + e.getMessage());
-
-    }
+        }
     }
 
 
