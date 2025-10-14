@@ -576,7 +576,8 @@ def enviar_solicitud():
 
 @app.route('/form-solicitud')
 def form_solicitud():
-    return render_template('publicar_solicitud.html')
+    return render_template('publicar_solicitud.html')    
+
 @app.route('/ofertas', methods=['GET'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -608,6 +609,71 @@ def ofertas():
     except Exception as e:
         flash(f"Error: {str(e)}", "error")
         return render_template('ofertas.html', ofertas=[])
+
+@app.route('/form-oferta')
+def form_oferta():
+    return render_template('ofrecer_donacion.html')
+
+@app.route('/enviar-oferta', methods=['POST'])
+def enviar_oferta():
+    try:
+        # Obtener datos del formulario
+        id_organizacion = request.form.get('id_organizacion')
+        categorias = request.form.getlist('categoria[]')
+        descripciones = request.form.getlist('descripcion[]')
+        cantidades = request.form.getlist('cantidad[]')
+
+        # Validaciones
+        if not id_organizacion:
+            flash("ID de organización es obligatorio", "error")
+            return redirect(url_for('form_oferta'))
+
+        if not categorias or not descripciones or not cantidades:
+            flash("Debe agregar al menos una donación", "error")
+            return redirect(url_for('form_oferta'))
+
+        if len(categorias) != len(descripciones) or len(categorias) != len(cantidades):
+            flash("Los datos de las donaciones no coinciden", "error")
+            return redirect(url_for('form_oferta'))
+
+        # Crear lista de objetos gRPC ItemOferta
+        items = []
+        for cat, desc, cant in zip(categorias, descripciones, cantidades):
+            if not cat or not desc or not cant:
+                flash("Todos los campos de cada ítem son obligatorios", "error")
+                return redirect(url_for('form_oferta'))
+
+            try:
+                cantidad_int = int(cant)
+                if cantidad_int <= 0:
+                    flash("La cantidad debe ser mayor a 0", "error")
+                    return redirect(url_for('form_oferta'))
+            except ValueError:
+                flash("La cantidad debe ser un número válido", "error")
+                return redirect(url_for('form_oferta'))
+
+            item = donacion_pb2.OfertaDonacionItem(
+                categoria=cat,
+                descripcion=desc,
+                cantidad=cantidad_int
+            )
+            items.append(item)
+
+        # Llamar al método ofrecer_donacion
+        controller = ClienteDonacion(host='localhost', port=9090)
+        response = controller.ofrecer_donacion(id_organizacion, items)
+
+        if response and hasattr(response, 'status') and response.status == "SUCCESS":
+            flash("Oferta publicada exitosamente", "success")
+        else:
+            message = getattr(response, 'message', 'Error al publicar oferta') if response else "Error al publicar oferta"
+            flash(message, "error")
+
+    except Exception as e:
+        flash(f"Error al publicar oferta: {str(e)}", "error")
+
+    return redirect(url_for('form_oferta'))
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

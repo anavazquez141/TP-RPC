@@ -170,7 +170,7 @@ service DonacionService {
     rpc traerDonacionPorId (DonacionIdRequest) returns (DonacionResponse);
     rpc solicitarDonacion (SolicitarDonacionRequest) returns (SolicitarDonacionResponse);
     rpc bajaSolicitudDonacion (BajaSolicitudRequest) returns (BajaSolicitudResponse);
-    rpc OfrecerDonacion(OfertaDonacionRequest) returns (OfertaDonacionResponse);
+    rpc ofrecerDonacion(OfertaDonacionRequest) returns (OfertaDonacionResponse);
     rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
     rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
 }

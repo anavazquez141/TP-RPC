@@ -108,6 +108,24 @@ message BajaSolicitudResponse {
     string message = 2;
 }
 
+message OfertaDonacionItem {
+  string categoria = 1;
+  string descripcion = 2;
+  int64 cantidad = 3; // o int32 según prefieras
+}
+
+message OfertaDonacionRequest {
+  string token = 1;
+  string idOferta = 2;
+  string idOrganizacion = 3;
+  repeated OfertaDonacionItem items = 4;
+}
+
+message OfertaDonacionResponse {
+  string status = 1;
+  string message = 2;
+}
+
 message ListarSolicitudesRequest {
     string token = 1;
 }
@@ -152,6 +170,7 @@ service DonacionService {
     rpc traerDonacionPorId (DonacionIdRequest) returns (DonacionResponse);
     rpc solicitarDonacion (SolicitarDonacionRequest) returns (SolicitarDonacionResponse);
     rpc bajaSolicitudDonacion (BajaSolicitudRequest) returns (BajaSolicitudResponse);
+    rpc ofrecerDonacion(OfertaDonacionRequest) returns (OfertaDonacionResponse);
     rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
     rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
 }

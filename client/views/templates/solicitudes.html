@@ -1,50 +1,135 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Solicitudes de Donaciones</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .btn.primary {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .btn.primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn.delete-btn {
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+        }
+
+        .btn.delete-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .btn.secondary {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .btn.secondary:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .messages {
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
-    <div class="profile-card">
-        <h1>Solicitudes de Donaciones</h1>
-        <div class="actions">
-            <a href="{{ url_for('index') }}">Volver al Perfil</a>
-        </div>
+<div class="profile-card">
+    <div class="header">
+        <h2>Solicitudes de Donaciones</h2>
+        <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
+    </div>
+
+    <div class="messages">
         {% for category, message in get_flashed_messages(with_categories=true) %}
             <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
         {% endfor %}
-        {% if solicitudes %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID Solicitud</th>
-                        <th>Organización</th>
-                        <th>Items</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for solicitud in solicitudes %}
-                        <tr>
-                            <td>{{ solicitud.id_solicitud }}</td>
-                            <td>{{ solicitud.id_organizacion }}</td>
-                            <td>
-                                {% for item in solicitud.items %}
-                                    {{ item.categoria }} ({{ item.descripcion }})<br>
-                                {% endfor %}
-                            </td>
-                            <td>
-                                <form action="{{ url_for('baja_solicitud', id_solicitud=solicitud.id_solicitud) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn delete-btn">Dar de Baja</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No hay solicitudes disponibles.</p>
-        {% endif %}
     </div>
+
+    {% if solicitudes %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID Solicitud</th>
+                    <th>Organización</th>
+                    <th>Items</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for solicitud in solicitudes %}
+                    <tr>
+                        <td>{{ solicitud.id_solicitud }}</td>
+                        <td>{{ solicitud.id_organizacion }}</td>
+                        <td>
+                            {% for item in solicitud.items %}
+                                <div>{{ item.categoria }} ({{ item.descripcion }}) - {{ item.cantidad }}</div>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <form action="{{ url_for('baja_solicitud', id_solicitud=solicitud.id_solicitud) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn delete-btn">Dar de Baja</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align:center;">No hay solicitudes disponibles.</p>
+    {% endif %}
+</div>
 </body>
 </html>

@@ -5,6 +5,7 @@ import io.grpc.stub.StreamObserver;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -514,54 +515,64 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
 
 
     @Override
-    public void ofrecerDonacion(OfertaDonacionRequest request,
-            StreamObserver<OfertaDonacionResponse> responseObserver) {
+    public void ofrecerDonacion(OfertaDonacionRequest request, StreamObserver<OfertaDonacionResponse> responseObserver) {
         try {
-            // Validar token
-            if (!tokenValidator.validarToken(request.getToken(), responseObserver, "OfertaDonacionResponse")) {
-                return;
-            }
-
-            // Validar roles
-            Claims claims = Jwts.parser().verifyWith(key).build().parseClaimsJws(request.getToken()).getPayload();
-            List<String> roles = claims.get("roles", List.class);
-            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+            // Validaciones
+            if (request.getIdOrganizacion().isEmpty()) {
                 responseObserver.onNext(OfertaDonacionResponse.newBuilder()
-                        .setStatus("FAILURE")
-                        .setMessage("No tienes permiso")
-                        .build());
+                    .setStatus("FAILURE")
+                    .setMessage("El ID de organización es obligatorio")
+                    .build());
                 responseObserver.onCompleted();
                 return;
             }
 
-            // Construir mensaje Kafka
-            OfertaDonacionMessage mensaje = new OfertaDonacionMessage();
-            mensaje.setIdOferta(request.getIdOferta());
-            mensaje.setIdOrganizacion(request.getIdOrganizacion());
-            mensaje.setDonaciones(request.getItemsList().stream().map(
-                    item -> new OfertaDonacionMessage.ItemDonacionO(
-                            item.getCategoria(),
-                            item.getDescripcion(),
-                            item.getCantidad()))
-                    .collect(Collectors.toList()));
-
-            // Enviar mensaje a Kafka
-            kafkaProducerService.sendOfertaDonacion(mensaje);
-
-            // Responder gRPC
-            responseObserver.onNext(OfertaDonacionResponse.newBuilder()
-                    .setStatus("SUCCESS")
-                    .setMessage("Oferta publicada exitosamente")
+            if (request.getItemsList().isEmpty()) {
+                responseObserver.onNext(OfertaDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Debe haber al menos una donación ofrecida")
                     .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Generar un ID de oferta único
+            String idOferta = UUID.randomUUID().toString();
+
+            // Construir el mensaje para Kafka
+            OfertaDonacionMessage message = new OfertaDonacionMessage();
+            message.setIdOferta(idOferta);
+            message.setIdOrganizacion(request.getIdOrganizacion());
+            message.setDonaciones(request.getItemsList().stream()
+                .map(item -> new OfertaDonacionMessage.ItemDonacionO(
+                    item.getCategoria(),
+                    item.getDescripcion(),
+                    item.getCantidad()
+                ))
+                .collect(Collectors.toList()));
+
+            // Enviar el mensaje al topic de Kafka
+            kafkaProducerService.sendOfertaDonacion(message);
+
+            System.out.println("✅ Oferta enviada a Kafka: " + idOferta);
+
+            // Respuesta gRPC
+            responseObserver.onNext(OfertaDonacionResponse.newBuilder()
+                .setStatus("SUCCESS")
+                .setMessage("Oferta publicada correctamente en Kafka")
+                .build());
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL
-                    .withDescription("Error al publicar oferta: " + e.getMessage())
-                    .asRuntimeException());
-
+            System.out.println("❌ Error al procesar la oferta: " + e.getMessage());
+            responseObserver.onError(
+                Status.INTERNAL
+                    .withDescription("Error al procesar la oferta: " + e.getMessage())
+                    .asRuntimeException()
+            );
         }
     }
+
 
 
     @Override

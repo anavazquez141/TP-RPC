@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofrecer Donaciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .profile-card {
+            max-width: 700px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn.primary {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .btn.primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn.secondary {
+            background-color: #3498db;
+            color: #fff;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn.secondary:hover {
+            background-color: #2980b9;
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+        }
+    </style>
+</head>
+<body>
+<div class="profile-card">
+    <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>Ofrecer Donaciones</h2>
+        <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
+    </div>
+
+    <div class="messages">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+
+    <form action="{{ url_for('enviar_oferta') }}" method="POST" id="ofertaForm">
+        <label for="id_organizacion">ID Organización:</label>
+        <input type="text" id="id_organizacion" name="id_organizacion" required>
+
+        <label for="id_oferta">ID Oferta:</label>
+        <input type="text" id="id_oferta" name="id_oferta" required>
+
+        <h3 style="color:#2c3e50;">Items de Donación</h3>
+        <div id="items-container">
+            <div class="item">
+                <label>Categoría:</label>
+                <select name="categoria[]" required>
+                    <option value="ROPA">Ropa</option>
+                    <option value="ALIMENTOS">Alimentos</option>
+                    <option value="JUGUETES">Juguetes</option>
+                    <option value="UTILES_ESCOLARES">Útiles escolares</option>
+                </select>
+
+                <label>Descripción:</label>
+                <input type="text" name="descripcion[]" required>
+
+                <label>Cantidad:</label>
+                <input type="text" name="cantidad[]" required>
+            </div>
+        </div>
+
+        <button type="button" class="btn primary" onclick="agregarItem()">Agregar Item</button>
+
+        <div class="actions">
+            <button type="submit" id="submitButton" class="btn primary">Enviar Oferta</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function agregarItem() {
+    const container = document.getElementById('items-container');
+    const item = document.createElement('div');
+    item.classList.add('item');
+    item.innerHTML = `
+        <label>Categoría:</label>
+        <select name="categoria[]" required>
+            <option value="ROPA">Ropa</option>
+            <option value="ALIMENTOS">Alimentos</option>
+            <option value="JUGUETES">Juguetes</option>
+            <option value="UTILES_ESCOLARES">Útiles escolares</option>
+        </select>
+        <label>Descripción:</label>
+        <input type="text" name="descripcion[]" required>
+        <label>Cantidad:</label>
+        <input type="text" name="cantidad[]" required>
+    `;
+    container.appendChild(item);
+}
+
+// Prevenir envíos dobles
+document.getElementById('ofertaForm').addEventListener('submit', function(event) {
+    const submitButton = document.getElementById('submitButton');
+    if (submitButton.disabled) {
+        event.preventDefault();
+        return;
+    }
+    submitButton.disabled = true;
+    submitButton.innerText = 'Procesando...';
+});
+</script>
+</body>
+</html>
