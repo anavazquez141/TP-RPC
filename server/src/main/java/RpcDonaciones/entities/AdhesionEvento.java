@@ -1,4 +1,4 @@
-package RpcDonaciones.entities;
+/*package RpcDonaciones.entities;
 
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;

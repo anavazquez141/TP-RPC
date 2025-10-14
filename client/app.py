@@ -525,7 +525,7 @@ def baja_solicitud(id_solicitud):
     except Exception as e:
         flash(f"Error al dar de baja solicitud: {str(e)}", "error")
     return redirect(url_for('solicitudes'))
-    
+
 @app.route('/enviar-solicitud', methods=['POST'])
 def enviar_solicitud():
     try:
@@ -577,6 +577,37 @@ def enviar_solicitud():
 @app.route('/form-solicitud')
 def form_solicitud():
     return render_template('publicar_solicitud.html')
+@app.route('/ofertas', methods=['GET'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def ofertas():
+    try:
+        token = session.get('token')
+        if not token:
+            flash("Debes iniciar sesión primero", "error")
+            return redirect(url_for('login'))
+
+        response = cliente_donacion.listar_ofertas(token)
+        ofertas = []
+
+        if response and hasattr(response, 'ofertas'):
+            for o in response.ofertas:
+                # Convertimos cada objeto gRPC en un dict para Jinja
+                oferta_dict = {
+                    'id_oferta': o.idOferta,
+                    'id_organizacion': o.idOrganizacion,
+                    'lista_items': [{'categoria': i.categoria, 'descripcion': i.descripcion, 'cantidad': i.cantidad} 
+                    for i in o.items]
+                }
+                ofertas.append(oferta_dict)
+        else:
+            flash("No se encontraron ofertas", "error")
+
+        return render_template('ofertas.html', ofertas=ofertas)
+    
+    except Exception as e:
+        flash(f"Error: {str(e)}", "error")
+        return render_template('ofertas.html', ofertas=[])
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

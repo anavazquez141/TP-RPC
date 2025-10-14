@@ -17,6 +17,7 @@ import RpcDonaciones.kafka.messages.SolicitudDonacionMessage;
 import RpcDonaciones.kafka.messages.SolicitudDonacionMessage.ItemDonacionM;
 import RpcDonaciones.kafka.producers.KafkaProducerService;
 import RpcDonaciones.repositories.IAuditoria;
+import RpcDonaciones.repositories.IOfertaSolicitud;
 import RpcDonaciones.repositories.IDonacion;
 import RpcDonaciones.repositories.ISolicitudDonacion;
 import RpcDonaciones.entities.Auditoria;
@@ -25,6 +26,7 @@ import RpcDonaciones.entities.Donacion;
 import RpcDonaciones.entities.SolicitudDonacion;
 import RpcDonaciones.entities.enums.CategoriaDonacion;
 import RpcDonaciones.entities.enums.TipoAccion;
+import RpcDonaciones.entities.OfertaSolicitud;
 import RpcDonaciones.repositories.IUsuario;
 import RpcDonaciones.repositories.IBajaSolicitud;
 import RpcDonaciones.entities.Usuario;
@@ -56,6 +58,9 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     private ISolicitudDonacion solicitudDonacionRepository;
     @Autowired
     private IBajaSolicitud bajaSolicitudRepository;
+
+    @Autowired
+    private IOfertaSolicitud ofertaSolicitudRepository;
 
     private final TokenValidator tokenValidator;
     private final SecretKey key;
@@ -555,6 +560,45 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                     .withDescription("Error al publicar oferta: " + e.getMessage())
                     .asRuntimeException());
 
+        }
+    }
+
+
+    @Override
+    public void listarOfertas(ListarOfertasRequest request, StreamObserver<ListarOfertasResponse> responseObserver) {
+        try {
+            if (!tokenValidator.isTokenValid(request.getToken())) {
+                responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Token inválido").asRuntimeException());
+                return;
+            }
+
+            // Consultar las ofertas guardadas en la DB
+            List<OfertaSolicitud> ofertasDB = ofertaSolicitudRepository.findAll(); // tu repositorio de ofertas
+
+            List<Oferta> ofertasGrpc = ofertasDB.stream().map(oferta -> {
+                List<ItemOferta> itemsGrpc = oferta.getItemsOfertas().stream()
+                    .map(item -> ItemOferta.newBuilder()
+                        .setCategoria(item.getCategoria())
+                        .setDescripcion(item.getDescripcion())
+                        .setCantidad(item.getCantidad())
+                        .build())
+                    .collect(Collectors.toList());
+
+                return Oferta.newBuilder()
+                    .setIdOferta(oferta.getIdOferta())
+                    .setIdOrganizacion(oferta.getIdOrganizacion())
+                    .addAllItems(itemsGrpc)
+                    .build();
+            }).collect(Collectors.toList());
+
+            ListarOfertasResponse response = ListarOfertasResponse.newBuilder()
+                    .addAllOfertas(ofertasGrpc)
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL.withDescription("Error al listar ofertas: " + e.getMessage()).asRuntimeException());
         }
     }
 }

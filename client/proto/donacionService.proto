@@ -122,6 +122,27 @@ message ListarSolicitudesResponse {
     repeated SolicitudDonacionRequest solicitudes = 1;
 }
 
+// Para listar todas las ofertas
+message ListarOfertasRequest {
+    string token = 1;
+}
+
+message ItemOferta {
+    string categoria = 1;
+    string descripcion = 2;
+    int64 cantidad = 3;
+}
+
+message Oferta {
+    string idOferta = 1;
+    string idOrganizacion = 2;
+    repeated ItemOferta items = 3;
+}
+
+message ListarOfertasResponse {
+    repeated Oferta ofertas = 1;
+}
+
 // --------------------- SERVICIOS -----------------------
 service DonacionService {
     rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
@@ -132,4 +153,5 @@ service DonacionService {
     rpc solicitarDonacion (SolicitarDonacionRequest) returns (SolicitarDonacionResponse);
     rpc bajaSolicitudDonacion (BajaSolicitudRequest) returns (BajaSolicitudResponse);
     rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
+    rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
 }

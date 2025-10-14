@@ -64,10 +64,11 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Botón para agregar donación -->
-        <div class="actions">
-            <a href="{{ url_for('agregar_donacion') }}" class="btn primary">Agregar Donación</a>
-        </div>
+    <!-- Botones de acciones -->
+    <div class="actions">
+        <a href="{{ url_for('agregar_donacion') }}" class="btn primary">Agregar Donación</a>
+        <a href="{{ url_for('ofertas') }}" class="btn primary">Ver Ofertas</a> 
+    </div>
 
         <!-- Tabla de donaciones -->
         <table>

@@ -1,4 +1,4 @@
-package RpcDonaciones.repositories;
+/*package RpcDonaciones.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,3 +11,4 @@ public interface IAdhesionEventoRepository extends JpaRepository<AdhesionEvento,
     List<AdhesionEvento> findByIdOrganizacion(String idOrganizacion);
     List<AdhesionEvento> findByIdVoluntario(String idVoluntario);
 }
+*/

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofertas de Donaciones</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .btn.primary {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .btn.primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn.secondary {
+            background-color: #3498db; /* mismo azul que primary */
+            color: #fff;
+        }
+
+        .btn.secondary:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        td {
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+<div class="profile-card">
+    <div class="header">
+        <h2>Ofertas de Donaciones</h2>
+        <a href="{{ url_for('donaciones') }}" class="btn secondary">Volver a Donaciones</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID Oferta</th>
+                <th>Organización</th>
+                <th>Categoría</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for oferta in ofertas %}
+            {% for item in oferta.lista_items %}
+            <tr>
+                <td>{{ oferta.id_oferta }}</td>
+                <td>{{ oferta.id_organizacion }}</td>
+                <td>{{ item.categoria }}</td>
+                <td>{{ item.descripcion }}</td>
+                <td>{{ item.cantidad }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="5" style="text-align:center;">No hay ofertas disponibles</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
+</body>
+</html>

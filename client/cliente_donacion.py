@@ -149,3 +149,13 @@ class ClienteDonacion:
             self.channel.close()
             self.channel = None
             self.stub = None
+
+    def listar_ofertas(self, token):
+        self.connect()
+        request = donacion_pb2.ListarOfertasRequest(token=token)
+        try:
+            response = self.stub.listarOfertas(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error al listar ofertas: {e.code()} - {e.details()}")
+            return None        
