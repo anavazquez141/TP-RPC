@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Publicar Solicitud de Donación</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="profile-card">
+        <h1>Publicar Solicitud de Donación</h1>
+
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+        {% endfor %}
+
+        <form action="{{ url_for('enviar_solicitud') }}" method="POST" id="solicitudForm">
+            <label for="id_organizacion">ID Organización:</label>
+            <input type="text" id="id_organizacion" name="id_organizacion" required><br><br>
+
+            <label for="id_solicitud">ID Solicitud:</label>
+            <input type="text" id="id_solicitud" name="id_solicitud" required><br><br>
+
+            <h3>Items de Donación</h3>
+            <div id="items-container">
+                <div class="item">
+                    <label>Categoría:</label>
+                    <select name="categoria[]" required>
+                        <option value="ROPA">Ropa</option>
+                        <option value="ALIMENTOS">Alimentos</option>
+                        <option value="JUGUETES">Juguetes</option>
+                        <option value="UTILES_ESCOLARES">Útiles escolares</option>
+                    </select>
+
+                    <label>Descripción:</label>
+                    <input type="text" name="descripcion[]" required>
+                </div>
+            </div>
+
+            <button type="button" onclick="agregarItem()">Agregar Item</button>
+            <br><br>
+            <button type="submit" id="submitButton" class="btn">Enviar Solicitud</button>
+        </form>
+    </div>
+
+    <script>
+        function agregarItem() {
+            const container = document.getElementById('items-container');
+            const item = document.createElement('div');
+            item.classList.add('item');
+            item.innerHTML = `
+                <label>Categoría:</label>
+                <select name="categoria[]" required>
+                    <option value="ROPA">Ropa</option>
+                    <option value="ALIMENTOS">Alimentos</option>
+                    <option value="JUGUETES">Juguetes</option>
+                    <option value="UTILES_ESCOLARES">Útiles escolares</option>
+                </select>
+                <label>Descripción:</label>
+                <input type="text" name="descripcion[]" required>
+            `;
+            container.appendChild(item);
+        }
+
+        // Prevenir envíos dobles
+        let isSubmitting = false;
+        document.getElementById('solicitudForm').addEventListener('submit', function(event) {
+            const submitButton = document.getElementById('submitButton');
+            if (submitButton.disabled) {
+                event.preventDefault();
+                return;
+            }
+            submitButton.disabled = true;
+            submitButton.innerText = 'Procesando...';
+        });
+    </script>
+</body>
+</html>

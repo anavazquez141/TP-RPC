@@ -8,13 +8,7 @@ import lombok.Value;
 @Value
 public class BajaEventoMessage {
 
-    /**
-     * ID de la organización que dio de baja el evento.
-     */
+    
     private final String organizacionId;
-
-    /**
-     * ID del evento que ha sido dado de baja.
-     */
     private final String eventoId;
 }

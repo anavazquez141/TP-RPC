@@ -1,4 +1,4 @@
-package RpcDonaciones.kafka.consumers;
+/*package RpcDonaciones.kafka.consumers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,4 +44,4 @@ public class AdhesionEventoConsumer {
                 message.getIdEvento(), e.getMessage(), e);
         }
     }
-}
+}*/

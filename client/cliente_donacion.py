@@ -117,7 +117,33 @@ class ClienteDonacion:
         except grpc.RpcError as e:
             print(f"Error al listar solicitudes: {e.code()} - {e.details()}")
             return None
-    
+        
+    def solicitar_donacion(self, id_organizacion, id_solicitud, items):
+        self.connect()  # Asegura que el canal y stub estén inicializados
+        if not id_organizacion or not id_solicitud:
+            print("Error: ID de organización y solicitud no pueden estar vacíos")
+            return None
+        if not items:
+            print("Error: Debe haber al menos un ítem")
+            return None
+        
+        request = donacion_pb2.SolicitarDonacionRequest(
+            token="",  # vacío, no requiere autenticación
+            id_organizacion=id_organizacion,
+            id_solicitud=id_solicitud,
+            items=items
+        )
+        try:
+            response = self.stub.solicitarDonacion(request, timeout=10)
+            print(f"Respuesta de solicitar_donacion: status={response.status}, message={response.message}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error gRPC al solicitar donación: {e.code().name} - {e.details()}")
+            return None
+        except Exception as e:
+            print(f"Error inesperado al solicitar donación: {str(e)}")
+            return None
+        
     def cerrar(self):
         if self.channel is not None:
             self.channel.close()

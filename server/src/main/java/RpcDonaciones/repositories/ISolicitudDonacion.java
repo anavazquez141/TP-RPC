@@ -11,4 +11,5 @@ public interface ISolicitudDonacion extends JpaRepository<SolicitudDonacion, Lon
     boolean existsByIdOrganizacionAndIdSolicitud(String idOrganizacion, String idSolicitud);
     Optional<SolicitudDonacion> findByIdOrganizacionAndIdSolicitud(String idOrganizacion, String idSolicitud);
     List<SolicitudDonacion> findByVigenteTrue();
+    boolean existsByIdSolicitud(String idSolicitud);
 }

@@ -8,6 +8,7 @@ import io.jsonwebtoken.security.Keys;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import RpcDonaciones.grpc.DonacionServiceGrpc;
 import RpcDonaciones.grpc.DonacionServiceProto.*;
@@ -31,7 +32,6 @@ import RpcDonaciones.entities.Usuario;
 import RpcDonaciones.entities.ItemDonacion;
 
 import RpcDonaciones.kafka.messages.OfertaDonacionMessage;
->>>>>>> refs/remotes/origin/feature/wip/rpc
 
 import java.time.LocalDateTime;
 import java.util.Base64;
@@ -373,46 +373,55 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     @Override
     public void solicitarDonacion(SolicitarDonacionRequest request, StreamObserver<SolicitarDonacionResponse> responseObserver) {
         try {
-            if (!tokenValidator.validarToken(request.getToken(), responseObserver, "SolicitarDonacionResponse")) {
-                return;
-            }
-            // Validar roles (PRESIDENTE o VOCAL)
-            Claims claims = Jwts.parser().verifyWith(key).build().parseClaimsJws(request.getToken()).getPayload();
-            List<String> roles = claims.get("roles", List.class);
-            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+            // Validaciones
+            if (request.getIdOrganizacion().isEmpty() || request.getIdSolicitud().isEmpty()) {
                 responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
                     .setStatus("FAILURE")
-                    .setMessage("No tienes permiso")
+                    .setMessage("ID de organización y solicitud son obligatorios")
                     .build());
                 responseObserver.onCompleted();
                 return;
             }
-          
-            SolicitudDonacion solicitud = new SolicitudDonacion();
-            solicitud.setIdOrganizacion(request.getIdOrganizacion());
-            solicitud.setIdSolicitud(request.getIdSolicitud());
-            solicitud.setItems(request.getItemsList().stream()
-                .map(item -> new RpcDonaciones.entities.ItemDonacion(item.getCategoria(), item.getDescripcion()))
-                .collect(Collectors.toList()));
-            solicitud.setVigente(true);
-            solicitudDonacionRepository.save(solicitud);
-            
+            if (request.getItemsList().isEmpty()) {
+                responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Debe haber al menos un ítem")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+            if (solicitudDonacionRepository.existsByIdSolicitud(request.getIdSolicitud())) {
+                responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Ya existe una solicitud con ese ID")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Construir mensaje Kafka
             SolicitudDonacionMessage message = new SolicitudDonacionMessage();
             message.setIdOrganizacion(request.getIdOrganizacion());
             message.setIdSolicitud(request.getIdSolicitud());
-            message.setDonaciones(request.getItemsList().stream().map(item -> {
-                SolicitudDonacionMessage.ItemDonacionM msgItem = new SolicitudDonacionMessage.ItemDonacionM(item.getCategoria(), item.getDescripcion());
-                return msgItem;
-            }).collect(Collectors.toList()));
+            message.setDonaciones(request.getItemsList().stream()
+                .map(item -> new SolicitudDonacionMessage.ItemDonacionM(item.getCategoria(), item.getDescripcion()))
+                .collect(Collectors.toList()));
             kafkaProducerService.sendSolicitudDonacion(message);
-        
+
+            System.out.println("✅ Solicitud enviada a Kafka: " + request.getIdSolicitud());
+
             responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
                 .setStatus("SUCCESS")
-                .setMessage("Solicitud enviada")
+                .setMessage("Solicitud enviada correctamente a Kafka")
                 .build());
             responseObserver.onCompleted();
+
         } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL.withDescription("Error: " + e.getMessage()).asRuntimeException());
+            System.out.println("❌ Error al procesar solicitud: " + e.getMessage());
+            responseObserver.onError(
+                Status.INTERNAL.withDescription("Error al procesar la solicitud: " + e.getMessage())
+                    .asRuntimeException()
+            );
         }
     }
 

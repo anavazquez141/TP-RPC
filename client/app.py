@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from utils import mapear_rol, requiere_autenticacion, requiere_rol_presidente, requiere_rol_presidente_o_coordinador, requiere_rol_presidente_o_vocal
 from cliente_usuario import ClienteUsuario
 from cliente_evento import ClienteEvento
@@ -7,6 +7,8 @@ from proto import usuarioService_pb2 as usuario_pb2
 from proto import usuarioService_pb2_grpc as usuario_pb2_grpc
 from proto import authService_pb2 as auth_pb2
 from proto import authService_pb2_grpc as auth_pb2_grpc
+from proto import donacionService_pb2 as donacion_pb2
+from proto import donacionService_pb2_grpc as donacion_pb2_grpc
 from datetime import datetime
 import atexit
 
@@ -524,6 +526,57 @@ def baja_solicitud(id_solicitud):
         flash(f"Error al dar de baja solicitud: {str(e)}", "error")
     return redirect(url_for('solicitudes'))
     
+@app.route('/enviar-solicitud', methods=['POST'])
+def enviar_solicitud():
+    try:
+        # Obtener datos del formulario
+        id_organizacion = request.form.get('id_organizacion')
+        id_solicitud = request.form.get('id_solicitud')
+        categorias = request.form.getlist('categoria[]')
+        descripciones = request.form.getlist('descripcion[]')
+
+        # Validaciones
+        if not id_organizacion or not id_solicitud:
+            flash("ID de organización y solicitud son obligatorios", "error")
+            return redirect(url_for('form_solicitud'))
+        if not categorias or not descripciones or len(categorias) != len(descripciones):
+            flash("Debe proporcionar al menos un ítem válido con categoría y descripción", "error")
+            return redirect(url_for('form_solicitud'))
+
+        items = []
+        for categoria, descripcion in zip(categorias, descripciones):
+            if not categoria or not descripcion:
+                flash("Categoría y descripción no pueden estar vacías", "error")
+                return redirect(url_for('form_solicitud'))
+            item = donacion_pb2.ItemDonacionP(
+                categoria=categoria,
+                descripcion=descripcion
+            )
+            items.append(item)
+
+        # Instanciar ClienteDonacion (para consistencia con otros endpoints)
+        controller = ClienteDonacion(host='localhost', port=9090)
+
+        # Llamar al método solicitar_donacion
+        response = controller.solicitar_donacion(id_organizacion, id_solicitud, items)
+
+        # Manejo de la respuesta
+        if response and hasattr(response, 'status') and response.status == "SUCCESS":
+            flash("Solicitud publicada exitosamente", "success")
+        else:
+            message = getattr(response, 'message', 'Error al publicar solicitud') if response else "Error al publicar solicitud"
+            flash(message, "error")
+
+    except grpc.RpcError as e:
+        flash(f"Error gRPC: {e.code().name} - {e.details()}", "error")
+    except Exception as e:
+        flash(f"Error al publicar solicitud: {str(e)}", "error")
+
+    return redirect(url_for('form_solicitud'))
+
+@app.route('/form-solicitud')
+def form_solicitud():
+    return render_template('publicar_solicitud.html')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
