@@ -536,8 +536,29 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 return;
             }
 
-            // Generar un ID de oferta único
-            String idOferta = UUID.randomUUID().toString();
+            if (request.getIdOferta().isEmpty()) {
+                responseObserver.onNext(OfertaDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("El ID de oferta es obligatorio")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Validar unicidad del idOferta
+            Optional<OfertaSolicitud> existingOferta = ofertaSolicitudRepository
+                .findByIdOrganizacionAndIdOferta(request.getIdOrganizacion(), request.getIdOferta());
+            if (existingOferta.isPresent()) {
+                responseObserver.onNext(OfertaDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("El ID de oferta ya existe para esta organización")
+                    .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            // Usar el idOferta del request
+            String idOferta = request.getIdOferta();
 
             // Construir el mensaje para Kafka
             OfertaDonacionMessage message = new OfertaDonacionMessage();
