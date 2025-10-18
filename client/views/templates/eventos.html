@@ -47,7 +47,7 @@
         <div class="header">
             <h1>Eventos</h1>
             {% if puede_administrar_eventos %}
-                <a href="{{ url_for('registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
+                <a href="{{ url_for('evento_bp.registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
             {% endif %}
         </div>
 
@@ -85,7 +85,7 @@
                             <td>{{ evento.fechaHora | datetimeformat }}</td>
                             {% if puede_administrar_eventos %}
                                 <td>
-                                    <a href="{{ url_for('evento', id_evento=evento.idEvento) }}" class="btn event-action">Modificar / Eliminar</a>
+                                    <a href="{{ url_for('evento_bp.evento', id_evento=evento.idEvento) }}" class="btn event-action">Modificar / Eliminar</a>
                                 </td>
                             {% endif %}
                         </tr>
@@ -98,7 +98,7 @@
 
         <!-- Botón de volver al inicio -->
         <div class="actions">
-            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
+            <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Perfil</a>
         </div>
     </div>
 </body>

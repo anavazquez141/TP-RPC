@@ -21,7 +21,7 @@
         {% endwith %}
 
         <!-- Formulario Registrar -->
-        <form method="POST" action="{{ url_for('registrar') }}" class="modern-login-form">
+        <form method="POST" action="{{ url_for('usuarios.registrar_usuario') }}" class="modern-login-form">
             <div class="input-group">
                 <input type="text" id="nombreUsuario" name="nombreUsuario" required placeholder=" ">
                 <label>Nombre de Usuario</label>
@@ -58,8 +58,8 @@
 
         <!-- Enlaces -->
         <div class="actions">
-            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
-            <a href="{{ url_for('logout') }}" class="btn secondary">Cerrar Sesión</a>
+            <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Perfil</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn secondary">Cerrar Sesión</a>
         </div>
 
     </div>

@@ -160,13 +160,18 @@ class ClienteDonacion:
             print(f"Error al listar ofertas: {e.code()} - {e.details()}")
             return None        
 
-    def ofrecer_donacion(self, id_organizacion, items):
+    def ofrecer_donacion(self, id_organizacion, id_oferta, items):
         self.connect()  # Asegura que el canal y stub estén inicializados
 
         # Validaciones simples
         if not id_organizacion:
             print("Error: ID de organización no puede estar vacío")
             return None
+
+        if not id_oferta:
+            print("Error: ID de oferta no puede estar vacío")
+            return None  
+
         if not items:
             print("Error: Debe haber al menos un ítem")
             return None
@@ -174,6 +179,7 @@ class ClienteDonacion:
         # Crear request gRPC
         request = donacion_pb2.OfertaDonacionRequest(
             token="",  # vacío, si no requiere autenticación
+            idOferta=id_oferta,
             idOrganizacion=id_organizacion,
             items=items
         )

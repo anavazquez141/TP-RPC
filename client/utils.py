@@ -21,13 +21,13 @@ def requiere_autenticacion(cliente):
             if 'token' not in session:
                 session.clear()
                 flash("Debes iniciar sesión primero", "error")
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
             
             response = cliente.validar_token(session['token'])
             if response is None or response.status != "SUCCESS":
                 session.clear()
                 flash("Sesión inválida, inicia sesión nuevamente", "error")
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
             
             return f(*args, **kwargs)
         return wrapper
@@ -42,10 +42,10 @@ def requiere_rol_presidente(cliente):
             if usuario is None:
                 session.clear()
                 flash("Error al obtener datos del usuario", "error")
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
             if usuario.rol != 0:
                 flash("No tienes permisos para acceder a esta funcionalidad", "error")
-                return redirect(url_for('index'))
+                return redirect(url_for('auth.index'))
             return f(*args, **kwargs)
         return wrapper
     return decorador
@@ -58,10 +58,10 @@ def requiere_rol_presidente_o_coordinador(cliente):
             if usuario is None:
                 session.clear()
                 flash("Error al obtener datos del usuario", "error")
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
             if usuario.rol not in [0, 2]:  # Presidente (0) o Coordinador (2)
                 flash("No tienes permisos para acceder a esta funcionalidad", "error")
-                return redirect(url_for('index'))
+                return redirect(url_for('auth.index'))
             return f(*args, **kwargs)
         return wrapper
     return decorador
@@ -74,10 +74,10 @@ def requiere_rol_presidente_o_vocal(cliente):
             if usuario is None:
                 session.clear()
                 flash("Error al obtener datos del usuario", "error")
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login'))
             if usuario.rol not in [0, 1]:  # Presidente (0) o Vocal (1)
                 flash("No tienes permisos para acceder a esta funcionalidad", "error")
-                return redirect(url_for('index'))
+                return redirect(url_for('auth.index'))
             return f(*args, **kwargs)
         return wrapper
     return decorador
