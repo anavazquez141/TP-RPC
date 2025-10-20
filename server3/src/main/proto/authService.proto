@@ -1,0 +1,38 @@
+syntax = "proto3";
+option java_package = "GRSDonaciones.grpc";
+option java_outer_classname = "AuthServiceProto";
+
+service AuthService {
+    rpc login (LoginRequest) returns (LoginResponse);
+    rpc logout (LogoutRequest) returns (LogoutResponse);
+    rpc validarToken(TokenValidationRequest) returns (TokenValidationResponse);
+}
+
+message LoginRequest {
+    string email = 1;
+    string clave = 2;
+}
+
+message LoginResponse {
+    string token = 1; // JWT u otro token de autenticación
+    string status = 2; // e.g., "SUCCESS", "FAILURE"
+    string message = 3; // Mensaje opcional (e.g., "Credenciales invalidas")
+}
+
+message LogoutRequest {
+    string token = 1;
+}
+
+message LogoutResponse {
+    string status = 1; // e.g., "SUCCESS", "FAILURE"
+    string message = 2; // Mensaje opcional (e.g., "Credenciales invalidas")
+}
+
+message TokenValidationRequest {
+    string token = 1;
+}
+
+message TokenValidationResponse {
+    string status = 1;
+    string message = 2;
+}

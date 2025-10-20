@@ -1,0 +1,39 @@
+# ENUM CATEGORÍAS (SIN PUNTO Y COMA FINAL)
+enum Categoria {
+    ROPA
+    ALIMENTOS
+    JUGUETES
+    UTILES_ESCOLARES
+
+}
+
+# TIPO INFORME (COMPLETO)
+type DonacionResumen {
+    categoria: Categoria!
+    eliminado: Boolean!
+    totalCantidad: Int!
+}
+
+# INPUT PARA FILTROS
+input FiltroDonacionInput {
+    categoria: Categoria
+    fechaDesde: String
+    fechaHasta: String
+    eliminado: Boolean
+}
+
+# QUERY PRINCIPAL
+type Query {
+    informeDonaciones(token: String!, filtro: FiltroDonacionInput): [DonacionResumen!]!
+}
+
+# TIPOS BÁSICOS (si no los tenés)
+type Donacion {
+    id: ID!
+    categoria: Categoria!
+    descripcion: String!
+    cantidad: Int!
+    eliminado: Boolean!
+    fechaAlta: String!
+    fechaEliminacion: String
+}

@@ -1,0 +1,194 @@
+syntax = "proto3";
+option java_package = "GRSDonaciones.grpc";
+option java_outer_classname = "DonacionServiceProto";
+
+// ----------------- MENSAJES ---------------------
+//Categorias para el enum
+enum CategoriaDonacion {
+    ROPA = 0;
+    ALIMENTOS = 1;
+    JUGUETES = 2;
+    UTILES_ESCOLARES = 3;
+}
+
+// ----------------- ---------------------
+
+// Mensaje para registrar una donación
+message RegistrarDonacionRequest {
+    string token = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+// Mensaje para modificar una donación
+message ModificarDonacionRequest {
+    string token = 1;
+    int64 id = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+// Mensaje para eliminar una donación 
+message EliminarDonacionRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+// Mensaje para listar donaciones
+message ListarDonacionesRequest {
+    string token = 1;
+}
+
+// Mensaje para obtener una donación por ID
+message DonacionIdRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+// Mensaje de respuesta para operaciones de donación
+message DonacionResponse {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+    string status = 5;
+    string message = 6;
+}
+
+// Mensaje de respuesta para eliminación
+message EliminarDonacionResponse {
+    bool success = 1;
+    string message = 2;
+    string status = 3;
+}
+
+// Mensaje de respuesta para listado
+message ListarDonacionesResponse {
+    repeated DonacionItem donaciones = 1;
+}
+
+// Item individual de donación
+message DonacionItem {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+}
+
+// Mensaje para un item de donación en la solicitud
+message ItemDonacionP {
+    string categoria = 1;
+    string descripcion = 2;
+}
+
+// Mensaje para solicitar donaciones
+message SolicitarDonacionRequest {
+    string token = 1;
+    string id_organizacion = 2;
+    string id_solicitud = 3;
+    repeated ItemDonacionP items = 4;
+}
+
+// Mensaje de respuesta para solicitud de donaciones
+message SolicitarDonacionResponse {
+    string status = 1;
+    string message = 2;
+}
+
+// Mensaje para baja de solicitud de donación
+message BajaSolicitudRequest {
+    string token = 1;
+    string id_organizacion = 2;
+    string id_solicitud = 3;
+}
+
+message BajaSolicitudResponse {
+    string status = 1;
+    string message = 2;
+}
+
+message OfertaDonacionItem {
+  string categoria = 1;
+  string descripcion = 2;
+  int64 cantidad = 3; // o int32 según prefieras
+}
+
+message OfertaDonacionRequest {
+  string token = 1;
+  string idOferta = 2;
+  string idOrganizacion = 3;
+  repeated OfertaDonacionItem items = 4;
+}
+
+message OfertaDonacionResponse {
+  string status = 1;
+  string message = 2;
+}
+
+message ListarSolicitudesRequest {
+    string token = 1;
+}
+
+message SolicitudDonacionRequest {
+    string id_organizacion = 1;
+    string id_solicitud = 2;
+    repeated ItemDonacionP items = 3;
+}
+
+message ListarSolicitudesResponse {
+    repeated SolicitudDonacionRequest solicitudes = 1;
+}
+
+// Para listar todas las ofertas
+message ListarOfertasRequest {
+    string token = 1;
+}
+
+message ItemOferta {
+    string categoria = 1;
+    string descripcion = 2;
+    int64 cantidad = 3;
+}
+
+message Oferta {
+    string idOferta = 1;
+    string idOrganizacion = 2;
+    repeated ItemOferta items = 3;
+}
+
+message ListarOfertasResponse {
+    repeated Oferta ofertas = 1;
+}
+
+message DonacionConCampoEliminado {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+    bool eliminado = 5;  
+    string fechaAlta = 6;           
+    string fechaEliminacion = 7;
+}
+
+// Mensaje de respuesta para listado con eliminación
+message ListarDonacionesConEliminadoResponse {
+    repeated DonacionConCampoEliminado donaciones = 1;
+    string status = 2;      
+    string message = 3;      
+}
+
+// --------------------- SERVICIOS -----------------------
+service DonacionService {
+    rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
+    rpc modificarDonacion (ModificarDonacionRequest) returns (DonacionResponse);
+    rpc eliminarDonacion (EliminarDonacionRequest) returns (EliminarDonacionResponse);
+    rpc listarDonaciones (ListarDonacionesRequest) returns (ListarDonacionesResponse);
+    rpc traerDonacionPorId (DonacionIdRequest) returns (DonacionResponse);
+    rpc solicitarDonacion (SolicitarDonacionRequest) returns (SolicitarDonacionResponse);
+    rpc bajaSolicitudDonacion (BajaSolicitudRequest) returns (BajaSolicitudResponse);
+    rpc ofrecerDonacion(OfertaDonacionRequest) returns (OfertaDonacionResponse);
+    rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
+    rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
+    rpc listarDonacionesConEliminado(ListarDonacionesRequest) returns (ListarDonacionesConEliminadoResponse);
+}
