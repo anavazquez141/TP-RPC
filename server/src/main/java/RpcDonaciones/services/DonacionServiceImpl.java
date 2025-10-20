@@ -35,6 +35,8 @@ import RpcDonaciones.entities.Usuario;
 
 import RpcDonaciones.entities.ItemDonacion;
 
+import RpcDonaciones.services.TransferenciaService;
+
 import RpcDonaciones.kafka.messages.OfertaDonacionMessage;
 
 import java.time.LocalDateTime;
@@ -60,6 +62,9 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     private ISolicitudDonacion solicitudDonacionRepository;
     @Autowired
     private IBajaSolicitud bajaSolicitudRepository;
+
+    @Autowired
+    private TransferenciaService transferenciaService;
 
     @Autowired
     private IOfertaSolicitud ofertaSolicitudRepository;
@@ -698,5 +703,92 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onError(Status.INTERNAL.withDescription("Error al listar ofertas: " + e.getMessage()).asRuntimeException());
         }
     }
+
+    @Override
+    public void transferirDonacion(RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionRequest request,
+            StreamObserver<RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionResponse> responseObserver) {
+        try {
+            String token = request.getToken();
+            if (!tokenValidator.validarToken(token, responseObserver, "TransferirDonacionResponse")) {
+                return;
+            }
+
+            Claims claims = Jwts.parser().verifyWith(key).build().parseClaimsJws(token).getPayload();
+            List<String> roles = claims.get("roles", List.class);
+            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No tienes permiso para realizar transferencias")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            List<TransferenciaDonacionMessage.ItemTransferencia> items = request.getItemsList().stream()
+                    .map(item -> new TransferenciaDonacionMessage.ItemTransferencia(
+                            item.getCategoria(),
+                            item.getDescripcion(),
+                            item.getCantidad()))
+                    .collect(Collectors.toList());
+
+            transferenciaService.enviarTransferenciaDonacion(
+                    request.getIdOrganizacionSolicitante(),
+                    request.getIdSolicitud(),
+                    items);
+
+            responseObserver.onNext(RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionResponse.newBuilder()
+                    .setStatus("SUCCESS")
+                    .setMessage("Transferencia enviada correctamente")
+                    .build());
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Error al procesar transferencia: " + e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
+    @Override
+    public void listarSolicitudesExternas(RpcDonaciones.grpc.DonacionServiceProto.ListarSolicitudesRequest request,
+            StreamObserver<RpcDonaciones.grpc.DonacionServiceProto.ListarSolicitudesResponse> responseObserver) {
+        try {
+            if (!tokenValidator.isTokenValid(request.getToken())) {
+                sendErrorResponse(responseObserver, "Token invalido o expirado");
+                return;
+            }
+
+            List<SolicitudDonacion> solicitudes = solicitudDonacionRepository.findByVigenteTrue();
+            RpcDonaciones.grpc.DonacionServiceProto.ListarSolicitudesResponse.Builder responseBuilder = RpcDonaciones.grpc.DonacionServiceProto.ListarSolicitudesResponse
+                    .newBuilder();
+
+            for (SolicitudDonacion solicitud : solicitudes) {
+                if (!solicitud.getIdOrganizacion().equals(obtenerIdOrganizacionLocal())) {
+                    RpcDonaciones.grpc.DonacionServiceProto.SolicitudDonacionRequest.Builder solicitudBuilder = RpcDonaciones.grpc.DonacionServiceProto.SolicitudDonacionRequest
+                            .newBuilder()
+                            .setIdOrganizacion(solicitud.getIdOrganizacion())
+                            .setIdSolicitud(solicitud.getIdSolicitud());
+
+                    for (ItemDonacion item : solicitud.getItems()) {
+                        solicitudBuilder.addItems(RpcDonaciones.grpc.DonacionServiceProto.ItemDonacionP.newBuilder()
+                                .setCategoria(item.getCategoria())
+                                .setDescripcion(item.getDescripcion())
+                                .build());
+                    }
+                    responseBuilder.addSolicitudes(solicitudBuilder.build());
+                }
+            }
+
+            responseObserver.onNext(responseBuilder.build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            sendErrorResponse(responseObserver, "Error al listar solicitudes externas: " + e.getMessage());
+        }
+    }
+
+    private String obtenerIdOrganizacionLocal() {
+        return "org-local-id";
+    }
 }
+
 
