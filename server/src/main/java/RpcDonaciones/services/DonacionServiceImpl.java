@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+
 import RpcDonaciones.grpc.DonacionServiceGrpc;
 import RpcDonaciones.grpc.DonacionServiceProto.*;
 import RpcDonaciones.kafka.messages.BajaSolicitudMessage;
@@ -158,6 +159,70 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             
         } catch (Exception e) {
             sendErrorResponse(responseObserver, "Error al listar donaciones: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public void listarDonacionesConEliminado(ListarDonacionesRequest request, 
+                                        StreamObserver<ListarDonacionesConEliminadoResponse> responseObserver) {
+        
+        try {
+            String token = request.getToken();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                return;
+            }
+
+            Claims claims = Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseClaimsJws(token)
+                .getPayload();
+
+            List<String> roles = claims.get("roles", List.class);
+            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
+                responseObserver.onNext(ListarDonacionesConEliminadoResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No tienes permiso para ver informe de donaciones")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+            
+            List<Donacion> donaciones = donacionRepository.findAll();
+            
+            ListarDonacionesConEliminadoResponse.Builder response = ListarDonacionesConEliminadoResponse.newBuilder();
+
+            // ✅ UN SOLO BUCLE - CORREGIDO
+            for (Donacion d : donaciones) {
+                // ✅ FECHA ELIMINACIÓN DESDE AUDITORIA
+                String fechaEliminacion = "";
+                if (d.isEliminado()) {
+                    fechaEliminacion = d.getAuditorias().stream()
+                        .filter(a -> a.getTipoAccion() == TipoAccion.ELIMINACION)
+                        .map(a -> a.getFecha().toString())
+                        .findFirst()
+                        .orElse("");
+                }
+                
+                // ✅ UNA SOLA LÍNEA - CORREGIDO
+                DonacionConCampoEliminado item = DonacionConCampoEliminado.newBuilder()
+                    .setId(d.getId())
+                    .setCategoria(d.getCategoria().name())
+                    .setDescripcion(d.getDescripcion())
+                    .setCantidad(d.getCantidad())
+                    .setEliminado(d.isEliminado())
+                    .setFechaAlta(d.getFechaAlta().toString())
+                    .setFechaEliminacion(fechaEliminacion)
+                    .build();
+                response.addDonaciones(item);
+            }
+            
+            response.setStatus("SUCCESS");
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+            
+        } catch (Exception e) {
+            responseObserver.onError(e);
         }
     }
 

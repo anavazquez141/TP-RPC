@@ -154,43 +154,4 @@ public class GrpcServerConfig {
         }
     }
 }
-/*package RpcDonaciones.config;
 
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import RpcDonaciones.services.AuthServiceImpl;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
-@Component
-public class GrpcServerConfig {
-
-    private Server server;
-
-    @Autowired
-    private AuthServiceImpl authService;
-
-    @Value("${grpc.server.port}")
-    private int grpcPort; // Spring inyecta aquí el puerto
-
-    @PostConstruct
-    public void startGrpcServer() throws Exception {
-        server = ServerBuilder.forPort(grpcPort)
-                              .addService(authService) // usa la instancia de Spring
-                              .build()
-                              .start();
-        System.out.println("gRPC server started on port " + grpcPort);
-    }
-
-    @PreDestroy
-    public void stopGrpcServer() {
-        if (server != null) {
-            server.shutdown();
-        }
-    }
-}
-*/
