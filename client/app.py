@@ -619,6 +619,7 @@ def enviar_oferta():
     try:
         # Obtener datos del formulario
         id_organizacion = request.form.get('id_organizacion')
+        id_oferta = request.form.get('id_oferta')  # Nuevo: leer id_oferta
         categorias = request.form.getlist('categoria[]')
         descripciones = request.form.getlist('descripcion[]')
         cantidades = request.form.getlist('cantidad[]')
@@ -626,6 +627,10 @@ def enviar_oferta():
         # Validaciones
         if not id_organizacion:
             flash("ID de organización es obligatorio", "error")
+            return redirect(url_for('form_oferta'))
+
+        if not id_oferta:
+            flash("ID de oferta es obligatorio", "error")
             return redirect(url_for('form_oferta'))
 
         if not categorias or not descripciones or not cantidades:
@@ -661,7 +666,7 @@ def enviar_oferta():
 
         # Llamar al método ofrecer_donacion
         controller = ClienteDonacion(host='localhost', port=9090)
-        response = controller.ofrecer_donacion(id_organizacion, items)
+        response = controller.ofrecer_donacion(id_organizacion, id_oferta, items)
 
         if response and hasattr(response, 'status') and response.status == "SUCCESS":
             flash("Oferta publicada exitosamente", "success")

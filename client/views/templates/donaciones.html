@@ -52,7 +52,7 @@
         <!-- Header con título y botón de volver -->
         <div class="header">
             <h2>Inventario de Donaciones</h2>
-            <a href="{{ url_for('index') }}" class="btn secondary">Volver al Perfil</a>
+            <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Perfil</a>
         </div>
 
         <!-- Mensajes flash -->
@@ -66,8 +66,8 @@
 
     <!-- Botones de acciones -->
     <div class="actions">
-        <a href="{{ url_for('agregar_donacion') }}" class="btn primary">Agregar Donación</a>
-        <a href="{{ url_for('ofertas') }}" class="btn primary">Ver Ofertas</a>
+        <a href="{{ url_for('donacion_bp.agregar_donacion') }}" class="btn primary">Agregar Donación</a>
+        <a href="{{ url_for('oferta_bp.ofertas') }}" class="btn primary">Ver Ofertas</a>
         <a href="{{ url_for('informe_donaciones') }}" class="btn primary">Informe de donaciones</a>
     </div>
 
@@ -90,9 +90,9 @@
                     <td>{{ donacion.descripcion }}</td>
                     <td>{{ donacion.cantidad }}</td>
                     <td class="actions">
-                        <a href="{{ url_for('modificar_donacion', donacion_id=donacion.id) }}" 
+                        <a href="{{ url_for('donacion_bp.modificar_donacion', donacion_id=donacion.id) }}" 
                            class="btn primary" style="padding: 5px 10px; font-size: 12px;">Modificar</a>
-                        <form action="{{ url_for('eliminar_donacion', donacion_id=donacion.id) }}" 
+                        <form action="{{ url_for('donacion_bp.eliminar_donacion', donacion_id=donacion.id) }}" 
                               method="POST" style="display: inline;">
                             <button type="submit" class="btn delete-btn" 
                                     style="padding: 5px 10px; font-size: 12px;"

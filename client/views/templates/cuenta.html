@@ -22,7 +22,7 @@
     {% endwith %}
 
     <!-- Formulario para modificar cuenta -->
-    <form method="POST" action="{{ url_for('cuenta') }}" class="modern-login-form">
+    <form method="POST" action="{{ url_for('usuarios.cuenta') }}" class="modern-login-form">
         <div class="input-group">
             <input type="text" name="nombreUsuario" value="{{ usuario.nombreUsuario }}" required placeholder=" ">
             <label>Nombre de Usuario</label>
@@ -47,7 +47,7 @@
     </form>
 
     <!-- Formulario para eliminar cuenta -->
-    <form method="POST" action="{{ url_for('cuenta') }}"
+    <form method="POST" action="{{ url_for('usuarios.cuenta') }}"
           onsubmit="return confirm('¿Seguro que deseas eliminar tu cuenta? Esta acción no se puede deshacer.');"
           class="modern-login-form" style="margin-top: 15px;">
         <input type="hidden" name="eliminar" value="true">
@@ -56,8 +56,8 @@
 
     <!-- Enlaces -->
     <div class="actions">
-        <a href="{{ url_for('index') }}" class="btn secondary">Volver al perfil</a>
-        <a href="{{ url_for('logout') }}" class="btn secondary">Cerrar Sesión</a>
+        <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al perfil</a>
+        <a href="{{ url_for('auth.logout') }}" class="btn secondary">Cerrar Sesión</a>
     </div>
 
 </div>
