@@ -675,5 +675,44 @@ def enviar_oferta():
     return redirect(url_for('form_oferta'))
 
 
+@app.route('/informe-donaciones', methods=['GET', 'POST'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def informe_donaciones():
+    informe = []
+    categoria = None
+    fecha_desde = None
+    fecha_hasta = None
+    eliminado = None
+
+    if request.method == 'POST':
+        # Construir el filtro desde el formulario
+        filtro = {}
+        categoria = request.form.get('categoria')
+        if categoria:
+            filtro['categoria'] = categoria
+        fecha_desde = request.form.get('fechaDesde')
+        if fecha_desde:
+            filtro['fechaDesde'] = fecha_desde
+        fecha_hasta = request.form.get('fechaHasta')
+        if fecha_hasta:
+            filtro['fechaHasta'] = fecha_hasta
+        eliminado = request.form.get('eliminado')
+        if eliminado:
+            filtro['eliminado'] = eliminado.lower() == 'true'
+
+        # Llamar al cliente con el token de la sesión
+        informe = cliente_donacion.obtener_informe_donaciones(session['token'], filtro)
+
+    return render_template(
+        'informe_donaciones.html',
+        informe=informe,
+        categoria=categoria,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        eliminado=eliminado
+    )
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

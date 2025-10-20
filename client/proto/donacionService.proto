@@ -161,6 +161,23 @@ message ListarOfertasResponse {
     repeated Oferta ofertas = 1;
 }
 
+message DonacionConCampoEliminado {
+    int64 id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+    bool eliminado = 5;  
+    string fechaAlta = 6;           
+    string fechaEliminacion = 7;
+}
+
+// Mensaje de respuesta para listado con eliminación
+message ListarDonacionesConEliminadoResponse {
+    repeated DonacionConCampoEliminado donaciones = 1;
+    string status = 2;      
+    string message = 3;      
+}
+
 // --------------------- SERVICIOS -----------------------
 service DonacionService {
     rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
@@ -173,4 +190,5 @@ service DonacionService {
     rpc ofrecerDonacion(OfertaDonacionRequest) returns (OfertaDonacionResponse);
     rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
     rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
+    rpc listarDonacionesConEliminado(ListarDonacionesRequest) returns (ListarDonacionesConEliminadoResponse);
 }

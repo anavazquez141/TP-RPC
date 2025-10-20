@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe de Donaciones</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-group { margin: 10px 0; }
+        label { display: inline-block; width: 150px; }
+        input, select { padding: 5px; margin-right: 10px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .total { font-weight: bold; background-color: #e9ecef; }
+    </style>
+</head>
+<body>
+    <h1>📊 Informe de Donaciones</h1>
+    
+    <!-- FILTROS -->
+    <form method="POST">
+        <div class="form-group">
+            <label>Categoría:</label>
+            <select name="categoria">
+                <option value="">Todas</option>
+                <option value="ROPA" {{ 'selected' if categoria == 'ROPA' }}>👕 Ropa</option>
+                <option value="ALIMENTOS" {{ 'selected' if categoria == 'ALIMENTOS' }}>🍞 Alimentos</option>
+                <option value="JUGUETES" {{ 'selected' if categoria == 'JUGUETES' }}>🎲 Juguetes</option>
+                <option value="UTILES_ESCOLARES" {{ 'selected' if categoria == 'UTILES_ESCOLARES' }}>📚 Útiles Escolares</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Fecha Alta Desde:</label>
+            <input type="datetime-local" name="fechaDesde" value="{{ fecha_desde or '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label>Fecha Eliminación Hasta:</label>
+            <input type="datetime-local" name="fechaHasta" value="{{ fecha_hasta or '' }}">
+        </div>
+        
+        <div class="form-group">
+            <label>Estado:</label>
+            <select name="eliminado">
+                <option value="">Ambos</option>
+                <option value="false" {{ 'selected' if eliminado == 'false' }}>✅ Activas</option>
+                <option value="true" {{ 'selected' if eliminado == 'true' }}>🗑️ Eliminadas</option>
+            </select>
+        </div>
+        
+        <button type="submit">🔍 Filtrar</button>
+        <a href="{{ url_for('informe_donaciones') }}"><button type="button">↻ Limpiar</button></a>
+    </form>
+
+    <!-- RESULTADOS -->
+    {% if informe %}
+    <h2>Resultados: {{ informe|length }} registros</h2>
+    <table>
+        <tr>
+            <th>Categoría</th>
+            <th>Estado</th>
+            <th>Total Cantidad</th>
+        </tr>
+        {% for item in informe %}
+        <tr class="{{ 'total' if loop.last else '' }}">
+            <td>{{ item.categoria }}</td>
+            <td>{{ '🗑️ Eliminada' if item.eliminado else '✅ Activa' }}</td>
+            <td>{{ item.totalCantidad }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p>ℹ️ No hay datos para mostrar</p>
+    {% endif %}
+
+    <br>
+    <a href="{{ url_for('index') }}">🏠 Volver al Inicio</a>
+</body>
+</html>

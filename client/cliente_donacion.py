@@ -1,4 +1,6 @@
 import grpc
+import requests
+from flask import flash
 from proto import donacionService_pb2 as donacion_pb2
 from proto import donacionService_pb2_grpc as donacion_pb2_grpc
 
@@ -188,3 +190,87 @@ class ClienteDonacion:
         except Exception as e:
             print(f"Error inesperado al ofrecer donación: {str(e)}")
             return None            
+        
+    def informe_donaciones(self, token):
+        self.connect()
+        request = donacion_pb2.ListarDonacionesRequest(token=token)
+        try:
+            response = self.stub.listarDonacionesConEliminado(request)
+            return response
+        except grpc.RpcError as e:
+            print(f"Error al obtener informe: {e.code()} - {e.details()}")
+            return None
+    
+
+    def obtener_informe_donaciones(self, token, filtro=None):
+        """Obtiene el informe de donaciones desde GraphQL"""
+        try:
+            # Formatear filtro
+            filtro_str = "{}"  # Filtro vacío por defecto
+            if filtro:
+                parts = []
+                for k, v in filtro.items():
+                    if k == "categoria" and isinstance(v, str):
+                        # Validar categoría contra valores válidos
+                        if v not in ["ROPA", "ALIMENTOS", "JUGUETES", "UTILES_ESCOLARES"]:
+                            print(f"Categoría inválida: {v}")
+                            flash(f"Categoría inválida: {v}", "error")
+                            return []
+                        parts.append(f'{k}: {v}')  # Sin comillas para enums
+                    elif isinstance(v, str):
+                        parts.append(f'{k}: "{v}"')
+                    elif isinstance(v, bool):
+                        parts.append(f'{k}: {str(v).lower()}')
+                    elif isinstance(v, (int, float)):
+                        parts.append(f'{k}: {v}')
+                    else:
+                        parts.append(f'{k}: {v}')
+                filtro_str = "{" + ", ".join(parts) + "}"
+
+            # Construir query GraphQL con token
+            query = f'''
+            query {{
+                informeDonaciones(
+                    token: "{token}",
+                    filtro: {filtro_str}
+                ) {{
+                    categoria
+                    eliminado
+                    totalCantidad
+                }}
+            }}
+            '''
+            
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {token}'
+            }
+            
+            print(f"Query enviada: {query}")
+            print(f"Token usado: {token}")
+            
+            response = requests.post(
+                'http://localhost:8050/graphql',
+                json={'query': query},
+                headers=headers
+            )
+            
+            print(f"GraphQL response: {response.status_code}, {response.text}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'data' in data and data['data'] is not None and 'informeDonaciones' in data['data']:
+                    return data['data']['informeDonaciones']
+                if 'errors' in data:
+                    print(f"Errores GraphQL: {data['errors']}")
+                    flash(f"Error en la consulta GraphQL: {data['errors']}", "error")
+                else:
+                    flash("Error al obtener informe: respuesta inválida", "error")
+                return []
+            
+            flash(f"Error al obtener informe: código de estado {response.status_code}", "error")
+            return []
+        except Exception as e:
+            print(f"Error informe: {e}")
+            flash(f"Error al obtener informe: {e}", "error")
+            return []
