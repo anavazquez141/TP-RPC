@@ -51,7 +51,7 @@
         </div>
         
         <button type="submit">🔍 Filtrar</button>
-        <a href="{{ url_for('informe_donaciones') }}"><button type="button">↻ Limpiar</button></a>
+        <a href="{{ url_for('donacion_bp.informe_donaciones') }}"><button type="button">↻ Limpiar</button></a>
     </form>
 
     <!-- RESULTADOS -->
@@ -76,6 +76,6 @@
     {% endif %}
 
     <br>
-    <a href="{{ url_for('index') }}">🏠 Volver al Inicio</a>
+    <a href="{{ url_for('auth.index') }}">🏠 Volver al Inicio</a>
 </body>
 </html>
