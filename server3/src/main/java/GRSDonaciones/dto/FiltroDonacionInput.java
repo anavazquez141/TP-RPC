@@ -1,6 +1,16 @@
 package GRSDonaciones.dto;
 
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+
 
 public class FiltroDonacionInput {
     private String categoria;
@@ -9,7 +19,6 @@ public class FiltroDonacionInput {
     private String fechaHasta;
 
     // Getters y setters
-    public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) {
         // Validar categoría
         if (categoria != null && !List.of("ROPA", "ALIMENTOS", "JUGUETES", "UTILES_ESCOLARES").contains(categoria)) {
@@ -17,18 +26,5 @@ public class FiltroDonacionInput {
         }
         this.categoria = categoria;
     }
-    public Boolean getEliminado() { return eliminado; }
-    public void setEliminado(Boolean eliminado) { this.eliminado = eliminado; }
-    public String getFechaDesde() { return fechaDesde; }
-    public void setFechaDesde(String fechaDesde) { this.fechaDesde = fechaDesde; }
-    public String getFechaHasta() { return fechaHasta; }
-    public void setFechaHasta(String fechaHasta) { this.fechaHasta = fechaHasta; }
 
-    @Override
-    public String toString() {
-        return "FiltroDonacionInput{categoria=" + categoria + 
-               ", eliminado=" + eliminado + 
-               ", fechaDesde=" + fechaDesde + 
-               ", fechaHasta=" + fechaHasta + "}";
-    }
 }
