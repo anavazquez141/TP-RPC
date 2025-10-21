@@ -164,11 +164,16 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     
     @Override
     public void listarDonacionesConEliminado(ListarDonacionesRequest request, 
-                                        StreamObserver<ListarDonacionesConEliminadoResponse> responseObserver) {
-        
+                                            StreamObserver<ListarDonacionesConEliminadoResponse> responseObserver) {
+        System.out.println("=== Ingresó a listarDonacionesConEliminado ===");
+        System.out.println("Request recibido: " + request);
+
         try {
             String token = request.getToken();
+            System.out.println("Token recibido: " + token);
+
             if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                System.out.println("Token inválido, terminando ejecución");
                 return;
             }
 
@@ -187,14 +192,13 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 responseObserver.onCompleted();
                 return;
             }
-            
+
             List<Donacion> donaciones = donacionRepository.findAll();
-            
+            System.out.println("Cantidad de donaciones obtenidas: " + donaciones.size());
+
             ListarDonacionesConEliminadoResponse.Builder response = ListarDonacionesConEliminadoResponse.newBuilder();
 
-            // ✅ UN SOLO BUCLE - CORREGIDO
             for (Donacion d : donaciones) {
-                // ✅ FECHA ELIMINACIÓN DESDE AUDITORIA
                 String fechaEliminacion = "";
                 if (d.isEliminado()) {
                     fechaEliminacion = d.getAuditorias().stream()
@@ -203,8 +207,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                         .findFirst()
                         .orElse("");
                 }
-                
-                // ✅ UNA SOLA LÍNEA - CORREGIDO
+
                 DonacionConCampoEliminado item = DonacionConCampoEliminado.newBuilder()
                     .setId(d.getId())
                     .setCategoria(d.getCategoria().name())
@@ -214,14 +217,18 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                     .setFechaAlta(d.getFechaAlta().toString())
                     .setFechaEliminacion(fechaEliminacion)
                     .build();
+
                 response.addDonaciones(item);
             }
-            
+
             response.setStatus("SUCCESS");
             responseObserver.onNext(response.build());
             responseObserver.onCompleted();
-            
+
+            System.out.println("Respuesta enviada correctamente al cliente gRPC");
         } catch (Exception e) {
+            System.out.println("Error en listarDonacionesConEliminado: " + e.getMessage());
+            e.printStackTrace();
             responseObserver.onError(e);
         }
     }
