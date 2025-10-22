@@ -1,6 +1,7 @@
 package RpcDonaciones.kafka.producers;
 
 import RpcDonaciones.kafka.messages.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,6 @@ public class KafkaProducerService {
     public void sendTransferenciaDonacion(String idOrganizacionSolicitante, TransferenciaDonacionMessage message) {
     String topicName = "transferencia-donaciones-" + idOrganizacionSolicitante;
     kafkaTemplate.send(topicName, message.getIdSolicitud(), message);
-    logger.info("Mensaje de transferencia enviado al topic: ", topicName);
+    //logger.info("Mensaje de transferencia enviado al topic: ", topicName);
     }
 }

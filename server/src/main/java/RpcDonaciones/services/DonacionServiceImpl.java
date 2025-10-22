@@ -711,7 +711,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
         }
     }
 
-    @Override
+    /*@Override
     public void transferirDonacion(RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionRequest request,
             StreamObserver<RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionResponse> responseObserver) {
         try {
@@ -754,7 +754,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                     .withDescription("Error al procesar transferencia: " + e.getMessage())
                     .asRuntimeException());
         }
-    }
+    }*/
 
     @Override
     public void listarSolicitudesExternas(RpcDonaciones.grpc.DonacionServiceProto.ListarSolicitudesRequest request,
