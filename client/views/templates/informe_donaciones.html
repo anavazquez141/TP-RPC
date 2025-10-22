@@ -3,79 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <title>Informe de Donaciones</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .form-group { margin: 10px 0; }
-        label { display: inline-block; width: 150px; }
-        input, select { padding: 5px; margin-right: 10px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .total { font-weight: bold; background-color: #e9ecef; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
-    <h1>📊 Informe de Donaciones</h1>
-    
-    <!-- FILTROS -->
-    <form method="POST">
-        <div class="form-group">
-            <label>Categoría:</label>
+
+<div class="profile-card">
+
+    <h2>Informe de Donaciones</h2>
+
+    <!-- Mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <p class="{{ 'success' if category == 'success' else 'error' }}">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Formulario de filtros -->
+    <form method="GET" class="modern-login-form">
+        <div class="input-group">
             <select name="categoria">
-                <option value="">Todas</option>
-                <option value="ROPA" {{ 'selected' if categoria == 'ROPA' }}>👕 Ropa</option>
-                <option value="ALIMENTOS" {{ 'selected' if categoria == 'ALIMENTOS' }}>🍞 Alimentos</option>
-                <option value="JUGUETES" {{ 'selected' if categoria == 'JUGUETES' }}>🎲 Juguetes</option>
-                <option value="UTILES_ESCOLARES" {{ 'selected' if categoria == 'UTILES_ESCOLARES' }}>📚 Útiles Escolares</option>
+                <option value="">-- Todas las categorías --</option>
+                <option value="ROPA" {% if request.values.get('categoria') == 'ROPA' %}selected{% endif %}>Ropa</option>
+                <option value="ALIMENTOS" {% if request.values.get('categoria') == 'ALIMENTOS' %}selected{% endif %}>Alimentos</option>
+                <option value="JUGUETES" {% if request.values.get('categoria') == 'JUGUETES' %}selected{% endif %}>Juguetes</option>
+                <option value="UTILES_ESCOLARES" {% if request.values.get('categoria') == 'UTILES_ESCOLARES' %}selected{% endif %}>Útiles escolares</option>
             </select>
+            <label>Categoría</label>
         </div>
-        
-        <div class="form-group">
-            <label>Fecha Alta Desde:</label>
-            <input type="datetime-local" name="fechaDesde" value="{{ fecha_desde or '' }}">
+
+        <div class="input-group">
+            <input type="date" name="fechaDesde" value="{{ request.values.get('fechaDesde', '') }}">
+            <label>Fecha Desde</label>
         </div>
-        
-        <div class="form-group">
-            <label>Fecha Eliminación Hasta:</label>
-            <input type="datetime-local" name="fechaHasta" value="{{ fecha_hasta or '' }}">
+
+        <div class="input-group">
+            <input type="date" name="fechaHasta" value="{{ request.values.get('fechaHasta', '') }}">
+            <label>Fecha Hasta</label>
         </div>
-        
-        <div class="form-group">
-            <label>Estado:</label>
+
+        <div class="input-group">
             <select name="eliminado">
-                <option value="">Ambos</option>
-                <option value="false" {{ 'selected' if eliminado == 'false' }}>✅ Activas</option>
-                <option value="true" {{ 'selected' if eliminado == 'true' }}>🗑️ Eliminadas</option>
+                <option value="">-- Todos --</option>
+                <option value="si" {% if request.values.get('eliminado') == 'si' %}selected{% endif %}>Eliminado</option>
+                <option value="no" {% if request.values.get('eliminado') == 'no' %}selected{% endif %}>No eliminado</option>
             </select>
+            <label>Estado</label>
         </div>
-        
-        <button type="submit">🔍 Filtrar</button>
-        <a href="{{ url_for('donacion_bp.informe_donaciones') }}"><button type="button">↻ Limpiar</button></a>
+
+        <button type="submit" class="btn primary">Filtrar</button>
     </form>
 
-    <!-- RESULTADOS -->
+    <!-- Tabla de resultados -->
     {% if informe %}
-    <h2>Resultados: {{ informe|length }} registros</h2>
-    <table>
-        <tr>
-            <th>Categoría</th>
-            <th>Estado</th>
-            <th>Total Cantidad</th>
-        </tr>
-        {% for item in informe %}
-        <tr class="{{ 'total' if loop.last else '' }}">
-            <td>{{ item.categoria }}</td>
-            <td>{{ '🗑️ Eliminada' if item.eliminado else '✅ Activa' }}</td>
-            <td>{{ item.totalCantidad }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+        <table class="tabla-informe">
+            <thead>
+                <tr>
+                    <th>Categoría</th>
+                    <th>Eliminado</th>
+                    <th>Total Cantidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in informe %}
+                    <tr>
+                        <td>{{ item.categoria }}</td>
+                        <td>{{ 'Sí' if item.eliminado else 'No' }}</td>
+                        <td>{{ item.totalCantidad }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     {% else %}
-    <p>ℹ️ No hay datos para mostrar</p>
+        <p>No hay donaciones para mostrar con los filtros seleccionados.</p>
     {% endif %}
 
-    <br>
-    <a href="{{ url_for('auth.index') }}">🏠 Volver al Inicio</a>
+    <!-- Enlaces -->
+    <div class="actions">
+        <a href="{{ url_for('donacion_bp.donaciones') }}" class="btn secondary">Volver a Donaciones</a>
+        <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Inicio</a>
+    </div>
+
+</div>
+
 </body>
 </html>

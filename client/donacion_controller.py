@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from utils import requiere_autenticacion, requiere_rol_presidente_o_vocal
 from cliente_usuario import ClienteUsuario
 from cliente_donacion import ClienteDonacion
+from cliente_donacion_graph import ClienteDonacionGraph
 from proto import donacionService_pb2 as donacion_pb2
 
 cliente_usuario = ClienteUsuario() 
@@ -145,41 +146,44 @@ def modificar_donacion(donacion_id):
     except Exception as e:
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('donacion_bp.donaciones'))
-    
-@donacion_bp.route('/informe-donaciones', methods=['GET', 'POST'])
+
+@donacion_bp.route('/informe_donaciones', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
 def informe_donaciones():
+    token = session.get('token')
+    if not token:
+        flash("Debes iniciar sesión primero", "error")
+        return redirect(url_for('auth_bp.login'))
+
+    categoria = request.values.get('categoria') or None
+    if categoria:
+        categoria = categoria.upper()  # 🔹 Convierte a mayúsculas
+
+    fecha_desde = request.values.get('fechaDesde') or None
+    fecha_hasta = request.values.get('fechaHasta') or None
+    eliminado_str = request.values.get('eliminado')
+    if eliminado_str == 'si':
+        eliminado = True
+    elif eliminado_str == 'no':
+        eliminado = False
+    else:
+        eliminado = None
+
+    filtros_aplicados = any([categoria, fecha_desde, fecha_hasta, eliminado is not None])
     informe = []
-    categoria = None
-    fecha_desde = None
-    fecha_hasta = None
-    eliminado = None
 
-    if request.method == 'POST':
-        # Construir el filtro desde el formulario
-        filtro = {}
-        categoria = request.form.get('categoria')
-        if categoria:
-            filtro['categoria'] = categoria
-        fecha_desde = request.form.get('fechaDesde')
-        if fecha_desde:
-            filtro['fechaDesde'] = fecha_desde
-        fecha_hasta = request.form.get('fechaHasta')
-        if fecha_hasta:
-            filtro['fechaHasta'] = fecha_hasta
-        eliminado = request.form.get('eliminado')
-        if eliminado:
-            filtro['eliminado'] = eliminado.lower() == 'true'
+    if filtros_aplicados:
+        cliente = ClienteDonacionGraph()
+        informe = cliente.informe_donaciones_filtradas(
+            token=token,
+            categoria=categoria,
+            fecha_desde=fecha_desde,
+            fecha_hasta=fecha_hasta,
+            eliminado=eliminado
+        )
 
-        # Llamar al cliente con el token de la sesión
-        informe = cliente_donacion.obtener_informe_donaciones(session['token'], filtro)
+        if not informe:
+            flash("No se encontraron donaciones para mostrar", "info")
 
-    return render_template(
-        'informe_donaciones.html',
-        informe=informe,
-        categoria=categoria,
-        fecha_desde=fecha_desde,
-        fecha_hasta=fecha_hasta,
-        eliminado=eliminado
-    )
+    return render_template('informe_donaciones.html', informe=informe)
