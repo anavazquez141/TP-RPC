@@ -27,13 +27,3 @@ type Query {
     informeDonaciones(token: String!, filtro: FiltroDonacionInput): [DonacionResumen!]!
 }
 
-# TIPOS BÁSICOS (si no los tenés)
-type Donacion {
-    id: ID!
-    categoria: Categoria!
-    descripcion: String!
-    cantidad: Int!
-    eliminado: Boolean!
-    fechaAlta: String!
-    fechaEliminacion: String
-}

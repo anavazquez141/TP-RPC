@@ -1,4 +1,4 @@
-package GRSDonaciones.dto;
+package GRSDonaciones.model;
 
 import java.util.List;
 

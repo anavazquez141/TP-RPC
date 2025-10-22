@@ -1,0 +1,8 @@
+grpc:
+  client:
+    donaciones-service:
+      address: 'static://localhost:9090'
+      negotiation-type: plaintext
+    auth-service:
+      address: 'static://localhost:9090'
+      negotiation-type: plaintext
