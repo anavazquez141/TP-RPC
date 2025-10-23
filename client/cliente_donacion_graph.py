@@ -49,26 +49,25 @@ class ClienteDonacionGraph:
 
         return data["data"]["informeDonaciones"]
     
-# ------------------ Filtros guardados ------------------
+ # ------------------ Filtros guardados ------------------
 
     def guardar_filtro(self, token, nombre, categoria=None, fecha_desde=None, fecha_hasta=None, eliminado=None):
         mutation = """
-        mutation GuardarFiltro($input: FiltroInput!, $token: String!) {
-            guardarFiltro(filtro: $input, token: $token) {
+        mutation GuardarFiltro($filtro: FiltroGuardadoInput!) {
+            guardarFiltro(filtro: $filtro) {
                 id
                 nombreFiltro
             }
         }
         """
         variables = {
-            "input": {
+            "filtro": {
                 "nombreFiltro": nombre,
                 "categoria": categoria,
                 "fechaDesde": fecha_desde,
                 "fechaHasta": fecha_hasta,
                 "eliminado": eliminado
-            },
-            "token": token
+            }
         }
         headers = {
             "Content-Type": "application/json",
@@ -77,13 +76,13 @@ class ClienteDonacionGraph:
         response = requests.post(self.endpoint, json={"query": mutation, "variables": variables}, headers=headers)
         data = response.json()
         if "errors" in data:
-            raise Exception(f"Errores al guardar filtro: {data['errors']}")
+            raise Exception(f"Error al guardar filtro: {data['errors']}")
         return data["data"]["guardarFiltro"]
 
     def traer_filtros(self, token):
         query = """
-        query TraerFiltros($token: String!) {
-            filtrosGuardados(token: $token) {
+        query {
+            obtenerFiltros {
                 id
                 nombreFiltro
                 categoria
@@ -93,13 +92,12 @@ class ClienteDonacionGraph:
             }
         }
         """
-        variables = {"token": token}
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        response = requests.post(self.endpoint, json={"query": query, "variables": variables}, headers=headers)
+        response = requests.post(self.endpoint, json={"query": query}, headers=headers)
         data = response.json()
         if "errors" in data:
             raise Exception(f"Error al traer filtros: {data['errors']}")
-        return data["data"]["filtrosGuardados"]
+        return data["data"]["obtenerFiltros"]
 
     def traer_filtro_por_id(self, token, filtro_id):
         filtros = self.traer_filtros(token)
@@ -110,17 +108,15 @@ class ClienteDonacionGraph:
 
     def eliminar_filtro(self, token, filtro_id):
         mutation = """
-        mutation EliminarFiltro($id: ID!, $token: String!) {
-            eliminarFiltro(id: $id, token: $token) {
-                success
-            }
+        mutation EliminarFiltro($id: ID!) {
+            eliminarFiltro(id: $id)
         }
         """
-        variables = {"id": filtro_id, "token": token}
+        variables = {"id": filtro_id}
         headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         response = requests.post(self.endpoint, json={"query": mutation, "variables": variables}, headers=headers)
         data = response.json()
         if "errors" in data:
             raise Exception(f"Error al eliminar filtro: {data['errors']}")
-        return data["data"]["eliminarFiltro"]["success"]   
+        return data["data"]["eliminarFiltro"]
 

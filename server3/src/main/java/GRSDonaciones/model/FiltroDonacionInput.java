@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 
 
 public class FiltroDonacionInput {
+    private String nombreFiltro;
     private String categoria;
     private Boolean eliminado;
     private String fechaDesde;

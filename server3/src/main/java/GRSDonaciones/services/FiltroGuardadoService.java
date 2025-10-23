@@ -1,7 +1,7 @@
 package GRSDonaciones.services;
 
 import GRSDonaciones.model.FiltroGuardado;
-import GRSDonaciones.repository.FiltroGuardadoRepository;
+import GRSDonaciones.repositories.FiltroGuardadoRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -244,16 +244,32 @@ def aplicar_filtro():
     try:
         cliente = ClienteDonacionGraph()
         filtro = cliente.traer_filtro_por_id(token, filtro_id)
+
+        # Extraemos valores del dict con get(), por si son None
+        categoria = filtro.get('categoria') or ''
+        fecha_desde = filtro.get('fechaDesde') or ''
+        fecha_hasta = filtro.get('fechaHasta') or ''
+        eliminado = filtro.get('eliminado')
+        if eliminado is True:
+            eliminado_str = 'si'
+        elif eliminado is False:
+            eliminado_str = 'no'
+        else:
+            eliminado_str = ''
+
         return redirect(url_for(
             'donacion_bp.informe_donaciones',
-            categoria=filtro.categoria,
-            fechaDesde=filtro.fecha_desde,
-            fechaHasta=filtro.fecha_hasta,
-            eliminado='si' if filtro.eliminado else 'no' if filtro.eliminado == False else ''
+            categoria=categoria,
+            fechaDesde=fecha_desde,
+            fechaHasta=fecha_hasta,
+            eliminado=eliminado_str
         ))
     except Exception as e:
         flash(f"Error al aplicar filtro: {str(e)}", "error")
         return redirect(url_for('donacion_bp.informe_donaciones'))
+
+
+
 
 @donacion_bp.route('/eliminar_filtro', methods=['POST'])
 @requiere_autenticacion(cliente_usuario)

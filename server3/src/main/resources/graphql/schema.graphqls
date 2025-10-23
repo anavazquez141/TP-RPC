@@ -4,7 +4,6 @@ enum Categoria {
     ALIMENTOS
     JUGUETES
     UTILES_ESCOLARES
-
 }
 
 # TIPO INFORME (COMPLETO)
@@ -20,11 +19,6 @@ input FiltroDonacionInput {
     fechaDesde: String
     fechaHasta: String
     eliminado: Boolean
-}
-
-# QUERY PRINCIPAL
-type Query {
-    informeDonaciones(token: String!, filtro: FiltroDonacionInput): [DonacionResumen!]!
 }
 
 # --------------------- FILTROS PERSONALIZADOS ---------------------
@@ -47,10 +41,17 @@ input FiltroGuardadoInput {
     fechaHasta: String
 }
 
+# --------------------- QUERIES ---------------------
+
 type Query {
+    # Query principal
+    informeDonaciones(token: String!, filtro: FiltroDonacionInput): [DonacionResumen!]!
+    
     # Obtener todos los filtros guardados del usuario logueado
     obtenerFiltros: [FiltroGuardado!]!
 }
+
+# --------------------- MUTATIONS ---------------------
 
 type Mutation {
     # Guardar un nuevo filtro personalizado

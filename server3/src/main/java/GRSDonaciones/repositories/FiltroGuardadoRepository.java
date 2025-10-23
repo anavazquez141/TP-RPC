@@ -1,4 +1,4 @@
-package GRSDonaciones.repository;
+package GRSDonaciones.repositories;
 
 import GRSDonaciones.model.FiltroGuardado;
 import org.springframework.data.jpa.repository.JpaRepository;

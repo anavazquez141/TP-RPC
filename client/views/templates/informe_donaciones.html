@@ -23,33 +23,33 @@
     <!-- Formulario de filtros básicos -->
     <form method="GET" class="modern-login-form">
         <div class="input-group">
-            <select name="categoria">
+            <label for="categoria">Categoría</label>
+            <select name="categoria" id="categoria">
                 <option value="">-- Todas las categorías --</option>
                 <option value="ROPA" {% if request.values.get('categoria') == 'ROPA' %}selected{% endif %}>Ropa</option>
                 <option value="ALIMENTOS" {% if request.values.get('categoria') == 'ALIMENTOS' %}selected{% endif %}>Alimentos</option>
                 <option value="JUGUETES" {% if request.values.get('categoria') == 'JUGUETES' %}selected{% endif %}>Juguetes</option>
                 <option value="UTILES_ESCOLARES" {% if request.values.get('categoria') == 'UTILES_ESCOLARES' %}selected{% endif %}>Útiles escolares</option>
             </select>
-            <label>Categoría</label>
         </div>
 
         <div class="input-group">
-            <input type="date" name="fechaDesde" value="{{ request.values.get('fechaDesde', '') }}">
-            <label>Fecha Desde</label>
+            <label for="fechaDesde">Fecha Desde</label>
+            <input type="date" name="fechaDesde" id="fechaDesde" value="{{ request.values.get('fechaDesde', '') }}">
         </div>
 
         <div class="input-group">
-            <input type="date" name="fechaHasta" value="{{ request.values.get('fechaHasta', '') }}">
-            <label>Fecha Hasta</label>
+            <label for="fechaHasta">Fecha Hasta</label>
+            <input type="date" name="fechaHasta" id="fechaHasta" value="{{ request.values.get('fechaHasta', '') }}">
         </div>
 
         <div class="input-group">
-            <select name="eliminado">
+            <label for="eliminado">Estado</label>
+            <select name="eliminado" id="eliminado">
                 <option value="">-- Todos --</option>
                 <option value="si" {% if request.values.get('eliminado') == 'si' %}selected{% endif %}>Eliminado</option>
                 <option value="no" {% if request.values.get('eliminado') == 'no' %}selected{% endif %}>No eliminado</option>
             </select>
-            <label>Estado</label>
         </div>
 
         <button type="submit" class="btn primary">Filtrar</button>
@@ -60,7 +60,8 @@
     <!-- Guardar filtro -->
     <form method="POST" action="{{ url_for('donacion_bp.guardar_filtro') }}" class="modern-login-form">
         <div class="input-group">
-            <input type="text" name="nombreFiltro" placeholder="Nombre del filtro" required>
+            <label for="nombreFiltro">Nombre del filtro</label>
+            <input type="text" name="nombreFiltro" id="nombreFiltro" placeholder="Nombre del filtro" required>
             <input type="hidden" name="categoria" value="{{ request.values.get('categoria', '') }}">
             <input type="hidden" name="fechaDesde" value="{{ request.values.get('fechaDesde', '') }}">
             <input type="hidden" name="fechaHasta" value="{{ request.values.get('fechaHasta', '') }}">
@@ -72,8 +73,8 @@
     <!-- Aplicar filtro guardado -->
     <form method="POST" action="{{ url_for('donacion_bp.aplicar_filtro') }}" class="modern-login-form">
         <div class="input-group">
-            <label>Filtros guardados:</label>
-            <select name="filtroId" required>
+            <label for="filtroAplicar">Filtros guardados</label>
+            <select name="filtroId" id="filtroAplicar" required>
                 <option value="">-- Selecciona un filtro --</option>
                 {% for f in filtros_guardados %}
                     <option value="{{ f.id }}">{{ f.nombreFiltro }}</option>
@@ -86,7 +87,8 @@
     <!-- Eliminar filtro guardado -->
     <form method="POST" action="{{ url_for('donacion_bp.eliminar_filtro') }}" class="modern-login-form">
         <div class="input-group">
-            <select name="filtroId" required>
+            <label for="filtroEliminar">Eliminar filtro</label>
+            <select name="filtroId" id="filtroEliminar" required>
                 <option value="">-- Selecciona un filtro --</option>
                 {% for f in filtros_guardados %}
                     <option value="{{ f.id }}">{{ f.nombreFiltro }}</option>
