@@ -177,7 +177,24 @@ message ListarDonacionesConEliminadoResponse {
     string status = 2;      
     string message = 3;      
 }
+// Mensaje para transferir donaciones
+message TransferirDonacionRequest {
+  string token = 1;
+  string id_organizacion_solicitante = 2;
+  string id_solicitud = 3;
+  repeated ItemTransferencia items = 4;
+}
 
+message ItemTransferencia {
+  string categoria = 1;
+  string descripcion = 2;
+  int64 cantidad = 3;
+}
+
+message TransferirDonacionResponse {
+  string status = 1;
+  string message = 2;
+}
 // --------------------- SERVICIOS -----------------------
 service DonacionService {
     rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
@@ -191,4 +208,6 @@ service DonacionService {
     rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
     rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
     rpc listarDonacionesConEliminado(ListarDonacionesRequest) returns (ListarDonacionesConEliminadoResponse);
+    rpc transferirDonacion(TransferirDonacionRequest) returns (TransferirDonacionResponse);
+    rpc listarSolicitudesExternas(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
 }

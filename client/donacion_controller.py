@@ -5,6 +5,7 @@ from cliente_usuario import ClienteUsuario
 from cliente_donacion import ClienteDonacion
 from cliente_donacion_graph import ClienteDonacionGraph
 from proto import donacionService_pb2 as donacion_pb2
+import grpc
 
 cliente_usuario = ClienteUsuario() 
 cliente_donacion = ClienteDonacion() 
@@ -187,3 +188,59 @@ def informe_donaciones():
             flash("No se encontraron donaciones para mostrar", "info")
 
     return render_template('informe_donaciones.html', informe=informe)
+
+
+@donacion_bp.route('/transferir_donaciones', methods=['GET', 'POST'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def transferir_donaciones():
+    token = session.get('token')
+    if not token:
+        flash("Debes iniciar sesión primero", "error")
+        return redirect(url_for('auth_bp.login'))
+
+    controller = ClienteDonacion()  # Cliente gRPC
+
+    if request.method == "POST":
+        id_solicitud = request.form.get('id_solicitud')
+        id_organizacion_solicitante = request.form.get('id_organizacion_solicitante')
+        categorias = request.form.getlist('categoria[]')
+        descripciones = request.form.getlist('descripcion[]')
+        cantidades = request.form.getlist('cantidad[]')
+
+        if not id_solicitud or not id_organizacion_solicitante:
+            flash("Debes completar ID de solicitud y ID de organización", "error")
+            return redirect(url_for('donacion_bp.transferir_donaciones'))
+
+        if not categorias or not descripciones or not cantidades or len(categorias) != len(descripciones) or len(categorias) != len(cantidades):
+            flash("Debe completar al menos un item con categoría, descripción y cantidad", "error")
+            return redirect(url_for('donacion_bp.transferir_donaciones'))
+
+        # Construir la lista de objetos para gRPC
+        items_form = []
+        for cat, desc, cant in zip(categorias, descripciones, cantidades):
+            try:
+                items_form.append({
+                    "categoria": cat,
+                    "descripcion": desc,
+                    "cantidad": int(cant)
+                })
+            except ValueError:
+                flash("Cantidad inválida en algún item", "error")
+                return redirect(url_for('donacion_bp.transferir_donaciones'))
+
+        # Llamada gRPC
+        response = controller.transferir_donacion(id_organizacion_solicitante, id_solicitud, items_form)
+        if response and hasattr(response, 'status') and response.status == "SUCCESS":
+            flash("Donaciones transferidas correctamente", "success")
+        else:
+            flash("Error al transferir donaciones", "error")
+
+        return redirect(url_for('donacion_bp.donaciones'))
+
+    # GET → listar donaciones disponibles
+    response = controller.listar_donaciones(token)
+    donaciones = response.donaciones if response and hasattr(response, 'donaciones') else []
+
+    return render_template('transferir_donaciones.html', donaciones=donaciones)
+

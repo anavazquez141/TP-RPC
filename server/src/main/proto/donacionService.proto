@@ -208,6 +208,6 @@ service DonacionService {
     rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
     rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
     rpc listarDonacionesConEliminado(ListarDonacionesRequest) returns (ListarDonacionesConEliminadoResponse);
-    rpc TransferirDonacion(TransferirDonacionRequest) returns (TransferirDonacionResponse);
-    rpc ListarSolicitudesExternas(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
+    rpc transferirDonacion(TransferirDonacionRequest) returns (TransferirDonacionResponse);
+    rpc listarSolicitudesExternas(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
 }

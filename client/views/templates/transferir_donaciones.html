@@ -1,0 +1,65 @@
+<h2>Transferir Donaciones</h2>
+
+<form method="POST" class="modern-login-form">
+    <label for="id_organizacion_solicitante">ID Organización Solicitante:</label>
+    <input type="text" name="id_organizacion_solicitante" id="id_organizacion_solicitante" required>
+
+    <label for="id_solicitud">ID Solicitud:</label>
+    <input type="text" name="id_solicitud" id="id_solicitud" required>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Seleccionar</th>
+                <th>Categoría</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for donacion in donaciones %}
+            <tr>
+                <td>
+                    <input type="checkbox" name="item_check_{{ loop.index }}" class="item_check" data-index="{{ loop.index }}">
+                </td>
+                <td>
+                    <input type="hidden" name="categoria[]" value="{{ donacion.categoria }}">
+                    {{ donacion.categoria }}
+                </td>
+                <td>
+                    <input type="hidden" name="descripcion[]" value="{{ donacion.descripcion }}">
+                    {{ donacion.descripcion }}
+                </td>
+                <td>
+                    <input type="hidden" name="cantidad[]" value="{{ donacion.cantidad }}">
+                    {{ donacion.cantidad }}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No hay donaciones disponibles</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn primary">Transferir Seleccionadas</button>
+</form>
+
+<div class="actions">
+    <a href="{{ url_for('donacion_bp.donaciones') }}" class="btn secondary">Volver a Donaciones</a>
+</div>
+
+<script>
+    // Desmarcar items no seleccionados antes de enviar
+    document.querySelector('form').addEventListener('submit', function(e) {
+        document.querySelectorAll('.item_check').forEach(function(checkbox) {
+            let index = checkbox.dataset.index;
+            if (!checkbox.checked) {
+                document.querySelectorAll(`input[name^='categoria[]']`)[index-1].disabled = true;
+                document.querySelectorAll(`input[name^='descripcion[]']`)[index-1].disabled = true;
+                document.querySelectorAll(`input[name^='cantidad[]']`)[index-1].disabled = true;
+            }
+        });
+    });
+</script>

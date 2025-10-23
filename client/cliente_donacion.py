@@ -208,3 +208,37 @@ class ClienteDonacion:
             print(f"Error al obtener informe: {e.code()} - {e.details()}")
             return None
     
+    def transferir_donacion(self, id_organizacion_solicitante, id_solicitud, items_form):
+        self.connect()  # asegura canal y stub
+
+        if not id_organizacion_solicitante or not id_solicitud or not items_form:
+            print("Error: Deben proporcionarse id_organizacion_solicitante, id_solicitud y al menos un item")
+            return None
+
+        # Convertir los datos del formulario en objetos ItemTransferencia
+        items_pb = []
+        for item in items_form:
+            item_pb = donacion_pb2.ItemTransferencia()
+            item_pb.categoria = item['categoria']
+            item_pb.descripcion = item['descripcion']
+            item_pb.cantidad = int(item['cantidad'])
+            items_pb.append(item_pb)
+
+        # Construir el request gRPC
+        request_grpc = donacion_pb2.TransferirDonacionRequest(
+            token="",
+            id_organizacion_solicitante=id_organizacion_solicitante,
+            id_solicitud=id_solicitud,
+            items=items_pb
+        )
+
+        try:
+            response = self.stub.transferirDonacion(request_grpc, timeout=30)
+            print(f"Respuesta de transferir_donacion: status={response.status}, message={response.message}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error gRPC al transferir donación: {e.code().name} - {e.details()}")
+            return None
+        except Exception as e:
+            print(f"Error inesperado al transferir donación: {str(e)}")
+            return None

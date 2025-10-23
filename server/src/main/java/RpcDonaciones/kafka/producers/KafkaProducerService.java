@@ -33,9 +33,8 @@ public class KafkaProducerService {
         kafkaTemplate.send("baja-evento-solidario", message.getEventoId(), message);
     }
 
-    public void sendTransferenciaDonacion(String idOrganizacionSolicitante, TransferenciaDonacionMessage message) {
-    String topicName = "transferencia-donaciones-" + idOrganizacionSolicitante;
-    kafkaTemplate.send(topicName, message.getIdSolicitud(), message);
+    public void sendTransferenciaDonacion(TransferenciaDonacionMessage message) {
+    kafkaTemplate.send("transferencia-donaciones", message.getIdSolicitud(), message);
     //logger.info("Mensaje de transferencia enviado al topic: ", topicName);
     }
 }

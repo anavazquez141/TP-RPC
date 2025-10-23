@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ import RpcDonaciones.grpc.DonacionServiceProto.*;
 import RpcDonaciones.kafka.messages.BajaSolicitudMessage;
 import RpcDonaciones.kafka.messages.SolicitudDonacionMessage;
 import RpcDonaciones.kafka.messages.SolicitudDonacionMessage.ItemDonacionM;
+import RpcDonaciones.kafka.messages.TransferenciaDonacionMessage;
 import RpcDonaciones.kafka.producers.KafkaProducerService;
 import RpcDonaciones.repositories.IAuditoria;
 import RpcDonaciones.repositories.IOfertaSolicitud;
@@ -34,8 +36,6 @@ import RpcDonaciones.repositories.IBajaSolicitud;
 import RpcDonaciones.entities.Usuario;
 
 import RpcDonaciones.entities.ItemDonacion;
-
-import RpcDonaciones.services.TransferenciaService;
 
 import RpcDonaciones.kafka.messages.OfertaDonacionMessage;
 
@@ -62,9 +62,6 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     private ISolicitudDonacion solicitudDonacionRepository;
     @Autowired
     private IBajaSolicitud bajaSolicitudRepository;
-
-    @Autowired
-    private TransferenciaService transferenciaService;
 
     @Autowired
     private IOfertaSolicitud ofertaSolicitudRepository;
@@ -711,50 +708,60 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
         }
     }
 
-    /*@Override
-    public void transferirDonacion(RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionRequest request,
-            StreamObserver<RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionResponse> responseObserver) {
+    @Override
+    public void transferirDonacion(TransferirDonacionRequest request, StreamObserver<TransferirDonacionResponse> responseObserver) {
         try {
-            String token = request.getToken();
-            if (!tokenValidator.validarToken(token, responseObserver, "TransferirDonacionResponse")) {
+            // Validaciones
+            if (request.getIdOrganizacionSolicitante().isEmpty() || request.getIdSolicitud().isEmpty()) {
+                responseObserver.onNext(TransferirDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("ID de organización y solicitud son obligatorios")
+                    .build());
+                responseObserver.onCompleted();
                 return;
             }
-
-            Claims claims = Jwts.parser().verifyWith(key).build().parseClaimsJws(token).getPayload();
-            List<String> roles = claims.get("roles", List.class);
-            if (!roles.contains("ROLE_PRESIDENTE") && !roles.contains("ROLE_VOCAL")) {
-                responseObserver.onNext(RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionResponse.newBuilder()
-                        .setStatus("FAILURE")
-                        .setMessage("No tienes permiso para realizar transferencias")
-                        .build());
+            if (request.getItemsList().isEmpty()) {
+                responseObserver.onNext(TransferirDonacionResponse.newBuilder()
+                    .setStatus("FAILURE")
+                    .setMessage("Debe haber al menos un ítem")
+                    .build());
                 responseObserver.onCompleted();
                 return;
             }
 
+            // Construir mensaje Kafka
             List<TransferenciaDonacionMessage.ItemTransferencia> items = request.getItemsList().stream()
-                    .map(item -> new TransferenciaDonacionMessage.ItemTransferencia(
-                            item.getCategoria(),
-                            item.getDescripcion(),
-                            item.getCantidad()))
-                    .collect(Collectors.toList());
+                .map(item -> new TransferenciaDonacionMessage.ItemTransferencia(
+                    item.getCategoria(),
+                    item.getDescripcion(),
+                    item.getCantidad()))
+                .collect(Collectors.toList());
 
-            transferenciaService.enviarTransferenciaDonacion(
-                    request.getIdOrganizacionSolicitante(),
-                    request.getIdSolicitud(),
-                    items);
+            TransferenciaDonacionMessage message = new TransferenciaDonacionMessage();
+            message.setIdSolicitud(request.getIdSolicitud());
+            message.setIdOrganizacionDonante(obtenerIdOrganizacionLocal());
+            message.setDonaciones(items);
 
-            responseObserver.onNext(RpcDonaciones.grpc.DonacionServiceProto.TransferirDonacionResponse.newBuilder()
-                    .setStatus("SUCCESS")
-                    .setMessage("Transferencia enviada correctamente")
-                    .build());
+            // Enviar mensaje Kafka
+            kafkaProducerService.sendTransferenciaDonacion(message);
+            System.out.println("Mensaje de transferencia enviado a Kafka: " + request.getIdSolicitud());
+
+            // Responder inmediatamente al cliente gRPC
+            responseObserver.onNext(TransferirDonacionResponse.newBuilder()
+                .setStatus("SUCCESS")
+                .setMessage("Transferencia enviada a Kafka correctamente")
+                .build());
             responseObserver.onCompleted();
 
         } catch (Exception e) {
+            System.err.println("Error al transferir donación: " + e.getMessage());
             responseObserver.onError(Status.INTERNAL
-                    .withDescription("Error al procesar transferencia: " + e.getMessage())
-                    .asRuntimeException());
+                .withDescription("Error al procesar transferencia: " + e.getMessage())
+                .asRuntimeException());
         }
-    }*/
+    }
+
+
 
     @Override
     public void listarSolicitudesExternas(RpcDonaciones.grpc.DonacionServiceProto.ListarSolicitudesRequest request,
