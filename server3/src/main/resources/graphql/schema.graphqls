@@ -27,3 +27,38 @@ type Query {
     informeDonaciones(token: String!, filtro: FiltroDonacionInput): [DonacionResumen!]!
 }
 
+# --------------------- FILTROS PERSONALIZADOS ---------------------
+
+type FiltroGuardado {
+    id: ID!
+    usuario: String!
+    nombreFiltro: String!
+    categoria: Categoria
+    eliminado: Boolean
+    fechaDesde: String
+    fechaHasta: String
+}
+
+input FiltroGuardadoInput {
+    nombreFiltro: String!
+    categoria: Categoria
+    eliminado: Boolean
+    fechaDesde: String
+    fechaHasta: String
+}
+
+type Query {
+    # Obtener todos los filtros guardados del usuario logueado
+    obtenerFiltros: [FiltroGuardado!]!
+}
+
+type Mutation {
+    # Guardar un nuevo filtro personalizado
+    guardarFiltro(filtro: FiltroGuardadoInput!): FiltroGuardado!
+
+    # Actualizar un filtro existente
+    actualizarFiltro(id: ID!, filtro: FiltroGuardadoInput!): FiltroGuardado!
+
+    # Eliminar un filtro guardado
+    eliminarFiltro(id: ID!): String!
+}

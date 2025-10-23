@@ -11,7 +11,8 @@ cliente_usuario = ClienteUsuario()
 cliente_donacion = ClienteDonacion() 
 donacion_bp = Blueprint('donacion_bp', __name__)
 
-# Listar donaciones
+# ------------------ DONACIONES ------------------
+
 @donacion_bp.route('/donaciones', methods=['GET'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -34,7 +35,8 @@ def donaciones():
         flash(f"Error: {str(e)}", "error")
         return render_template('donaciones.html', donaciones=[])
 
-# Agregar donación
+# ------------------ AGREGAR DONACIÓN ------------------
+
 @donacion_bp.route('/agregar_donacion', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -74,7 +76,8 @@ def agregar_donacion():
 
     return render_template('agregar_donacion.html')
 
-# Eliminar donación
+# ------------------ ELIMINAR DONACIÓN ------------------
+
 @donacion_bp.route('/eliminar_donacion/<int:donacion_id>', methods=['POST'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -99,7 +102,8 @@ def eliminar_donacion(donacion_id):
 
     return redirect(url_for('donacion_bp.donaciones'))
 
-# Modificar donación
+# ------------------ MODIFICAR DONACIÓN ------------------
+
 @donacion_bp.route('/modificar_donacion/<int:donacion_id>', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -148,6 +152,8 @@ def modificar_donacion(donacion_id):
         flash(f"Error: {str(e)}", "error")
         return redirect(url_for('donacion_bp.donaciones'))
 
+# ------------------ INFORME DE DONACIONES ------------------
+
 @donacion_bp.route('/informe_donaciones', methods=['GET', 'POST'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -159,7 +165,7 @@ def informe_donaciones():
 
     categoria = request.values.get('categoria') or None
     if categoria:
-        categoria = categoria.upper()  # 🔹 Convierte a mayúsculas
+        categoria = categoria.upper()
 
     fecha_desde = request.values.get('fechaDesde') or None
     fecha_hasta = request.values.get('fechaHasta') or None
@@ -174,8 +180,9 @@ def informe_donaciones():
     filtros_aplicados = any([categoria, fecha_desde, fecha_hasta, eliminado is not None])
     informe = []
 
+    cliente = ClienteDonacionGraph()
+
     if filtros_aplicados:
-        cliente = ClienteDonacionGraph()
         informe = cliente.informe_donaciones_filtradas(
             token=token,
             categoria=categoria,
@@ -187,7 +194,85 @@ def informe_donaciones():
         if not informe:
             flash("No se encontraron donaciones para mostrar", "info")
 
-    return render_template('informe_donaciones.html', informe=informe)
+    # Traer filtros guardados
+    filtros_guardados = cliente.traer_filtros(token)
+
+    return render_template('informe_donaciones.html', informe=informe, filtros_guardados=filtros_guardados)
+
+# ------------------ FILTROS GUARDADOS ------------------
+
+@donacion_bp.route('/guardar_filtro', methods=['POST'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def guardar_filtro():
+    token = session.get('token')
+    if not token:
+        flash("Debes iniciar sesión primero", "error")
+        return redirect(url_for('auth_bp.login'))
+
+    nombre_filtro = request.form.get('nombreFiltro')
+    categoria = request.form.get('categoria') or None
+    fecha_desde = request.form.get('fechaDesde') or None
+    fecha_hasta = request.form.get('fechaHasta') or None
+    eliminado_str = request.form.get('eliminado')
+    if eliminado_str == 'si':
+        eliminado = True
+    elif eliminado_str == 'no':
+        eliminado = False
+    else:
+        eliminado = None
+
+    try:
+        cliente = ClienteDonacionGraph()
+        cliente.guardar_filtro(token, nombre_filtro, categoria, fecha_desde, fecha_hasta, eliminado)
+        flash(f"Filtro '{nombre_filtro}' guardado correctamente", "success")
+    except Exception as e:
+        flash(f"Error al guardar filtro: {str(e)}", "error")
+
+    return redirect(url_for('donacion_bp.informe_donaciones'))
+
+@donacion_bp.route('/aplicar_filtro', methods=['POST'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def aplicar_filtro():
+    token = session.get('token')
+    if not token:
+        flash("Debes iniciar sesión primero", "error")
+        return redirect(url_for('auth_bp.login'))
+
+    filtro_id = request.form.get('filtroId')
+    try:
+        cliente = ClienteDonacionGraph()
+        filtro = cliente.traer_filtro_por_id(token, filtro_id)
+        return redirect(url_for(
+            'donacion_bp.informe_donaciones',
+            categoria=filtro.categoria,
+            fechaDesde=filtro.fecha_desde,
+            fechaHasta=filtro.fecha_hasta,
+            eliminado='si' if filtro.eliminado else 'no' if filtro.eliminado == False else ''
+        ))
+    except Exception as e:
+        flash(f"Error al aplicar filtro: {str(e)}", "error")
+        return redirect(url_for('donacion_bp.informe_donaciones'))
+
+@donacion_bp.route('/eliminar_filtro', methods=['POST'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def eliminar_filtro():
+    token = session.get('token')
+    if not token:
+        flash("Debes iniciar sesión primero", "error")
+        return redirect(url_for('auth_bp.login'))
+
+    filtro_id = request.form.get('filtroId')
+    try:
+        cliente = ClienteDonacionGraph()
+        cliente.eliminar_filtro(token, filtro_id)
+        flash("Filtro eliminado correctamente", "success")
+    except Exception as e:
+        flash(f"Error al eliminar filtro: {str(e)}", "error")
+
+    return redirect(url_for('donacion_bp.informe_donaciones'))
 
 
 @donacion_bp.route('/transferir_donaciones', methods=['GET', 'POST'])

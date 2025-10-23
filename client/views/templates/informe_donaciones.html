@@ -20,7 +20,7 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Formulario de filtros -->
+    <!-- Formulario de filtros básicos -->
     <form method="GET" class="modern-login-form">
         <div class="input-group">
             <select name="categoria">
@@ -55,7 +55,49 @@
         <button type="submit" class="btn primary">Filtrar</button>
     </form>
 
-    <!-- Tabla de resultados -->
+    <!-- ------------------ FILTROS GUARDADOS ------------------ -->
+
+    <!-- Guardar filtro -->
+    <form method="POST" action="{{ url_for('donacion_bp.guardar_filtro') }}" class="modern-login-form">
+        <div class="input-group">
+            <input type="text" name="nombreFiltro" placeholder="Nombre del filtro" required>
+            <input type="hidden" name="categoria" value="{{ request.values.get('categoria', '') }}">
+            <input type="hidden" name="fechaDesde" value="{{ request.values.get('fechaDesde', '') }}">
+            <input type="hidden" name="fechaHasta" value="{{ request.values.get('fechaHasta', '') }}">
+            <input type="hidden" name="eliminado" value="{{ request.values.get('eliminado', '') }}">
+            <button type="submit" class="btn primary">Guardar filtro</button>
+        </div>
+    </form>
+
+    <!-- Aplicar filtro guardado -->
+    <form method="POST" action="{{ url_for('donacion_bp.aplicar_filtro') }}" class="modern-login-form">
+        <div class="input-group">
+            <label>Filtros guardados:</label>
+            <select name="filtroId" required>
+                <option value="">-- Selecciona un filtro --</option>
+                {% for f in filtros_guardados %}
+                    <option value="{{ f.id }}">{{ f.nombreFiltro }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn primary">Aplicar</button>
+        </div>
+    </form>
+
+    <!-- Eliminar filtro guardado -->
+    <form method="POST" action="{{ url_for('donacion_bp.eliminar_filtro') }}" class="modern-login-form">
+        <div class="input-group">
+            <select name="filtroId" required>
+                <option value="">-- Selecciona un filtro --</option>
+                {% for f in filtros_guardados %}
+                    <option value="{{ f.id }}">{{ f.nombreFiltro }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn danger">Eliminar</button>
+        </div>
+    </form>
+
+    <!-- ------------------ TABLA DE RESULTADOS ------------------ -->
+
     {% if informe %}
         <table class="tabla-informe">
             <thead>
