@@ -195,6 +195,28 @@ message TransferirDonacionResponse {
   string status = 1;
   string message = 2;
 }
+
+message DonacionParaExcel {
+    string id = 1;
+    string categoria = 2;
+    string descripcion = 3;
+    int32 cantidad = 4;
+    bool eliminado = 5;
+    string fechaAlta = 6;
+    string usuarioAlta = 7;
+    string usuarioModificacion = 8; // este es nuevo
+}
+
+message ListarDonacionesParaExcelRequest {
+    string token = 1;
+}
+
+message ListarDonacionesParaExcelResponse {
+    string status = 1;
+    string message = 2;
+    repeated DonacionParaExcel donaciones = 3;
+}
+
 // --------------------- SERVICIOS -----------------------
 service DonacionService {
     rpc registrarDonacion (RegistrarDonacionRequest) returns (DonacionResponse);
@@ -210,4 +232,5 @@ service DonacionService {
     rpc listarDonacionesConEliminado(ListarDonacionesRequest) returns (ListarDonacionesConEliminadoResponse);
     rpc transferirDonacion(TransferirDonacionRequest) returns (TransferirDonacionResponse);
     rpc listarSolicitudesExternas(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
+    rpc listarDonacionesParaExcel(ListarDonacionesParaExcelRequest) returns (ListarDonacionesParaExcelResponse);
 }

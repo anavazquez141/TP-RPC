@@ -123,13 +123,42 @@
         <p>No hay donaciones para mostrar con los filtros seleccionados.</p>
     {% endif %}
 
-    <!-- Enlaces -->
+    <!-- ------------------ DESCARGA EXCEL ------------------ -->
+
     <div class="actions">
         <a href="{{ url_for('donacion_bp.donaciones') }}" class="btn secondary">Volver a Donaciones</a>
         <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Inicio</a>
+        <button type="button" class="btn primary" id="btnDescargarExcel">Descargar Excel</button>
     </div>
 
 </div>
+
+<!-- ------------------ SCRIPT DESCARGA EXCEL ------------------ -->
+<script>
+document.getElementById('btnDescargarExcel').addEventListener('click', () => {
+    // Tomar filtros del formulario
+    const categoria = document.getElementById('categoria').value;
+    const fechaDesde = document.getElementById('fechaDesde').value;
+    const fechaHasta = document.getElementById('fechaHasta').value;
+    const eliminado = document.getElementById('eliminado').value;
+
+    // Construir URL de tu endpoint Flask
+    const url = `/donaciones/descargar_excel?categoria=${encodeURIComponent(categoria)}&fechaDesde=${encodeURIComponent(fechaDesde)}&fechaHasta=${encodeURIComponent(fechaHasta)}&eliminado=${encodeURIComponent(eliminado)}`;
+
+    fetch(url)
+    .then(resp => {
+        if (!resp.ok) throw new Error("No se pudo descargar el Excel (status " + resp.status + ")");
+        return resp.blob();
+    })
+    .then(blob => {
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = "informe_donaciones.xlsx";
+        link.click();
+    })
+    .catch(err => alert("Error al descargar Excel: " + err));
+});
+</script>
 
 </body>
 </html>

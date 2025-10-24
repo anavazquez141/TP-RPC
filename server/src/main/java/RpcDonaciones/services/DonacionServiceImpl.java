@@ -803,6 +803,59 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     private String obtenerIdOrganizacionLocal() {
         return "org-local-id";
     }
+
+    @Override
+    public void listarDonacionesParaExcel(ListarDonacionesParaExcelRequest request,
+                                        StreamObserver<ListarDonacionesParaExcelResponse> responseObserver) {
+        try {
+            String token = request.getToken();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                return;
+            }
+
+            List<Donacion> donaciones = donacionRepository.findAll();
+
+            ListarDonacionesParaExcelResponse.Builder response = ListarDonacionesParaExcelResponse.newBuilder()
+                    .setStatus("SUCCESS");
+
+            for (Donacion d : donaciones) {
+                String fechaEliminacion = "";
+                if (d.isEliminado()) {
+                    fechaEliminacion = d.getAuditorias().stream()
+                            .filter(a -> a.getTipoAccion() == TipoAccion.ELIMINACION)
+                            .map(a -> a.getFecha().toString())
+                            .findFirst()
+                            .orElse("");
+                }
+
+                String usuarioModificacion = d.getAuditorias().stream()
+                        .filter(a -> a.getTipoAccion() == TipoAccion.MODIFICACION)
+                        .map(Auditoria::getUsuario)
+                        .reduce((first, second) -> second)
+                        .orElse("");
+
+                DonacionParaExcel item = DonacionParaExcel.newBuilder()
+                        .setId(d.getId())
+                        .setCategoria(d.getCategoria().name())
+                        .setDescripcion(d.getDescripcion())
+                        .setCantidad(d.getCantidad())
+                        .setEliminado(d.isEliminado())
+                        .setFechaAlta(d.getFechaAlta().toString())
+                        .setUsuarioAlta(d.getUsuarioAlta())
+                        .setUsuarioModificacion(usuarioModificacion)
+                        .build();
+
+                response.addDonaciones(item);
+            }
+
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Error al listar donaciones para Excel: " + e.getMessage())
+                    .asRuntimeException());
+        }
+    }
 }
 
 

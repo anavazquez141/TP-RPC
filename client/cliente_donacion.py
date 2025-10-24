@@ -242,3 +242,14 @@ class ClienteDonacion:
         except Exception as e:
             print(f"Error inesperado al transferir donación: {str(e)}")
             return None
+
+
+    def listar_donaciones_con_eliminado(self, token):
+        self.connect()
+        request = donacion_pb2.ListarDonacionesRequest(token=token)
+        try:
+            response = self.stub.listarDonacionesConEliminado(request)
+            return response.donaciones  # lista de DonacionConCampoEliminado
+        except grpc.RpcError as e:
+            print(f"Error al listar donaciones con eliminado: {e.code()} - {e.details()}")
+            return None

@@ -27,4 +27,20 @@ public class GrpcDonacionesClient {
 
         return response.getDonacionesList();
     }
+
+    public List<DonacionServiceProto.DonacionParaExcel> listarDonacionesParaExcel(String token) {
+        DonacionServiceProto.ListarDonacionesParaExcelRequest request =
+                DonacionServiceProto.ListarDonacionesParaExcelRequest.newBuilder()
+                        .setToken(token)
+                        .build();
+
+        DonacionServiceProto.ListarDonacionesParaExcelResponse response =
+                stub.listarDonacionesParaExcel(request);
+
+        if (!"SUCCESS".equalsIgnoreCase(response.getStatus())) {
+            throw new RuntimeException("Error gRPC DonacionService (Excel): " + response.getMessage());
+        }
+
+        return response.getDonacionesList();
+    }
 }

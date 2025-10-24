@@ -1,11 +1,14 @@
 # controllers/donacion_controller.py
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, jsonify, render_template, request, redirect, url_for, session, flash, send_file
 from utils import requiere_autenticacion, requiere_rol_presidente_o_vocal
 from cliente_usuario import ClienteUsuario
 from cliente_donacion import ClienteDonacion
 from cliente_donacion_graph import ClienteDonacionGraph
 from proto import donacionService_pb2 as donacion_pb2
 import grpc
+import requests
+import io
+from openpyxl import Workbook
 
 cliente_usuario = ClienteUsuario() 
 cliente_donacion = ClienteDonacion() 
@@ -344,4 +347,36 @@ def transferir_donaciones():
     donaciones = response.donaciones if response and hasattr(response, 'donaciones') else []
 
     return render_template('transferir_donaciones.html', donaciones=donaciones)
+
+@donacion_bp.route('/descargar_excel', methods=['GET'])
+@requiere_autenticacion(cliente_usuario)
+@requiere_rol_presidente_o_vocal(cliente_usuario)
+def descargar_excel():
+    token = session.get('token')  # token JWT almacenado en sesión
+    if not token:
+        flash("Debes iniciar sesión primero", "error")
+        return redirect(url_for('auth_bp.login'))
+
+    categoria = request.args.get('categoria', '')
+    fecha_desde = request.args.get('fechaDesde', '')
+    fecha_hasta = request.args.get('fechaHasta', '')
+    eliminado = request.args.get('eliminado', '')
+
+    url_rest = f"http://localhost:8050/api/informes/donaciones/descargar_excel?categoria={categoria}&fechaDesde={fecha_desde}&fechaHasta={fecha_hasta}&eliminado={eliminado}"
+
+    try:
+        headers = {'Authorization': f'Bearer {token}'}  # <-- MUY IMPORTANTE
+        resp = requests.get(url_rest, headers=headers)
+        resp.raise_for_status()
+
+        return send_file(
+            io.BytesIO(resp.content),
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            download_name='informe_donaciones.xlsx',
+            as_attachment=True
+        )
+
+    except requests.RequestException as e:
+        flash(f"Error al descargar el Excel: {str(e)}", "error")
+        return redirect(url_for('donacion_bp.informe_donaciones'))
 
