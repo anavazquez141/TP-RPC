@@ -1,6 +1,6 @@
 # controllers/evento_controller.py
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from utils import requiere_autenticacion, requiere_rol_presidente_o_coordinador
+from utils import requiere_autenticacion, requiere_rol_presidente_o_coordinador, requiere_rol_voluntario
 from cliente_evento import ClienteEvento
 from cliente_usuario import ClienteUsuario 
 
@@ -25,9 +25,52 @@ def eventos():
             return redirect(url_for('auth.index'))
 
         puede_administrar_eventos = usuario.rol in [0, 2]  # presidente o coordinador
-        return render_template('eventos.html', eventos=eventos, puede_administrar_eventos=puede_administrar_eventos)
+        es_voluntario = usuario.rol == 3  # voluntario (Role.VOLUNTARIO = 3)
+        usuario_id = usuario.id  # Usar id
+
+        # Obtener datos completos de cada evento
+        eventos_completos = []
+        for evento in eventos:
+            response_evento = controller.get_evento(evento.idEvento, session['token'])
+            if response_evento and response_evento.status == "SUCCESS":
+                evento_completo = response_evento.evento
+                # Convertir evento a diccionario
+                evento_dict = {
+                    'idEvento': evento_completo.idEvento,
+                    'nombreEvento': evento_completo.nombreEvento,
+                    'descripcion': evento_completo.descripcion,
+                    'fechaHora': evento_completo.fechaHora,
+                    'usuarioIds': [usuario.id for usuario in getattr(evento_completo, 'usuarios', [])]
+                }
+                eventos_completos.append(evento_dict)
+                print(f"Evento {evento_dict['idEvento']}: usuarios={evento_dict['usuarioIds']}")
+            else:
+                print(f"Error al obtener evento {evento.idEvento}: {response_evento.message if response_evento else 'Respuesta nula'}")
+                # Crear diccionario para el evento con usuarioIds vacío
+                evento_dict = {
+                    'idEvento': evento.idEvento,
+                    'nombreEvento': evento.nombreEvento,
+                    'descripcion': evento.descripcion,
+                    'fechaHora': evento.fechaHora,
+                    'usuarioIds': []
+                }
+                eventos_completos.append(evento_dict)
+
+        # Depuración
+        print(f"Usuario: email={session['email']}, rol={usuario.rol}, id={usuario.id}, es_voluntario={es_voluntario}")
+        for evento in eventos_completos:
+            print(f"Evento {evento['idEvento']}: nombre={evento['nombreEvento']}, usuarioIds={evento['usuarioIds']}")
+
+        return render_template(
+            'eventos.html',
+            eventos=eventos_completos,
+            puede_administrar_eventos=puede_administrar_eventos,
+            es_voluntario=es_voluntario,
+            usuario_id=usuario_id
+        )
 
     except Exception as e:
+        print(f"Error en eventos: {str(e)}")
         flash(f"Error al obtener eventos: {str(e)}", "error")
         return render_template('eventos.html', eventos=[])
 
@@ -131,3 +174,39 @@ def evento(id_evento):
     puede_administrar_eventos = usuario.rol in [0, 2]
 
     return render_template('modificar_eliminar_evento.html',evento=evento_data, usuarios=usuarios, puede_administrar_eventos=puede_administrar_eventos)
+
+
+@evento_bp.route('/eventos/asignarse/<int:id_evento>', methods=['POST'])
+@requiere_autenticacion(ClienteUsuario())
+@requiere_rol_voluntario(ClienteUsuario())
+def asignarse_evento(id_evento):
+    try:
+        cliente_usuario = ClienteUsuario()
+        usuario = cliente_usuario.traer_usuario_por_email(session['email'], session['token'])
+        if usuario is None:
+            session.clear()
+            flash("Error al obtener datos del usuario", "error")
+            return redirect(url_for('auth.index'))
+
+        # Depuración: Imprimir el token de la sesión
+        token = session.get('token')
+        print(f"Token en sesión: {token}")
+
+        if not token:
+            flash("No hay token en la sesión. Por favor, inicia sesión nuevamente.", "error")
+            session.clear()
+            return redirect(url_for('auth.index'))
+
+        controller = ClienteEvento()
+        response = controller.asignarse_evento(id_evento, usuario.id, token)
+
+        if response.status == "SUCCESS":
+            flash("Te has asignado al evento exitosamente", "success")
+        else:
+            flash(response.message or "Error al asignarse al evento", "error")
+
+        return redirect(url_for('evento_bp.eventos'))
+
+    except Exception as e:
+        flash(f"Error al asignarse al evento: {str(e)}", "error")
+        return redirect(url_for('evento_bp.eventos'))

@@ -139,6 +139,32 @@ class ClienteEvento:
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
             return evento_pb2.ListEventosResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
+        
+    def asignarse_evento(self, id_evento, user_id, token=None):
+        self.connect()
+        token = token or self.token
+        if not token:
+            return evento_pb2.UpdateEventoResponse(status="FAILURE", message="No hay token para asignarse al evento")
+
+        # Depuración: Imprimir el user_id recibido
+        print(f"Construyendo UpdateEventoRequest con id_evento={id_evento}, user_id={user_id}, token={token}")
+
+        request = evento_pb2.UpdateEventoRequest(
+            token=token,
+            idEvento=id_evento,
+            usuarioIds=[user_id]
+        )
+
+        # Depuración: Imprimir el contenido del request
+        print(f"UpdateEventoRequest: token={request.token}, idEvento={request.idEvento}, usuarioIds={request.usuarioIds}")
+
+        try:
+            response = self.evento_stub.AsignarseEvento(request)
+            print(f"Respuesta de asignarse_evento: {response}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error de gRPC: {e.code()} - {e.details()}")
+            return evento_pb2.UpdateEventoResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}") 
 
     def cerrar(self):
         """Cierra el canal gRPC."""

@@ -19,25 +19,41 @@
         }
 
         .header .btn.primary {
-            width: auto; /* Para que no ocupe todo el ancho */
+            width: auto;
             padding: 10px 20px;
         }
 
-        /* --- Botones Modificar/Eliminar estilo igual que registrar evento --- */
-        .btn.event-action {
+        /* --- Botones Modificar/Eliminar y Asignarse estilo igual que registrar evento --- */
+        .btn.event-action, .btn.assign-action {
             padding: 8px 16px;
             font-weight: bold;
             font-size: 14px;
             border-radius: 6px;
-            background-color: #3498db;
             color: #fff;
             text-decoration: none;
             display: inline-block;
             transition: 0.3s;
         }
 
+        .btn.event-action {
+            background-color: #3498db;
+        }
+
         .btn.event-action:hover {
             background-color: #2980b9;
+        }
+
+        .btn.assign-action {
+            background-color: #2ecc71;
+        }
+
+        .btn.assign-action:hover {
+            background-color: #27ae60;
+        }
+
+        .btn.disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -71,9 +87,7 @@
                         <th>Nombre</th>
                         <th>Descripción</th>
                         <th>Fecha y Hora</th>
-                        {% if puede_administrar_eventos %}
-                            <th>Acciones</th>
-                        {% endif %}
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,11 +97,20 @@
                             <td>{{ evento.nombreEvento }}</td>
                             <td>{{ evento.descripcion }}</td>
                             <td>{{ evento.fechaHora | datetimeformat }}</td>
-                            {% if puede_administrar_eventos %}
-                                <td>
-                                    <a href="{{ url_for('evento_bp.evento', id_evento=evento.idEvento) }}" class="btn event-action">Modificar / Eliminar</a>
-                                </td>
-                            {% endif %}
+                            <td>
+                                {% if puede_administrar_eventos %}
+                                    <a href="{{ url_for('evento_bp.evento', id_evento=evento['idEvento']) }}" class="btn event-action">Modificar / Eliminar</a>
+                                {% endif %}
+                                {% if es_voluntario %}
+                                    {% if evento['usuarioIds'] and usuario_id in evento['usuarioIds'] %}
+                                        <span class="btn assign-action disabled">Ya asignado</span>
+                                    {% else %}
+                                        <form action="{{ url_for('evento_bp.asignarse_evento', id_evento=evento['idEvento']) }}" method="POST">
+                                            <button type="submit" class="btn assign-action">Asignarse</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>

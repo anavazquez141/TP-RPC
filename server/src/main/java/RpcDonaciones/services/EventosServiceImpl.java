@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -299,6 +300,79 @@ public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEvent
         }
     }
 
+    @Override
+    public void asignarseEvento(UpdateEventoRequest request, StreamObserver<UpdateEventoResponse> responseObserver) {
+        try {
+            String token = request.getToken();
+            System.out.println("AsignarseEvento recibido: idEvento=" + request.getIdEvento() + ", usuarioIds=" + request.getUsuarioIdsList());
+
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                return;
+            }
+
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getPayload();
+
+            List<String> roles = claims.get("roles", List.class);
+            if (!roles.contains("ROLE_VOLUNTARIO")) {
+                responseObserver.onNext(UpdateEventoResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No tienes permiso para realizar esta acción")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+
+            if (request.getUsuarioIdsList().isEmpty()) {
+                System.out.println("Error: No se proporcionó un ID de usuario");
+                responseObserver.onNext(UpdateEventoResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("No se proporcionó un ID de usuario")
+                        .build());
+                responseObserver.onCompleted();
+                return;
+            }
+            Long userId = request.getUsuarioIdsList().get(0);
+            Optional<EventoSolidario> optionalEvento = eventosRepository.findById(request.getIdEvento());
+            Optional<Usuario> optionalUsuario = usuarioRepository.findById(userId);
+            if (optionalEvento.isPresent() && optionalUsuario.isPresent()) {
+                EventoSolidario evento = optionalEvento.get();
+                Usuario usuario = optionalUsuario.get();
+
+                if (evento.getUsuarios().contains(usuario)) {
+                    responseObserver.onNext(UpdateEventoResponse.newBuilder()
+                            .setStatus("FAILURE")
+                            .setMessage("El usuario ya está asignado a este evento")
+                            .build());
+                    responseObserver.onCompleted();
+                    return;
+                }
+
+                evento.getUsuarios().add(usuario);
+                EventoSolidario updated = eventosRepository.save(evento);
+                UpdateEventoResponse response = UpdateEventoResponse.newBuilder()
+                        .setEvento(toProto(updated))
+                        .setStatus("SUCCESS")
+                        .setMessage("Usuario asignado al evento exitosamente")
+                        .build();
+                responseObserver.onNext(response);
+            } else {
+                responseObserver.onNext(UpdateEventoResponse.newBuilder()
+                        .setStatus("FAILURE")
+                        .setMessage("Evento o usuario no encontrado")
+                        .build());
+            }
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL
+                    .withDescription("Error al asignarse al evento: " + e.getMessage())
+                    .asRuntimeException());
+        }
+    }
+
     private Evento toProto(EventoSolidario entity) {
         Evento.Builder builder = Evento.newBuilder()
                 .setIdEvento(entity.getIdEvento())
@@ -306,12 +380,14 @@ public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEvent
                 .setDescripcion(entity.getDescripcion())
                 .setFechaHora(entity.getFechaHora().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
-        // Usar el método auxiliar para evitar complejidad en stream
-        List<UsuarioSinClave> usuariosProto = entity.getUsuarios().stream()
-                .map(this::toUsuarioSinClave)
-                .collect(Collectors.toList());
+        List<UsuarioSinClave> usuariosProto = entity.getUsuarios() != null
+                ? entity.getUsuarios().stream()
+                    .map(this::toUsuarioSinClave)
+                    .collect(Collectors.toList())
+                : Collections.emptyList();
         builder.addAllUsuarios(usuariosProto);
 
+        System.out.println("Evento " + entity.getIdEvento() + ": usuarios=" + usuariosProto);
         return builder.build();
     }
 
@@ -337,4 +413,6 @@ public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEvent
                 .setFechaHora(entity.getFechaHora().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
                 .build();
     }
+
+
 }

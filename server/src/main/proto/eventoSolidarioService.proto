@@ -90,4 +90,5 @@ service EventosService {
     rpc UpdateEvento(UpdateEventoRequest) returns (UpdateEventoResponse);
     rpc DeleteEvento(DeleteEventoRequest) returns (DeleteEventoResponse);
     rpc ListEventos(ListEventosRequest) returns (ListEventosResponse);
+    rpc AsignarseEvento(UpdateEventoRequest) returns (UpdateEventoResponse);
 }

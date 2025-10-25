@@ -81,3 +81,19 @@ def requiere_rol_presidente_o_vocal(cliente):
             return f(*args, **kwargs)
         return wrapper
     return decorador
+
+def requiere_rol_voluntario(cliente):
+    def decorador(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            usuario = cliente.traer_usuario_por_email(session['email'], session['token'])
+            if usuario is None:
+                session.clear()
+                flash("Error al obtener datos del usuario", "error")
+                return redirect(url_for('auth.login'))
+            if usuario.rol != 3:
+                flash("No tienes permisos para acceder a esta funcionalidad", "error")
+                return redirect(url_for('auth.index'))
+            return f(*args, **kwargs)
+        return wrapper
+    return decorador
