@@ -225,3 +225,35 @@ table tr:hover td {
     color: red;
     margin-bottom: 10px;
 }
+
+/* --- Corrección para labels sobre inputs/selects --- */
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    position: static; /* elimina posicionamiento absoluto */
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #3498db;
+    font-size: 14px;
+}
+
+/* Ajuste para inputs y selects normales */
+.input-group input,
+.input-group select {
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px;
+    height: auto;
+    background-color: #fff;
+    font-size: 15px;
+    color: #000;
+    transition: border-color 0.3s;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    border-color: #3498db;
+}
