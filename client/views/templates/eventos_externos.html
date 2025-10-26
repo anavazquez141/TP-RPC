@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ofertas de Donaciones</title>
+    <title>Eventos Externos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
         .header {
@@ -35,7 +35,7 @@
         }
 
         .btn.secondary {
-            background-color: #3498db;
+            background-color: #3498db; 
             color: #fff;
         }
 
@@ -61,43 +61,47 @@
         td {
             vertical-align: top;
         }
+
+        tbody tr:hover {
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
 <div class="profile-card">
     <div class="header">
-        <h2>Ofertas de Donaciones</h2>
-        <a href="{{ url_for('donacion_bp.donaciones') }}" class="btn secondary">Volver a Donaciones</a>
+        <h2>Eventos Externos</h2>
+        <a href="{{ url_for('evento_bp.eventos') }}" class="btn secondary">Volver a Mis Eventos</a>
     </div>
 
+    {% if eventos %}
     <table>
         <thead>
             <tr>
-                <th>ID Oferta</th>
-                <th>Organización</th>
-                <th>Categoría</th>
+                <th>ID</th>
+                <th>Nombre</th>
                 <th>Descripción</th>
-                <th>Cantidad</th>
+                <th>Fecha y Hora</th>
+                <th>Organización</th>
             </tr>
         </thead>
         <tbody>
-        {% for oferta in ofertas %}
-            {% for item in oferta.lista_items %}
+            {% for evento in eventos %}
             <tr>
-                <td>{{ oferta.id_oferta }}</td>
-                <td>{{ oferta.id_organizacion }}</td>
-                <td>{{ item.categoria }}</td>
-                <td>{{ item.descripcion }}</td>
-                <td>{{ item.cantidad }}</td>
+                <td>{{ evento.idEvento }}</td>
+                <td>{{ evento.nombreEvento }}</td>
+                <td>{{ evento.descripcion }}</td>
+                <td>{{ evento.fechaHora }}</td>
+                <td>{{ evento.idOrganizacion }}</td>
             </tr>
             {% endfor %}
-        {% else %}
-        <tr>
-            <td colspan="5" style="text-align:center;">No hay ofertas disponibles</td>
-        </tr>
-        {% endfor %}
-    </tbody>
+        </tbody>
     </table>
+    {% else %}
+    <tr>
+        <td colspan="5" style="text-align:center;">No hay eventos externos disponibles</td>
+    </tr>
+    {% endif %}
 </div>
 </body>
 </html>

@@ -36,19 +36,19 @@ public class InformeDonacionesService {
                                                 String fechaDesde, String fechaHasta,
                                                 Boolean eliminado) {
 
-        // 1️⃣ Validar token
+        // Validar token
         if (!authClient.validarToken(token)) {
             throw new SecurityException("Token inválido o expirado");
         }
 
-        // 2️⃣ Obtener todas las donaciones
+        //  Obtener todas las donaciones
         List<DonacionServiceProto.DonacionConCampoEliminado> todas = donacionesClient.listarDonacionesConEliminado(token);
 
-        // 3️⃣ Convertir fechas a LocalDate
+        //  Convertir fechas a LocalDate
         LocalDate desde = fechaDesde != null ? LocalDate.parse(fechaDesde) : null;
         LocalDate hasta = fechaHasta != null ? LocalDate.parse(fechaHasta) : null;
 
-        // 4️⃣ Filtrar opcionalmente
+        //  Filtrar opcionalmente
         var filtradas = todas.stream()
                 .filter(d -> categoria == null || d.getCategoria().equalsIgnoreCase(categoria))
                 .filter(d -> eliminado == null || d.getEliminado() == eliminado)
@@ -64,14 +64,14 @@ public class InformeDonacionesService {
                 })
                 .collect(Collectors.toList());
 
-        // 5️⃣ Agrupar por categoría + eliminado
+        //  Agrupar por categoría + eliminado
         Map<List<Object>, Integer> agrupado = filtradas.stream()
                 .collect(Collectors.groupingBy(
                         d -> List.of(d.getCategoria(), d.getEliminado()),
                         Collectors.summingInt(DonacionServiceProto.DonacionConCampoEliminado::getCantidad)
                 ));
 
-        // 6️⃣ Convertir a DTO
+        //  Convertir a DTO
         return agrupado.entrySet().stream()
                 .map(e -> new DonacionResumen(
                         e.getKey().get(0).toString(),
@@ -98,7 +98,7 @@ public class InformeDonacionesService {
         }).toList();
     }
 
-    // 🔹 Genera el archivo Excel con POI
+    //  Genera el archivo Excel con POI
     public byte[] generarExcelDonaciones(List<DonacionExcel> donaciones) throws Exception {
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 

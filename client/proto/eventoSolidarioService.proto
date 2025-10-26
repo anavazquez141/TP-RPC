@@ -84,6 +84,42 @@ message ListEventosResponse {
     string message = 3;
 }
 
+// Mensaje para publicar evento solidario
+message PublicarEventoRequest {
+    string token = 1;
+    string idEvento = 2;   
+    string nombreEvento = 3;
+    string descripcion = 4;
+    string fechaHora = 5;
+    string idOrganizacion = 6; // ID de la organización emisora
+}
+
+message PublicarEventoResponse {
+    string status = 1;
+    string message = 2;
+}
+
+// Request para listar eventos externos
+message ListarEventosExternosRequest {
+    string token = 1;
+}
+
+// Evento externo individual
+message EventoExterno {
+    string idEvento = 1;
+    string idOrganizacion = 2;
+    string nombreEvento = 3;
+    string descripcion = 4;
+    string fechaHora = 5;
+}
+
+// Response con lista de eventos externos
+message ListarEventosExternosResponse {
+    repeated EventoExterno eventos = 1;
+    string status = 2;
+    string message = 3;
+}
+
 service EventosService {
     rpc CreateEvento(CreateEventoRequest) returns (CreateEventoResponse);
     rpc GetEvento(GetEventoRequest) returns (GetEventoResponse);
@@ -91,4 +127,6 @@ service EventosService {
     rpc DeleteEvento(DeleteEventoRequest) returns (DeleteEventoResponse);
     rpc ListEventos(ListEventosRequest) returns (ListEventosResponse);
     rpc AsignarseEvento(UpdateEventoRequest) returns (UpdateEventoResponse);
+    rpc PublicarEventoExterno(PublicarEventoRequest) returns (PublicarEventoResponse);
+    rpc ListarEventosExternos(ListarEventosExternosRequest) returns (ListarEventosExternosResponse);
 }

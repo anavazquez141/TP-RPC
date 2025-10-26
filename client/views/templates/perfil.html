@@ -12,7 +12,7 @@
 
         <h2>{{ usuario.nombreUsuario }}</h2>
 
-        <!-- Mensajes -->
+       
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -21,7 +21,7 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Datos del Usuario -->
+        
         <table>
             <tr>
                 <th>Nombre</th>
@@ -49,7 +49,7 @@
             </tr>
         </table>
 
-        <!-- Enlaces -->
+        
         <div class="actions">
             {% if es_presidente %}
                 <a href="{{ url_for('usuarios.registrar_usuario') }}" class="btn primary">Registrar Usuario</a>

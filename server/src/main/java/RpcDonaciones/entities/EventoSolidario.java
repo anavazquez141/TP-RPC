@@ -34,4 +34,4 @@ public class EventoSolidario {
         inverseJoinColumns = @JoinColumn(name = "id_usuario")
     )
     private List<Usuario> usuarios;
-}
+}    

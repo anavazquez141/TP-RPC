@@ -13,7 +13,7 @@ solicitud_bp = Blueprint('solicitud_bp', __name__)
 def form_solicitud():
     return render_template('publicar_solicitud.html')
 
-# Listar solicitudes
+
 @solicitud_bp.route('/solicitudes', methods=['GET'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -39,7 +39,7 @@ def solicitudes():
         flash(f"Error: {str(e)}", "error")
         return render_template('solicitudes.html', solicitudes=[])
 
-# Dar de baja una solicitud
+
 @solicitud_bp.route('/solicitudes/baja/<id_solicitud>', methods=['POST'])
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
@@ -75,7 +75,7 @@ def baja_solicitud(id_solicitud):
 
     return redirect(url_for('solicitud_bp.solicitudes'))
 
-# Enviar solicitud
+
 @solicitud_bp.route('/enviar-solicitud', methods=['POST'])
 def enviar_solicitud():
     try:

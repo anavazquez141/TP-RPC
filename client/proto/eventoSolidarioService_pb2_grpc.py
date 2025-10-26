@@ -64,6 +64,16 @@ class EventosServiceStub(object):
                 request_serializer=eventoSolidarioService__pb2.UpdateEventoRequest.SerializeToString,
                 response_deserializer=eventoSolidarioService__pb2.UpdateEventoResponse.FromString,
                 _registered_method=True)
+        self.PublicarEventoExterno = channel.unary_unary(
+                '/EventosService/PublicarEventoExterno',
+                request_serializer=eventoSolidarioService__pb2.PublicarEventoRequest.SerializeToString,
+                response_deserializer=eventoSolidarioService__pb2.PublicarEventoResponse.FromString,
+                _registered_method=True)
+        self.ListarEventosExternos = channel.unary_unary(
+                '/EventosService/ListarEventosExternos',
+                request_serializer=eventoSolidarioService__pb2.ListarEventosExternosRequest.SerializeToString,
+                response_deserializer=eventoSolidarioService__pb2.ListarEventosExternosResponse.FromString,
+                _registered_method=True)
 
 
 class EventosServiceServicer(object):
@@ -105,6 +115,18 @@ class EventosServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def PublicarEventoExterno(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListarEventosExternos(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_EventosServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -137,6 +159,16 @@ def add_EventosServiceServicer_to_server(servicer, server):
                     servicer.AsignarseEvento,
                     request_deserializer=eventoSolidarioService__pb2.UpdateEventoRequest.FromString,
                     response_serializer=eventoSolidarioService__pb2.UpdateEventoResponse.SerializeToString,
+            ),
+            'PublicarEventoExterno': grpc.unary_unary_rpc_method_handler(
+                    servicer.PublicarEventoExterno,
+                    request_deserializer=eventoSolidarioService__pb2.PublicarEventoRequest.FromString,
+                    response_serializer=eventoSolidarioService__pb2.PublicarEventoResponse.SerializeToString,
+            ),
+            'ListarEventosExternos': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListarEventosExternos,
+                    request_deserializer=eventoSolidarioService__pb2.ListarEventosExternosRequest.FromString,
+                    response_serializer=eventoSolidarioService__pb2.ListarEventosExternosResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -301,6 +333,60 @@ class EventosService(object):
             '/EventosService/AsignarseEvento',
             eventoSolidarioService__pb2.UpdateEventoRequest.SerializeToString,
             eventoSolidarioService__pb2.UpdateEventoResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def PublicarEventoExterno(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/EventosService/PublicarEventoExterno',
+            eventoSolidarioService__pb2.PublicarEventoRequest.SerializeToString,
+            eventoSolidarioService__pb2.PublicarEventoResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListarEventosExternos(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/EventosService/ListarEventosExternos',
+            eventoSolidarioService__pb2.ListarEventosExternosRequest.SerializeToString,
+            eventoSolidarioService__pb2.ListarEventosExternosResponse.FromString,
             options,
             channel_credentials,
             insecure,

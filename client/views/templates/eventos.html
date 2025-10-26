@@ -5,7 +5,7 @@
     <title>Eventos</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
-        /* --- Header con título y botón --- */
+        
         .header {
             display: flex;
             justify-content: space-between;
@@ -59,15 +59,16 @@
 </head>
 <body>
     <div class="profile-card">
-        <!-- Header con título y botón -->
+        
         <div class="header">
             <h1>Eventos</h1>
             {% if puede_administrar_eventos %}
                 <a href="{{ url_for('evento_bp.registrar_evento') }}" class="btn primary">Registrar Nuevo Evento</a>
             {% endif %}
+            <a href="{{ url_for('evento_bp.listar_eventos_externos') }}" class="btn primary">Ver Eventos Externos</a>
         </div>
 
-        <!-- Mostrar mensajes flash -->
+       
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flash-messages">
@@ -119,7 +120,7 @@
             <p>No hay eventos disponibles.</p>
         {% endif %}
 
-        <!-- Botón de volver al inicio -->
+       
         <div class="actions">
             <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Perfil</a>
         </div>

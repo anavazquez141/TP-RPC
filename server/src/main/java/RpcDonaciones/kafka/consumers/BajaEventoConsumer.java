@@ -37,11 +37,11 @@ public class BajaEventoConsumer {
                  throw new IllegalArgumentException("El ID del evento no puede estar vacío.");
              }
              
-             LOG.info("✅ Evento {} de la organización {} procesado y dado de baja con éxito.",
+             LOG.info("Evento {} de la organización {} procesado y dado de baja con éxito.",
                      message.getEventoId(), message.getOrganizacionId());
 
         } catch (Exception e) {
-            LOG.error("❌ Error al procesar la baja del evento {}: {}", message.getEventoId(), e.getMessage());
+            LOG.error("Error al procesar la baja del evento {}: {}", message.getEventoId(), e.getMessage());
 
         }
     }

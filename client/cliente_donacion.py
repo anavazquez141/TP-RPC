@@ -15,7 +15,7 @@ class ClienteDonacion:
     def connect(self):
         if self.channel is None or self.is_channel_closed():
             self.channel = grpc.insecure_channel(f"{self.host}:{self.port}")
-            # CORRECCIÓN: Usa DonacionServiceStub en lugar de llamar al módulo directamente
+            
             self.stub = donacion_pb2_grpc.DonacionServiceStub(self.channel)
 
     #Verifica si el canal está cerrado
@@ -26,7 +26,7 @@ class ClienteDonacion:
         except Exception:
             return True
 
-    #Registra donación
+    
     def registrar_donacion(self, token, categoria, descripcion, cantidad):
         self.connect()
         request = donacion_pb2.RegistrarDonacionRequest(
@@ -42,7 +42,7 @@ class ClienteDonacion:
             print(f"Error al registrar donación: {e.code()} - {e.details()}")
             return None
 
-    #Lista de las donaciones
+    
     def listar_donaciones(self, token):
         self.connect()
         request = donacion_pb2.ListarDonacionesRequest(token=token)
@@ -53,7 +53,7 @@ class ClienteDonacion:
             print(f"Error al listar donaciones: {e.code()} - {e.details()}")
             return None
         
-    # Elimina donación
+    
     def eliminar_donacion(self, token, donacion_id):
         self.connect()
         request = donacion_pb2.EliminarDonacionRequest(
@@ -67,7 +67,7 @@ class ClienteDonacion:
             print(f"Error al eliminar donación: {e.code()} - {e.details()}")
             return None
 
-    # Modifica donacion
+   
     def modificar_donacion(self, token, donacion_id, descripcion, cantidad):
         self.connect()
         request = donacion_pb2.ModificarDonacionRequest(
@@ -83,7 +83,7 @@ class ClienteDonacion:
             print(f"Error al modificar donación: {e.code()} - {e.details()}")
             return None
 
-    # Trae donación por su ID
+    
     def traer_donacion_por_id(self, token, donacion_id):
         self.connect()
         request = donacion_pb2.DonacionIdRequest(
@@ -166,7 +166,7 @@ class ClienteDonacion:
     def ofrecer_donacion(self, id_organizacion, id_oferta, items):
         self.connect()  # Asegura que el canal y stub estén inicializados
 
-        # Validaciones simples
+        
         if not id_organizacion:
             print("Error: ID de organización no puede estar vacío")
             return None
@@ -215,7 +215,7 @@ class ClienteDonacion:
             print("Error: Deben proporcionarse id_organizacion_solicitante, id_solicitud y al menos un item")
             return None
 
-        # Convertir los datos del formulario en objetos ItemTransferencia
+        
         items_pb = []
         for item in items_form:
             item_pb = donacion_pb2.ItemTransferencia()
@@ -249,7 +249,7 @@ class ClienteDonacion:
         request = donacion_pb2.ListarDonacionesRequest(token=token)
         try:
             response = self.stub.listarDonacionesConEliminado(request)
-            return response.donaciones  # lista de DonacionConCampoEliminado
+            return response.donaciones  
         except grpc.RpcError as e:
             print(f"Error al listar donaciones con eliminado: {e.code()} - {e.details()}")
             return None

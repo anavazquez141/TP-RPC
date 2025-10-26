@@ -11,7 +11,7 @@
 
         <h2>Registrar Nuevo Usuario</h2>
 
-        <!-- Mensajes -->
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -20,7 +20,7 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Formulario Registrar -->
+       
         <form method="POST" action="{{ url_for('usuarios.registrar_usuario') }}" class="modern-login-form">
             <div class="input-group">
                 <input type="text" id="nombreUsuario" name="nombreUsuario" required placeholder=" ">
@@ -56,7 +56,7 @@
             <button type="submit">Registrar Usuario</button>
         </form>
 
-        <!-- Enlaces -->
+       
         <div class="actions">
             <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Perfil</a>
             <a href="{{ url_for('auth.logout') }}" class="btn secondary">Cerrar Sesión</a>

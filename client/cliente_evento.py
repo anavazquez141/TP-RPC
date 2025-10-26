@@ -139,7 +139,7 @@ class ClienteEvento:
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
             return evento_pb2.ListEventosResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}")
-        
+                
     def asignarse_evento(self, id_evento, user_id, token=None):
         self.connect()
         token = token or self.token
@@ -165,6 +165,56 @@ class ClienteEvento:
         except grpc.RpcError as e:
             print(f"Error de gRPC: {e.code()} - {e.details()}")
             return evento_pb2.UpdateEventoResponse(status="FAILURE", message=f"Error en el servidor: {e.details()}") 
+
+
+    def publicar_evento(self, token, id_evento, nombre_evento, descripcion, fecha_hora, id_organizacion):
+        self.connect()
+
+        
+        if not all([nombre_evento, descripcion, fecha_hora, id_organizacion]):
+            print("Error: faltan campos obligatorios para publicar el evento")
+            return None
+
+        request = evento_pb2.PublicarEventoRequest(
+            token=token or "",
+            idEvento=str(id_evento) if id_evento is not None else "",
+            nombreEvento=nombre_evento,
+            descripcion=descripcion,
+            fechaHora=fecha_hora,
+            idOrganizacion=str(id_organizacion)
+        )
+
+        try:
+            response = self.evento_stub.PublicarEventoExterno(request, timeout=10)
+            print(f"Respuesta publicar_evento: status={response.status}, message={response.message}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error gRPC al publicar evento: {e.code().name} - {e.details()}")
+            return None
+        except Exception as e:
+            print(f"Error inesperado al publicar evento: {str(e)}")
+            return None
+
+
+    def listar_eventos_externos(self, token):
+        self.connect()
+
+        request = evento_pb2.ListarEventosExternosRequest(token=token or "")
+
+        try:
+            response = self.evento_stub.ListarEventosExternos(request, timeout=10)
+            print(f"Respuesta listar_eventos_externos: status={response.status}, message={response.message}")
+            for evento in response.eventos:
+                print(f"- {evento.nombreEvento} ({evento.idEvento}) de {evento.idOrganizacion}")
+            return response
+        except grpc.RpcError as e:
+            print(f"Error gRPC al listar eventos externos: {e.code().name} - {e.details()}")
+            return None
+        except Exception as e:
+            print(f"Error inesperado al listar eventos externos: {str(e)}")
+            return None
+
+
 
     def cerrar(self):
         """Cierra el canal gRPC."""

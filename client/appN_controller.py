@@ -45,6 +45,7 @@ app.register_blueprint(donacion_bp)
 app.register_blueprint(oferta_bp)
 app.register_blueprint(solicitud_bp)
 
+
 # Funciones de cierre para clientes gRPC
 atexit.register(cliente_usuario.cerrar)
 atexit.register(cliente_evento.cerrar)

@@ -5,7 +5,7 @@
     <title>Modificar / Eliminar Evento</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
-        /* --- Tarjeta de contenido --- */
+       
         .profile-card {
             background-color: #fff;
             padding: 30px 40px;
@@ -22,7 +22,7 @@
             margin-bottom: 30px;
         }
 
-        /* --- Formulario moderno --- */
+       
         .modern-login-form .input-group {
             position: relative;
             margin-bottom: 20px;
@@ -86,7 +86,7 @@
             color: #3498db;
         }
 
-        /* --- Usuarios asignados/disponibles --- */
+        
         .user-lists { display: flex; gap: 20px; margin-bottom: 20px; }
         .list-container { flex: 1; }
         .list-container select { width: 100%; min-height: 200px; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
@@ -94,7 +94,7 @@
         .list-container button { display: block; width: 100%; margin-top: 8px; padding: 8px; border: none; border-radius: 6px; background-color: #3498db; color: #fff; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .list-container button:hover { background-color: #2980b9; }
 
-        /* --- Botones principales --- */
+        
         .btn.primary {
             width: 100%;
             padding: 12px;
@@ -147,25 +147,25 @@
         {% endwith %}
 
         <form method="POST" class="modern-login-form" id="evento-form">
-            <!-- Nombre -->
+            
             <div class="input-group">
                 <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or evento.nombreEvento }}" required placeholder=" ">
                 <label>Nombre</label>
             </div>
 
-            <!-- Descripción -->
+            
             <div class="input-group">
                 <textarea name="descripcion" required placeholder=" ">{{ request.form.descripcion or evento.descripcion }}</textarea>
                 <label>Descripción</label>
             </div>
 
-            <!-- Fecha y Hora -->
+            
             <div class="input-group">
                 <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or evento.fechaHora }}" required placeholder=" ">
                 <label>Fecha y Hora</label>
             </div>
 
-            <!-- Usuarios asignados y disponibles -->
+           
             <div class="user-lists">
                 <div class="list-container">
                     <h4>Usuarios Asignados</h4>
@@ -194,7 +194,7 @@
 
             <input type="hidden" name="usuarioIds" id="usuarioIds">
 
-            <!-- Botones -->
+            
             <button type="submit" class="btn primary">Actualizar</button>
             {% if puede_administrar_eventos %}
                 <button type="submit" name="eliminar" value="eliminar" class="btn danger">Eliminar</button>
@@ -227,7 +227,7 @@
             hidden.value = Array.from(assigned.options).map(option => option.value).join(',');
         }
 
-        // Actualizar hidden al cargar la página
+       
         window.onload = updateHiddenField;
     </script>
 </body>

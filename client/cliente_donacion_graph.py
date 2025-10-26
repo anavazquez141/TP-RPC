@@ -27,7 +27,7 @@ class ClienteDonacionGraph:
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}"  # 🔹 Agregamos el header JWT
+            "Authorization": f"Bearer {token}" 
         }
 
         response = requests.post(
@@ -38,7 +38,7 @@ class ClienteDonacionGraph:
 
         data = response.json()
 
-        # Log útil si querés debuggear
+       
         print("📡 Respuesta GraphQL:", data)
 
         if "errors" in data:

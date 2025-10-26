@@ -488,7 +488,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 .collect(Collectors.toList()));
             kafkaProducerService.sendSolicitudDonacion(message);
 
-            System.out.println("✅ Solicitud enviada a Kafka: " + request.getIdSolicitud());
+            System.out.println("Solicitud enviada a Kafka: " + request.getIdSolicitud());
 
             responseObserver.onNext(SolicitarDonacionResponse.newBuilder()
                 .setStatus("SUCCESS")
@@ -497,7 +497,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            System.out.println("❌ Error al procesar solicitud: " + e.getMessage());
+            System.out.println("Error al procesar solicitud: " + e.getMessage());
             responseObserver.onError(
                 Status.INTERNAL.withDescription("Error al procesar la solicitud: " + e.getMessage())
                     .asRuntimeException()
@@ -649,7 +649,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             // Enviar el mensaje al topic de Kafka
             kafkaProducerService.sendOfertaDonacion(message);
 
-            System.out.println("✅ Oferta enviada a Kafka: " + idOferta);
+            System.out.println("Oferta enviada a Kafka: " + idOferta);
 
             // Respuesta gRPC
             responseObserver.onNext(OfertaDonacionResponse.newBuilder()
@@ -659,7 +659,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            System.out.println("❌ Error al procesar la oferta: " + e.getMessage());
+            System.out.println("Error al procesar la oferta: " + e.getMessage());
             responseObserver.onError(
                 Status.INTERNAL
                     .withDescription("Error al procesar la oferta: " + e.getMessage())

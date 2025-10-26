@@ -11,7 +11,7 @@
 
     <h2>Informe de Donaciones</h2>
 
-    <!-- Mensajes flash -->
+    
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -20,7 +20,7 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Formulario de filtros básicos -->
+   
     <form method="GET" class="modern-login-form">
         <div class="input-group">
             <label for="categoria">Categoría</label>
@@ -57,7 +57,7 @@
 
     <!-- ------------------ FILTROS GUARDADOS ------------------ -->
 
-    <!-- Guardar filtro -->
+    
     <form method="POST" action="{{ url_for('donacion_bp.guardar_filtro') }}" class="modern-login-form">
         <div class="input-group">
             <label for="nombreFiltro">Nombre del filtro</label>
@@ -70,7 +70,7 @@
         </div>
     </form>
 
-    <!-- Aplicar filtro guardado -->
+    
     <form method="POST" action="{{ url_for('donacion_bp.aplicar_filtro') }}" class="modern-login-form">
         <div class="input-group">
             <label for="filtroAplicar">Filtros guardados</label>
@@ -84,7 +84,7 @@
         </div>
     </form>
 
-    <!-- Eliminar filtro guardado -->
+  
     <form method="POST" action="{{ url_for('donacion_bp.eliminar_filtro') }}" class="modern-login-form">
         <div class="input-group">
             <label for="filtroEliminar">Eliminar filtro</label>
@@ -143,7 +143,7 @@ document.getElementById('btnDescargarExcel').addEventListener('click', () => {
     const eliminado = document.getElementById('eliminado').value;
 
     // Construir URL de tu endpoint Flask
-    const url = `/donaciones/descargar_excel?categoria=${encodeURIComponent(categoria)}&fechaDesde=${encodeURIComponent(fechaDesde)}&fechaHasta=${encodeURIComponent(fechaHasta)}&eliminado=${encodeURIComponent(eliminado)}`;
+    const url = `/descargar_excel?categoria=${encodeURIComponent(categoria)}&fechaDesde=${encodeURIComponent(fechaDesde)}&fechaHasta=${encodeURIComponent(fechaHasta)}&eliminado=${encodeURIComponent(eliminado)}`;
 
     fetch(url)
     .then(resp => {

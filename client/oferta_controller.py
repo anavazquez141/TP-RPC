@@ -12,7 +12,7 @@ oferta_bp = Blueprint('oferta_bp', __name__)
 def form_oferta():
     return render_template('ofrecer_donacion.html')
 
-# Listar ofertas
+
 @oferta_bp.route('/ofertas', methods=['GET'])
 @requiere_autenticacion(ClienteUsuario())
 @requiere_rol_presidente_o_vocal(ClienteUsuario())
@@ -45,7 +45,7 @@ def ofertas():
         flash(f"Error: {str(e)}", "error")
         return render_template('ofertas.html', ofertas=[])
 
-# Enviar oferta
+
 @oferta_bp.route('/enviar-oferta', methods=['POST'])
 def enviar_oferta():
     try:

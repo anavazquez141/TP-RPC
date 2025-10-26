@@ -176,6 +176,66 @@ def evento(id_evento):
     return render_template('modificar_eliminar_evento.html',evento=evento_data, usuarios=usuarios, puede_administrar_eventos=puede_administrar_eventos)
 
 
+@evento_bp.route('/eventos/publicar', methods=['GET', 'POST'])
+@requiere_autenticacion(ClienteUsuario())
+@requiere_rol_presidente_o_coordinador(ClienteUsuario())
+def publicar_evento():
+    if request.method == 'POST':
+        id_organizacion = request.form['organizacionId']
+        id_evento = request.form['eventoId']
+        nombre_evento = request.form['nombreEvento']
+        descripcion = request.form['descripcion']
+        fecha_hora = request.form['fechaHora']
+
+        try:
+            cliente_evento = ClienteEvento()
+            response = cliente_evento.publicar_evento(
+                token=session['token'],
+                id_evento=id_evento,
+                nombre_evento=nombre_evento,
+                descripcion=descripcion,
+                fecha_hora=fecha_hora,
+                id_organizacion=id_organizacion
+            )
+
+            if response and response.status == "SUCCESS":
+              flash("Evento publicado correctamente", "success")
+              return render_template('publicar_eventos.html',
+                           organizacionId="",
+                           eventoId="",
+                           nombreEvento="",
+                           descripcion="",
+                           fechaHora="")
+            else:
+                flash(getattr(response, 'message', "Error al publicar el evento"), "error")
+
+        except Exception as e:
+            flash(f"Error: {str(e)}", "error")
+
+    return render_template('publicar_eventos.html')
+
+@evento_bp.route('/eventos-externos')
+def listar_eventos_externos():
+    token = session.get('token')  
+    try:
+        
+        from app import cliente_evento
+
+        response = cliente_evento.listar_eventos_externos(token)
+
+        if response and response.status == "SUCCESS":
+            eventos_externos = response.eventos
+        else:
+            flash(getattr(response, 'message', "Error al obtener eventos externos"), 'error')
+            eventos_externos = []
+
+    except Exception as e:
+        flash(f"Error al obtener eventos externos: {e}", 'error')
+        eventos_externos = []
+
+    return render_template('eventos_externos.html', eventos=eventos_externos)
+
+
 @evento_bp.route('/eventos/asignarse/<int:id_evento>', methods=['POST'])
 @requiere_autenticacion(ClienteUsuario())
 @requiere_rol_voluntario(ClienteUsuario())

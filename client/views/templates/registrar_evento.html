@@ -5,7 +5,7 @@
     <title>Registrar Evento</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
     <style>
-        /* --- Mejora del formulario --- */
+        
         .input-group {
             position: relative;
             margin-bottom: 20px;
@@ -32,12 +32,12 @@
             border-bottom-color: #3498db;
         }
 
-        /* Label flotante */
+       
         .input-group label {
             position: absolute;
             left: 0;
             top: 12px;
-            color: #3498db; /* azul */
+            color: #3498db; 
             font-size: 14px;
             font-family: Arial, sans-serif;
             pointer-events: none;
@@ -55,18 +55,18 @@
             color: #3498db;
         }
 
-        /* Textarea específico */
+        
         .input-group textarea {
             min-height: 120px;
             resize: vertical;
         }
 
-        /* Select multiple */
+       
         .input-group select[multiple] {
             height: 120px;
         }
 
-        /* Título de la tarjeta igual que los demás */
+       
         .profile-card h1 {
             color: #2c3e50;
             text-align: center;
@@ -78,7 +78,7 @@
     <div class="profile-card">
         <h1>Registrar Evento</h1>
 
-        <!-- Mostrar mensajes flash -->
+       
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flash-messages">
@@ -90,25 +90,25 @@
         {% endwith %}
 
         <form method="POST" class="modern-login-form">
-            <!-- Nombre del evento -->
+           
             <div class="input-group">
                 <input type="text" name="nombreEvento" value="{{ request.form.nombreEvento or '' }}" required placeholder=" ">
                 <label>Nombre</label>
             </div>
 
-            <!-- Descripción -->
+            
             <div class="input-group">
                 <textarea name="descripcion" required placeholder=" ">{{ request.form.descripcion or '' }}</textarea>
                 <label>Descripción</label>
             </div>
 
-            <!-- Fecha y hora -->
+           
             <div class="input-group">
                 <input type="datetime-local" name="fechaHora" value="{{ request.form.fechaHora or '' }}" required placeholder=" ">
                 <label>Fecha y Hora</label>
             </div>
 
-            <!-- Selección de usuarios -->
+            
             <div class="input-group">
                 <select name="usuarioIds" multiple required>
                     {% for usuario in usuarios %}
@@ -120,11 +120,11 @@
                 <label>Usuarios</label>
             </div>
 
-            <!-- Botón registrar -->
+           
             <button type="submit" class="btn primary">Registrar</button>
         </form>
 
-        <!-- Botón volver -->
+       
         <div class="actions">
             <a href="{{ url_for('evento_bp.eventos') }}" class="btn secondary">Volver a Eventos</a>
         </div>

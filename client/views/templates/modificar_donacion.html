@@ -11,7 +11,7 @@
 
         <h2>Modificar Donación</h2>
 
-        <!-- Mensajes flash -->
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -20,7 +20,7 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Formulario para modificar donación -->
+        
         <form method="POST" class="modern-login-form">
             <div class="input-group">
                 <input type="text" value="{{ donacion.categoria }}" readonly placeholder=" ">
@@ -42,7 +42,7 @@
             <button type="submit" class="btn primary">Guardar Cambios</button>
         </form>
 
-        <!-- Enlaces -->
+       
         <div class="actions">
             <a href="{{ url_for('donaciones') }}" class="btn secondary">Volver a Donaciones</a>
             <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Inicio</a>

@@ -40,15 +40,15 @@ public class BajaSolicitudConsumer {
                 baja.setIdSolicitud(message.getIdSolicitud());
                 bajaSolicitudRepository.save(baja);
 
-                logger.info("✅ Baja procesada correctamente: idOrganizacion={}, idSolicitud={}",
+                logger.info("Baja procesada correctamente: idOrganizacion={}, idSolicitud={}",
                         message.getIdOrganizacion(), message.getIdSolicitud());
             } else {
-                logger.warn("⚠️ No se encontró solicitud para baja: idOrganizacion={}, idSolicitud={}",
+                logger.warn("No se encontró solicitud para baja: idOrganizacion={}, idSolicitud={}",
                         message.getIdOrganizacion(), message.getIdSolicitud());
             }
 
         } catch (Exception e) {
-            logger.error("❌ Error al procesar baja de solicitud: {}", e.getMessage(), e);
+            logger.error("Error al procesar baja de solicitud: {}", e.getMessage(), e);
         }
 }
 

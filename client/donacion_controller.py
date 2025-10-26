@@ -303,7 +303,7 @@ def transferir_donaciones():
         flash("Debes iniciar sesión primero", "error")
         return redirect(url_for('auth_bp.login'))
 
-    controller = ClienteDonacion()  # Cliente gRPC
+    controller = ClienteDonacion()  
 
     if request.method == "POST":
         id_solicitud = request.form.get('id_solicitud')
@@ -365,7 +365,7 @@ def descargar_excel():
     url_rest = f"http://localhost:8050/api/informes/donaciones/descargar_excel?categoria={categoria}&fechaDesde={fecha_desde}&fechaHasta={fecha_hasta}&eliminado={eliminado}"
 
     try:
-        headers = {'Authorization': f'Bearer {token}'}  # <-- MUY IMPORTANTE
+        headers = {'Authorization': f'Bearer {token}'}  
         resp = requests.get(url_rest, headers=headers)
         resp.raise_for_status()
 
