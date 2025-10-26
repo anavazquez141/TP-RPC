@@ -352,7 +352,7 @@ def transferir_donaciones():
 @requiere_autenticacion(cliente_usuario)
 @requiere_rol_presidente_o_vocal(cliente_usuario)
 def descargar_excel():
-    token = session.get('token')  # token JWT almacenado en sesión
+    token = session.get('token')
     if not token:
         flash("Debes iniciar sesión primero", "error")
         return redirect(url_for('auth_bp.login'))
@@ -365,9 +365,17 @@ def descargar_excel():
     url_rest = f"http://localhost:8050/api/informes/donaciones/descargar_excel?categoria={categoria}&fechaDesde={fecha_desde}&fechaHasta={fecha_hasta}&eliminado={eliminado}"
 
     try:
-        headers = {'Authorization': f'Bearer {token}'}  
-        resp = requests.get(url_rest, headers=headers)
+        headers = {'Authorization': f'Bearer {token}'}
+        print(f"Enviando solicitud a: {url_rest}")
+        resp = requests.get(url_rest, headers=headers, stream=True)
         resp.raise_for_status()
+
+        content_type = resp.headers.get('Content-Type')
+        print(f"Content-Type recibido: {content_type}")
+        if not ('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' in content_type or
+                'application/octet-stream' in content_type):
+            print(f"Respuesta no es un Excel: {resp.text[:200]}")
+            raise Exception(f"Respuesta no es un archivo Excel, Content-Type: {content_type}")
 
         return send_file(
             io.BytesIO(resp.content),
@@ -377,6 +385,7 @@ def descargar_excel():
         )
 
     except requests.RequestException as e:
+        print(f"Error al descargar el Excel: {str(e)}")
         flash(f"Error al descargar el Excel: {str(e)}", "error")
         return redirect(url_for('donacion_bp.informe_donaciones'))
 

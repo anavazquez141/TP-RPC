@@ -14,6 +14,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import RpcDonaciones.grpc.DonacionServiceGrpc;
+import RpcDonaciones.grpc.DonacionServiceProto;
 import RpcDonaciones.grpc.DonacionServiceProto.*;
 import RpcDonaciones.kafka.messages.BajaSolicitudMessage;
 import RpcDonaciones.kafka.messages.SolicitudDonacionMessage;
@@ -38,8 +39,12 @@ import RpcDonaciones.entities.Usuario;
 import RpcDonaciones.entities.ItemDonacion;
 
 import RpcDonaciones.kafka.messages.OfertaDonacionMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -68,6 +73,7 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
 
     private final TokenValidator tokenValidator;
     private final SecretKey key;
+    private static final Logger logger = LoggerFactory.getLogger(DonacionServiceImpl.class);
 
     public DonacionServiceImpl(@Value("${jwt.secret}") String base64Key, TokenValidator tokenValidator) {
         this.key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(base64Key));
@@ -805,37 +811,77 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
     }
 
     @Override
-    public void listarDonacionesParaExcel(ListarDonacionesParaExcelRequest request,
-                                        StreamObserver<ListarDonacionesParaExcelResponse> responseObserver) {
+    public void listarDonacionesParaExcel(DonacionServiceProto.ListarDonacionesParaExcelRequest request,
+                                         StreamObserver<DonacionServiceProto.ListarDonacionesParaExcelResponse> responseObserver) {
+        logger.info("Procesando listarDonacionesParaExcel con token: {}", request.getToken());
         try {
             String token = request.getToken();
             if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                logger.warn("Validación de token fallida para token: {}", token);
                 return;
             }
 
-            List<Donacion> donaciones = donacionRepository.findAll();
+            String categoria = request.getCategoria();
+            String fechaDesde = request.getFechaDesde();
+            String fechaHasta = request.getFechaHasta();
+            String eliminado = request.getEliminado();
 
-            ListarDonacionesParaExcelResponse.Builder response = ListarDonacionesParaExcelResponse.newBuilder()
-                    .setStatus("SUCCESS");
+            List<Donacion> donaciones = donacionRepository.findAll();
+            logger.info("Donaciones encontradas: {}", donaciones.size());
+
+            if (categoria != null && !categoria.isEmpty()) {
+                donaciones = donaciones.stream()
+                    .filter(d -> d.getCategoria().name().equals(categoria))
+                    .collect(Collectors.toList());
+                logger.info("Filtro por categoría {} aplicado, donaciones restantes: {}", categoria, donaciones.size());
+            }
+            if (fechaDesde != null && !fechaDesde.isEmpty()) {
+                try {
+                    LocalDateTime desde = LocalDate.parse(fechaDesde).atStartOfDay();
+                    donaciones = donaciones.stream()
+                        .filter(d -> d.getFechaAlta().isAfter(desde) || d.getFechaAlta().isEqual(desde))
+                        .collect(Collectors.toList());
+                    logger.info("Filtro por fechaDesde {} aplicado, donaciones restantes: {}", fechaDesde, donaciones.size());
+                } catch (DateTimeParseException e) {
+                    logger.error("Error al parsear fechaDesde: {}", fechaDesde, e);
+                    throw new IllegalArgumentException("Formato de fechaDesde inválido: " + fechaDesde);
+                }
+            }
+            if (fechaHasta != null && !fechaHasta.isEmpty()) {
+                try {
+                    LocalDateTime hasta = LocalDate.parse(fechaHasta).atStartOfDay();
+                    donaciones = donaciones.stream()
+                        .filter(d -> d.getFechaAlta().isBefore(hasta) || d.getFechaAlta().isEqual(hasta))
+                        .collect(Collectors.toList());
+                    logger.info("Filtro por fechaHasta {} aplicado, donaciones restantes: {}", fechaHasta, donaciones.size());
+                } catch (DateTimeParseException e) {
+                    logger.error("Error al parsear fechaHasta: {}", fechaHasta, e);
+                    throw new IllegalArgumentException("Formato de fechaHasta inválido: " + fechaHasta);
+                }
+            }
+            if (eliminado != null && !eliminado.isEmpty()) {
+                Boolean elim = "si".equalsIgnoreCase(eliminado) ? true : "no".equalsIgnoreCase(eliminado) ? false : null;
+                if (elim != null) {
+                    donaciones = donaciones.stream()
+                        .filter(d -> d.isEliminado() == elim)
+                        .collect(Collectors.toList());
+                    logger.info("Filtro por eliminado {} aplicado, donaciones restantes: {}", eliminado, donaciones.size());
+                }
+            }
+
+            DonacionServiceProto.ListarDonacionesParaExcelResponse.Builder response =
+                    DonacionServiceProto.ListarDonacionesParaExcelResponse.newBuilder()
+                            .setStatus("SUCCESS");
 
             for (Donacion d : donaciones) {
-                String fechaEliminacion = "";
-                if (d.isEliminado()) {
-                    fechaEliminacion = d.getAuditorias().stream()
-                            .filter(a -> a.getTipoAccion() == TipoAccion.ELIMINACION)
-                            .map(a -> a.getFecha().toString())
-                            .findFirst()
-                            .orElse("");
-                }
-
                 String usuarioModificacion = d.getAuditorias().stream()
                         .filter(a -> a.getTipoAccion() == TipoAccion.MODIFICACION)
                         .map(Auditoria::getUsuario)
                         .reduce((first, second) -> second)
                         .orElse("");
 
-                DonacionParaExcel item = DonacionParaExcel.newBuilder()
-                        .setId(d.getId())
+                DonacionServiceProto.DonacionParaExcel item = DonacionServiceProto.DonacionParaExcel.newBuilder()
+                        .setId((d.getId())) // Convertir a String si es necesario
                         .setCategoria(d.getCategoria().name())
                         .setDescripcion(d.getDescripcion())
                         .setCantidad(d.getCantidad())
@@ -848,9 +894,11 @@ public class DonacionServiceImpl extends DonacionServiceGrpc.DonacionServiceImpl
                 response.addDonaciones(item);
             }
 
+            logger.info("Enviando respuesta con {} donaciones", response.getDonacionesCount());
             responseObserver.onNext(response.build());
             responseObserver.onCompleted();
         } catch (Exception e) {
+            logger.error("Error al listar donaciones para Excel", e);
             responseObserver.onError(Status.INTERNAL
                     .withDescription("Error al listar donaciones para Excel: " + e.getMessage())
                     .asRuntimeException());
