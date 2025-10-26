@@ -23,7 +23,6 @@ public class SecurityConfig {
 
     private final String jwtSecret;
 
-    // Inyecta el valor de jwt.secret desde application.properties
     public SecurityConfig(@Value("${jwt.secret}") String jwtSecret) {
         this.jwtSecret = jwtSecret;
     }
@@ -32,8 +31,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/graphql").authenticated()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated() // El endpoint /api/informes/donaciones/descargar_excel requiere autenticación
             )
             .addFilterBefore(new JwtAuthenticationFilter(jwtSecret), UsernamePasswordAuthenticationFilter.class)
             .csrf(csrf -> csrf.disable());
@@ -62,6 +62,10 @@ public class SecurityConfig {
                     System.out.println("Token JWT válido: " + token);
                 } catch (Exception e) {
                     System.out.println("Error validando token JWT: " + e.getMessage());
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"Invalid JWT token: " + e.getMessage() + "\"}");
+                    return;
                 }
             } else {
                 System.out.println("No se encontró encabezado Authorization");

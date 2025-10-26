@@ -209,6 +209,10 @@ message DonacionParaExcel {
 
 message ListarDonacionesParaExcelRequest {
     string token = 1;
+    string categoria = 2; // Opcional
+    string fechaDesde = 3; // Opcional
+    string fechaHasta = 4; // Opcional
+    string eliminado = 5; // "si", "no" o "" (vacío para todos)
 }
 
 message ListarDonacionesParaExcelResponse {
@@ -230,7 +234,6 @@ service DonacionService {
     rpc listarSolicitudes(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
     rpc listarOfertas(ListarOfertasRequest) returns (ListarOfertasResponse);
     rpc listarDonacionesConEliminado(ListarDonacionesRequest) returns (ListarDonacionesConEliminadoResponse);
-    rpc transferirDonacion(TransferirDonacionRequest) returns (TransferirDonacionResponse);
-    rpc listarSolicitudesExternas(ListarSolicitudesRequest) returns (ListarSolicitudesResponse);
     rpc listarDonacionesParaExcel(ListarDonacionesParaExcelRequest) returns (ListarDonacionesParaExcelResponse);
 }
+    

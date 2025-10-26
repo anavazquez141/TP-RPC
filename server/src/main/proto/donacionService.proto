@@ -209,6 +209,10 @@ message DonacionParaExcel {
 
 message ListarDonacionesParaExcelRequest {
     string token = 1;
+    string categoria = 2; // Opcional
+    string fechaDesde = 3; // Opcional
+    string fechaHasta = 4; // Opcional
+    string eliminado = 5; // "si", "no" o "" (vacío para todos)
 }
 
 message ListarDonacionesParaExcelResponse {
@@ -216,6 +220,7 @@ message ListarDonacionesParaExcelResponse {
     string message = 2;
     repeated DonacionParaExcel donaciones = 3;
 }
+
 
 // --------------------- SERVICIOS -----------------------
 service DonacionService {

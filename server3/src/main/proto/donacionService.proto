@@ -186,11 +186,15 @@ message DonacionParaExcel {
     bool eliminado = 5;
     string fechaAlta = 6;
     string usuarioAlta = 7;
-    string usuarioModificacion = 8; // este es nuevo
+    string usuarioModificacion = 8; 
 }
 
 message ListarDonacionesParaExcelRequest {
     string token = 1;
+    string categoria = 2; // Opcional
+    string fechaDesde = 3; // Opcional
+    string fechaHasta = 4; // Opcional
+    string eliminado = 5; // "si", "no" o "" (vacío para todos)
 }
 
 message ListarDonacionesParaExcelResponse {
