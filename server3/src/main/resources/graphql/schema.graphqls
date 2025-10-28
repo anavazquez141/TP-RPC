@@ -13,12 +13,23 @@ type DonacionResumen {
     totalCantidad: Int!
 }
 
+type ParticipacionResumen {
+    usuario: String!
+    totalEventos: Int!
+}
+
 # INPUT PARA FILTROS
 input FiltroDonacionInput {
     categoria: Categoria
     fechaDesde: String
     fechaHasta: String
     eliminado: Boolean
+}
+
+input FiltroParticipacionInput {
+    fechaDesde: String
+    fechaHasta: String
+    usuario: String!          # OBLIGATORIO
 }
 
 # --------------------- FILTROS PERSONALIZADOS ---------------------
@@ -49,6 +60,8 @@ type Query {
     
     # Obtener todos los filtros guardados del usuario logueado
     obtenerFiltros: [FiltroGuardado!]!
+
+    informeParticipacionEventos(token: String!, filtro: FiltroParticipacionInput!): [ParticipacionResumen!]!
 }
 
 # --------------------- MUTATIONS ---------------------

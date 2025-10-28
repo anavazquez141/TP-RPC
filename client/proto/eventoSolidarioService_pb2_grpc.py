@@ -74,6 +74,11 @@ class EventosServiceStub(object):
                 request_serializer=eventoSolidarioService__pb2.ListarEventosExternosRequest.SerializeToString,
                 response_deserializer=eventoSolidarioService__pb2.ListarEventosExternosResponse.FromString,
                 _registered_method=True)
+        self.ListarParticipacionesEventos = channel.unary_unary(
+                '/EventosService/ListarParticipacionesEventos',
+                request_serializer=eventoSolidarioService__pb2.ListarParticipacionesRequest.SerializeToString,
+                response_deserializer=eventoSolidarioService__pb2.ListarParticipacionesResponse.FromString,
+                _registered_method=True)
 
 
 class EventosServiceServicer(object):
@@ -127,6 +132,12 @@ class EventosServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def ListarParticipacionesEventos(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_EventosServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -169,6 +180,11 @@ def add_EventosServiceServicer_to_server(servicer, server):
                     servicer.ListarEventosExternos,
                     request_deserializer=eventoSolidarioService__pb2.ListarEventosExternosRequest.FromString,
                     response_serializer=eventoSolidarioService__pb2.ListarEventosExternosResponse.SerializeToString,
+            ),
+            'ListarParticipacionesEventos': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListarParticipacionesEventos,
+                    request_deserializer=eventoSolidarioService__pb2.ListarParticipacionesRequest.FromString,
+                    response_serializer=eventoSolidarioService__pb2.ListarParticipacionesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -387,6 +403,33 @@ class EventosService(object):
             '/EventosService/ListarEventosExternos',
             eventoSolidarioService__pb2.ListarEventosExternosRequest.SerializeToString,
             eventoSolidarioService__pb2.ListarEventosExternosResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListarParticipacionesEventos(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/EventosService/ListarParticipacionesEventos',
+            eventoSolidarioService__pb2.ListarParticipacionesRequest.SerializeToString,
+            eventoSolidarioService__pb2.ListarParticipacionesResponse.FromString,
             options,
             channel_credentials,
             insecure,

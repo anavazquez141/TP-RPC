@@ -121,6 +121,23 @@ message ListarEventosExternosResponse {
     string message = 3;
 }
 
+message ParticipacionEvento {
+    int64 eventoId = 1;
+    string eventoNombre = 2;
+    string fechaEvento = 3;
+    string usuario = 4;
+}
+
+message ListarParticipacionesRequest {
+    string token = 1;
+}
+
+message ListarParticipacionesResponse {
+    repeated ParticipacionEvento participaciones = 1;
+    string status = 2;
+    string message = 3;
+}
+
 service EventosService {
     rpc CreateEvento(CreateEventoRequest) returns (CreateEventoResponse);
     rpc GetEvento(GetEventoRequest) returns (GetEventoResponse);
@@ -130,4 +147,5 @@ service EventosService {
     rpc AsignarseEvento(UpdateEventoRequest) returns (UpdateEventoResponse);
     rpc PublicarEventoExterno(PublicarEventoRequest) returns (PublicarEventoResponse);
     rpc ListarEventosExternos(ListarEventosExternosRequest) returns (ListarEventosExternosResponse);
+    rpc ListarParticipacionesEventos (ListarParticipacionesRequest) returns (ListarParticipacionesResponse);
 }

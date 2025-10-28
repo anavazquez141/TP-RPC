@@ -604,5 +604,42 @@ public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEvent
     }
 
 
+    @Override
+    public void listarParticipacionesEventos(ListarParticipacionesRequest request,
+                                            StreamObserver<ListarParticipacionesResponse> responseObserver) {
+        try {
+            String token = request.getToken();
+            if (!tokenValidator.validarToken(token, responseObserver, "UsuarioResponse")) {
+                return;
+            }
+
+            List<EventoSolidario> eventos = eventoRepository.findAll();
+            ListarParticipacionesResponse.Builder response = ListarParticipacionesResponse.newBuilder();
+
+            for (EventoSolidario e : eventos) {
+                List<Usuario> usuarios = e.getUsuarios();
+                if (usuarios == null || usuarios.isEmpty()) continue;
+
+                String fechaStr = e.getFechaHora().toString();
+
+                for (Usuario u : usuarios) {
+                    ParticipacionEvento item = ParticipacionEvento.newBuilder()
+                        .setEventoId(e.getIdEvento())
+                        .setEventoNombre(e.getNombreEvento())
+                        .setFechaEvento(fechaStr)
+                        .setUsuario(u.getUsername())
+                        .build();
+                    response.addParticipaciones(item);
+                }
+            }
+
+            response.setStatus("SUCCESS");
+            responseObserver.onNext(response.build());
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
 
 }

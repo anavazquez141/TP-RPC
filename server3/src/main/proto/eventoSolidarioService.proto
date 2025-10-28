@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+option java_package = "GRSDonaciones.grpc";
+option java_outer_classname = "EventoSolidarioServiceProto";
+
+import "usuarioService.proto";
+
+message Evento {
+    int64 idEvento = 1;
+    string nombreEvento = 2;
+    string descripcion = 3;
+    string fechaHora = 4;
+    repeated usuario.UsuarioSinClave usuarios = 5;
+}
+
+message EventoSinUsuarios {
+    int64 idEvento = 1;
+    string nombreEvento = 2;
+    string descripcion = 3;
+    string fechaHora = 4;
+}
+
+message CreateEventoRequest {
+    string token = 1;
+    string nombreEvento = 2;
+    string descripcion = 3;
+    string fechaHora = 4;
+    repeated int64 usuarioIds = 5;
+    usuario.Role rol = 6;
+}
+
+message CreateEventoResponse {
+    Evento evento = 1;
+    string status = 2; 
+    string message = 3; 
+}
+
+message GetEventoRequest {
+    string token = 1;
+    int64 idEvento = 2;
+}
+
+message GetEventoResponse {
+    Evento evento = 1;
+    string status = 2;
+    string message = 3;
+}
+
+message UpdateEventoRequest {
+    string token = 1;
+    int64 idEvento = 2;
+    string nombreEvento = 3;
+    string descripcion = 4;
+    string fechaHora = 5;
+    repeated int64 usuarioIds = 6;
+    usuario.Role rol = 7;
+}
+
+message UpdateEventoResponse {
+    Evento evento = 1;
+    string status = 2;
+    string message = 3;
+}
+
+message DeleteEventoRequest {
+    string token = 1;
+    int64 idEvento = 2;
+    usuario.Role rol = 3;
+}
+
+message DeleteEventoResponse {
+    bool success = 1;
+    string status = 2;
+    string message = 3;
+}
+
+message ListEventosRequest {
+    string token = 1;
+}
+
+message ListEventosResponse {
+    repeated EventoSinUsuarios eventos = 1;
+    string status = 2;
+    string message = 3;
+}
+
+
+// Mensaje para publicar evento solidario
+message PublicarEventoRequest {
+    string token = 1;
+    string idEvento = 2;   
+    string nombreEvento = 3;
+    string descripcion = 4;
+    string fechaHora = 5;
+    string idOrganizacion = 6; // ID de la organización emisora
+}
+
+message PublicarEventoResponse {
+    string status = 1;
+    string message = 2;
+}
+
+// Request para listar eventos externos
+message ListarEventosExternosRequest {
+    string token = 1;
+}
+
+// Evento externo individual
+message EventoExterno {
+    string idEvento = 1;
+    string idOrganizacion = 2;
+    string nombreEvento = 3;
+    string descripcion = 4;
+    string fechaHora = 5;
+}
+
+// Response con lista de eventos externos
+message ListarEventosExternosResponse {
+    repeated EventoExterno eventos = 1;
+    string status = 2;
+    string message = 3;
+}
+
+message ParticipacionEvento {
+    int64 eventoId = 1;
+    string eventoNombre = 2;
+    string fechaEvento = 3;
+    string usuario = 4;
+}
+
+message ListarParticipacionesRequest {
+    string token = 1;
+}
+
+message ListarParticipacionesResponse {
+    repeated ParticipacionEvento participaciones = 1;
+    string status = 2;
+    string message = 3;
+}
+
+service EventosService {
+    rpc CreateEvento(CreateEventoRequest) returns (CreateEventoResponse);
+    rpc GetEvento(GetEventoRequest) returns (GetEventoResponse);
+    rpc UpdateEvento(UpdateEventoRequest) returns (UpdateEventoResponse);
+    rpc DeleteEvento(DeleteEventoRequest) returns (DeleteEventoResponse);
+    rpc ListEventos(ListEventosRequest) returns (ListEventosResponse);
+    rpc AsignarseEvento(UpdateEventoRequest) returns (UpdateEventoResponse);
+    rpc PublicarEventoExterno(PublicarEventoRequest) returns (PublicarEventoResponse);
+    rpc ListarEventosExternos(ListarEventosExternosRequest) returns (ListarEventosExternosResponse);
+    rpc ListarParticipacionesEventos (ListarParticipacionesRequest) returns (ListarParticipacionesResponse);
+}

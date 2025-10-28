@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package usuario;
+
+option java_package = "GRSDonaciones.grpc";
+option java_outer_classname = "UsuarioServiceProto";
+
+enum Role {
+    PRESIDENTE = 0;
+    VOCAL = 1;
+    COORDINADOR = 2;
+    VOLUNTARIO = 3;
+}
+
+message UsuarioRequest {
+    string token = 1;
+    int64 id = 2;
+    string nombreUsuario = 3;
+    string nombre = 4;
+    string apellido = 5;
+    string telefono = 6;
+    string email = 7;
+    Role rol = 8;
+    bool activo = 9;
+}
+
+message UsuarioIdRequest {
+    string token = 1;
+    int64 id = 2;
+}
+
+message UsuarioEmailRequest {
+    string email = 1;
+    string token = 2; 
+}
+message UsuarioResponse {
+    int64 id = 1;
+    string nombreUsuario = 2;
+    string nombre = 3;
+    string apellido = 4;
+    string telefono = 5;
+    string email = 6;
+    Role rol = 7;
+    bool activo = 8;
+    string status = 9;
+    string message = 10;
+}
+
+message UsuarioSinClave {
+    int64 id = 1;
+    string nombreUsuario = 2;
+    string nombre = 3;
+    string apellido = 4;
+    string telefono = 5;
+    string email = 6;
+    Role rol = 7;
+    bool activo = 8;
+}
+
+message EliminarUsuarioResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message ListarUsuariosRequest {
+    string token = 1;
+}
+
+message ListarUsuariosResponse {
+    repeated UsuarioSinClave usuarios = 1;
+}
+
+service UsuarioService {
+    rpc registrarUsuario(UsuarioRequest) returns (UsuarioResponse);
+    rpc traerUsuarioPorId(UsuarioIdRequest) returns (UsuarioSinClave);
+    rpc modificarUsuario(UsuarioRequest) returns (UsuarioResponse);
+    rpc eliminarUsuario(UsuarioIdRequest) returns (EliminarUsuarioResponse);
+    rpc listarUsuarios(ListarUsuariosRequest) returns (ListarUsuariosResponse);
+    rpc traerUsuarioPorEmail(UsuarioEmailRequest) returns (UsuarioSinClave);
+}
