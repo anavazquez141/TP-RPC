@@ -1,3 +1,4 @@
+// src/main/java/GRSDonaciones/resolvers/InformeParticipacionResolver.java
 package GRSDonaciones.resolvers;
 
 import GRSDonaciones.model.FiltroParticipacionInput;
@@ -24,8 +25,7 @@ public class InformeParticipacionResolver {
     @QueryMapping
     public List<ParticipacionResumen> informeParticipacionEventos(@Argument FiltroParticipacionInput filtro) {
         String token = getTokenFromHeader();
-
-        return service.obtenerInforme(
+        return service.obtenerInformeDetallado(
                 token,
                 filtro.getUsuario(),
                 filtro.getFechaDesde(),

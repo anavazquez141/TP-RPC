@@ -16,6 +16,9 @@ import RpcDonaciones.grpc.EventoSolidarioServiceProto.PublicarEventoRequest;
 import RpcDonaciones.grpc.EventoSolidarioServiceProto.PublicarEventoResponse;
 import RpcDonaciones.grpc.EventoSolidarioServiceProto.ListarEventosExternosRequest;
 import RpcDonaciones.grpc.EventoSolidarioServiceProto.ListarEventosExternosResponse;
+import RpcDonaciones.grpc.EventoSolidarioServiceProto.ListarParticipacionesRequest;
+import RpcDonaciones.grpc.EventoSolidarioServiceProto.ListarParticipacionesResponse;
+import RpcDonaciones.grpc.EventoSolidarioServiceProto.ParticipacionEvento;
 import RpcDonaciones.grpc.EventoSolidarioServiceProto.EventoExterno;
 
 import RpcDonaciones.grpc.EventosServiceGrpc;
@@ -613,7 +616,7 @@ public void updateEvento(UpdateEventoRequest request, StreamObserver<UpdateEvent
                 return;
             }
 
-            List<EventoSolidario> eventos = eventoRepository.findAll();
+            List<EventoSolidario> eventos = eventosRepository.findAll();
             ListarParticipacionesResponse.Builder response = ListarParticipacionesResponse.newBuilder();
 
             for (EventoSolidario e : eventos) {

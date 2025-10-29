@@ -8,7 +8,7 @@ from evento_controller import evento_bp
 from donacion_controller import donacion_bp
 from oferta_controller import oferta_bp
 from solicitud_controller import solicitud_bp
-
+from participacion_controller import participacion_bp
 # Importar clientes gRPC
 from cliente_usuario import ClienteUsuario
 from cliente_evento import ClienteEvento
@@ -44,6 +44,7 @@ app.register_blueprint(evento_bp)
 app.register_blueprint(donacion_bp)
 app.register_blueprint(oferta_bp)
 app.register_blueprint(solicitud_bp)
+app.register_blueprint(participacion_bp, url_prefix='/participacion')
 
 
 # Funciones de cierre para clientes gRPC

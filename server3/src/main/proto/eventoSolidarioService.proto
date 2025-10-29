@@ -126,6 +126,7 @@ message ParticipacionEvento {
     string eventoNombre = 2;
     string fechaEvento = 3;
     string usuario = 4;
+    string eventoDescripcion = 5;
 }
 
 message ListarParticipacionesRequest {

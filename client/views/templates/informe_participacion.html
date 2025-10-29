@@ -2,16 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Informe de Participación en Eventos</title>
+    <title>Informe de Participación</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
 </head>
 <body>
-
 <div class="profile-card">
-
     <h2>Informe de Participación en Eventos</h2>
 
-    <!-- ------------------ MENSAJES FLASH ------------------ -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -20,7 +17,6 @@
         {% endif %}
     {% endwith %}
 
-    <!-- ------------------ FORMULARIO DE FILTROS ------------------ -->
     <form method="GET" class="modern-login-form">
         <div class="input-group">
             <label for="fechaDesde">Fecha Desde</label>
@@ -33,77 +29,51 @@
         </div>
 
         <div class="input-group">
-            <label for="usuario">Usuario</label>
+            <label for="usuario">Usuario <span style="color:red">*</span></label>
             {% if es_admin %}
-            <select name="usuario" id="usuario" required>
-                <option value="">-- Seleccionar usuario --</option>
-                {% for u in usuarios %}
-                <option value="{{ u }}" {% if request.values.get('usuario') == u %}selected{% endif %}>{{ u }}</option>
-                {% endfor %}
-            </select>
+                <input type="text" name="usuario" id="usuario"
+                       placeholder="Nombre de usuario" 
+                       value="{{ usuario_filtro or '' }}" required>
             {% else %}
-            <input type="text" class="form-control" value="{{ usuario_actual }}" readonly>
-            <input type="hidden" name="usuario" value="{{ usuario_actual }}">
+                <input type="text" value="{{ usuario_actual }}" readonly>
+                <input type="hidden" name="usuario" value="{{ usuario_actual }}">
             {% endif %}
         </div>
 
         <button type="submit" class="btn primary">Filtrar</button>
     </form>
 
-    <!-- ------------------ TABLA DE RESULTADOS ------------------ -->
     {% if informe %}
-        <table class="tabla-informe">
-            <thead>
-                <tr>
-                    <th>Usuario</th>
-                    <th>Total Eventos Participados</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in informe %}
+        {% set meses = informe|groupby('mes') %}
+        {% for mes, eventos in meses %}
+            <h3 style="margin: 30px 0 10px; color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                {{ mes }}
+            </h3>
+            <table>
+                <thead>
+                    <tr><th>Día</th><th>Evento</th><th>Descripción</th></tr>
+                </thead>
+                <tbody>
+                    {% for e in eventos %}
                     <tr>
-                        <td><strong>{{ item.usuario }}</strong></td>
-                        <td>{{ item.totalEventos }}</td>
+                        <td>{{ e.dia }}</td>
+                        <td><strong>{{ e.nombreEvento }}</strong></td>
+                        <td>{{ e.descripcion }}</td>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
     {% else %}
-        <p>No hay participaciones para mostrar con los filtros seleccionados.</p>
+        <p style="text-align:center; color:#7f8c8d; margin:25px 0; font-style:italic;">
+            No hay participaciones para mostrar.
+        </p>
     {% endif %}
 
-    <!-- ------------------ ACCIONES ------------------ -->
     <div class="actions">
-        <a href="{{ url_for('eventos_bp.eventos') }}" class="btn secondary">Volver a Eventos</a>
-        <a href="{{ url_for('auth.index') }}" class="btn secondary">Volver al Inicio</a>
-        <button type="button" class="btn primary" id="btnDescargarExcel">Descargar Excel</button>
+        <a href="{{ url_for('evento_bp.eventos') }}" class="btn secondary">Volver a Eventos</a>
+        <a href="{{ url_for('auth.index') }}" class="btn secondary">Inicio</a>
     </div>
-
 </div>
-
-<!-- ------------------ SCRIPT DESCARGA EXCEL ------------------ -->
-<script>
-document.getElementById('btnDescargarExcel').addEventListener('click', () => {
-    const fechaDesde = document.getElementById('fechaDesde').value;
-    const fechaHasta = document.getElementById('fechaHasta').value;
-    const usuario = document.getElementById('usuario') ? document.getElementById('usuario').value : "{{ usuario_actual }}";
-
-    const url = `/descargar_excel_participacion?fechaDesde=${encodeURIComponent(fechaDesde)}&fechaHasta=${encodeURIComponent(fechaHasta)}&usuario=${encodeURIComponent(usuario)}`;
-
-    fetch(url)
-    .then(resp => {
-        if (!resp.ok) throw new Error("No se pudo descargar el Excel (status " + resp.status + ")");
-        return resp.blob();
-    })
-    .then(blob => {
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = "informe_participacion_eventos.xlsx";
-        link.click();
-    })
-    .catch(err => alert("Error al descargar Excel: " + err));
-});
-</script>
-
 </body>
 </html>

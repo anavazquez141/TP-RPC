@@ -7,14 +7,15 @@ class ClienteEventoGraphQL:
 
     def informe_participacion(self, token, usuario, fecha_desde=None, fecha_hasta=None):
         query = """
-        query InformeParticipacion($filtro: FiltroParticipacionInput!, $token: String!) {
+        query Informe($filtro: FiltroParticipacionInput!, $token: String!) {
             informeParticipacionEventos(filtro: $filtro, token: $token) {
-                usuario
-                totalEventos
+                mes
+                dia
+                nombreEvento
+                descripcion
             }
         }
         """
-
         variables = {
             "filtro": {
                 "usuario": usuario,
@@ -23,24 +24,14 @@ class ClienteEventoGraphQL:
             },
             "token": token
         }
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}"
-        }
-
         response = requests.post(
             self.endpoint,
             json={"query": query, "variables": variables},
-            headers=headers
+            headers={"Authorization": f"Bearer {token}"}
         )
-
         data = response.json()
-        print("Respuesta GraphQL Participación:", data)
-
         if "errors" in data:
-            raise Exception(f"Errores GraphQL: {data['errors']}")
-
+            raise Exception(data["errors"])
         return data["data"]["informeParticipacionEventos"]
 
     def obtener_usuarios(self, token):

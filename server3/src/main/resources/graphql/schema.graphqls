@@ -14,8 +14,10 @@ type DonacionResumen {
 }
 
 type ParticipacionResumen {
-    usuario: String!
-    totalEventos: Int!
+    mes: String!
+    dia: Int!
+    nombreEvento: String!
+    descripcion: String!
 }
 
 # INPUT PARA FILTROS

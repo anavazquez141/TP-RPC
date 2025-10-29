@@ -6,3 +6,6 @@ grpc:
     auth-service:
       address: 'static://localhost:9090'
       negotiation-type: plaintext
+    eventos-service:
+      address: 'static://localhost:9090'  # IP y puerto del servidor gRPC
+      negotiation-type: plaintext  # o 'tls' si usas SSL

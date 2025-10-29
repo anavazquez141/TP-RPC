@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ParticipacionResumen {
-    private String usuario;
-    private int totalEventos;
+    private String mes;           // "Octubre 2025"
+    private int dia;              // 16
+    private String nombreEvento;
+    private String descripcion;
 }
